@@ -555,6 +555,39 @@
     return "";
   }
 
+  function categoryLogoUrl(product) {
+    const text = (product.category_leaf + " " + product.name + " " + (product.brand || "")).toLowerCase();
+    const logos = [
+      ["ea sports", "ea.com"],
+      ["ea games", "ea.com"],
+      ["netflix", "netflix.com"],
+      ["game pass", "xbox.com"],
+      ["xbox", "xbox.com"],
+      ["playstation", "playstation.com"],
+      ["steam", "store.steampowered.com"],
+      ["windows", "microsoft.com"],
+      ["microsoft", "microsoft.com"],
+      ["coursera", "coursera.org"],
+      ["unity", "unity.com"],
+      ["figma", "figma.com"],
+      ["google", "google.com"],
+      ["apple", "apple.com"],
+      ["samsung", "samsung.com"],
+      ["sony", "sony.com"],
+      ["nvidia", "nvidia.com"],
+      ["amd", "amd.com"],
+      ["intel", "intel.com"],
+      ["nike", "nike.com"],
+      ["lego", "lego.com"],
+    ];
+    for (const [name, domain] of logos) {
+      if (text.includes(name)) {
+        return "https://www.google.com/s2/favicons?domain=" + encodeURIComponent(domain) + "&sz=128";
+      }
+    }
+    return brandLogoUrl(product.brand || product.name);
+  }
+
   function placeholderIconForProduct(product) {
     const text = product.category_path + " " + product.name + " " + (product.brand || "");
     return categoryIcon(text);
@@ -582,7 +615,7 @@
     const hue = Math.abs(hash) % 360;
     const productType = String(product.product_type || "").toLowerCase();
     const placeholderIcon = placeholderIconForProduct(product);
-    const logoUrl = brandLogoUrl(product.brand || product.name);
+    const logoUrl = categoryLogoUrl(product);
     const logoMarkup = logoUrl
       ? '<img class="product-placeholder-logo" src="' + logoUrl + '" alt="">'
       : '<span class="product-placeholder-icon" aria-hidden="true">' + placeholderIcon + "</span>";
@@ -610,7 +643,8 @@
           (soldOut ? '<span class="badge-soft is-blood">Закінчився</span>' : "") +
         "</div>" +
         '<div class="product-foot">' +
-          '<span class="small text-muted-soft product-seller">' + window.MS.escapeHtml(product.seller) + "</span>" +
+          '<span class="small text-muted-soft product-seller" title="' +
+            window.MS.escapeHtml(product.seller) + '">' + window.MS.escapeHtml(product.seller) + "</span>" +
           '<a class="btn btn-sm ' + (soldOut ? "btn-neutral" : "btn-primary") +
             '" href="/pages/product.html?id=' + product.id + '">Переглянути</a>' +
         "</div>" +
