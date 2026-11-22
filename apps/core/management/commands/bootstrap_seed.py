@@ -75,11 +75,118 @@ class Command(BaseCommand):
                 ("Послуга", ["Послуги", "Дизайн", "Логотипи й айдентика"], "service", "StudioPro", "Послуга"),
                 ("Підписка", ["Підписки", "Навчання й продуктивність", "Coursera"], "subscription", "Learning+", "Підписка"),
             ]
+            name_pools = {
+                "Електроніка": [
+                    "Pixel Max 128", "NovaPhone 5G", "SmartOne Pro", "Phone Lite",
+                    "Galaxy Mini", "AeroPhone Plus", "Ultra Screen", "Pocket Smart",
+                    "TechNova X", "DailyPhone 12", "Fusion Phone", "Edge Mini",
+                    "Prime Mobile", "SmartLife S", "NextGen Phone", "Pocket Pro",
+                ],
+                "Комп'ютери": [
+                    "OfficeBook Air", "WorkStation 14", "PowerDesk Pro", "SlimBook X",
+                    "Study Laptop", "Creator 16", "Daily Work PC", "Compact Tower",
+                    "Business Mate", "UltraPad Studio", "Home Office Mini", "NexBook",
+                    "WorkCore", "Travel Laptop", "Precision PC", "SilverDesk",
+                ],
+                "Аудіо": [
+                    "SoundAir Pro", "Studio Beats", "QuietPods", "BassLine Mini",
+                    "Wave Buds", "Crystal Audio", "DeepSound TWS", "RoadBeat",
+                    "Focus Pods", "NightWave", "ClearTalk", "AirBeat Plus",
+                    "Pocket Audio", "StudioFlow", "BassPocket", "CloudSound",
+                ],
+                "Одяг": [
+                    "Urban Black Tee", "Essential Cotton Shirt", "Street Polo",
+                    "Classic Everyday Tee", "Minimal White Top", "SportFit Polo",
+                    "Weekend Cotton", "Premium Navy Shirt", "City Street Tee",
+                    "Original Logo Tee", "Soft Cotton Basic", "Graphic Streetwear",
+                    "DailyFit Polo", "Retro Print Tee", "Summer Cotton",
+                    "Modern Basic Shirt",
+                ],
+                "Взуття": [
+                    "StreetStep Runner", "Urban Walk", "Daily Comfort",
+                    "Cloud Sneakers", "Metro Sport", "Classic White",
+                    "Active Flex", "City Runner", "LightStep",
+                    "Everyday Trainer", "Road Comfort", "Soft Motion",
+                    "Modern Street", "Weekend Sneakers", "Go Walk",
+                    "SportLine Mini",
+                ],
+                "Меблі": [
+                    "Nordic 3-Seater", "Comfort Cloud Sofa", "Small Space Sofa",
+                    "Modern Living Sofa", "SoftGrey Corner", "Classic Cozy",
+                    "Loft Sofa", "Compact Apartment", "Family Relax",
+                    "Urban Corner", "Dream Soft Sofa", "Minimal Lounge",
+                    "Home Comfort", "Relax Modern", "Premium Velvet",
+                    "Studio Sofa",
+                ],
+                "Освітлення": [
+                    "LightHome Desk", "Amber Study Lamp", "Minimal Glow",
+                    "WorkLight Pro", "Warm Desk Light", "Focus Table Lamp",
+                    "Modern Reading Lamp", "SoftGlow 2", "Compact Office Lamp",
+                    "Studio Light", "NightDesk", "LED Paper Lamp",
+                    "Silver Reading", "Eco Light", "Smart Desk Glow",
+                    "Nordic Table Lamp",
+                ],
+                "Ігри": [
+                    "Shadow Arena", "Sky Guardians", "Dungeon Legacy",
+                    "Cyber Strike", "Dragon Frontier", "Battle Kingdom",
+                    "Neon Racer", "Wild Survival", "Space Vanguard",
+                    "Mystic Quest", "Iron Battalion", "Pixel Odyssey",
+                    "Arena Legends", "Lost Empire", "Storm Hunters",
+                    "Galaxy Tactics",
+                ],
+                "Софт": [
+                    "Office Pro License", "Document Suite", "Secure Office",
+                    "WorkKey 2026", "Business Tools", "Office Lifetime",
+                    "Pro Productivity", "Creative License", "Cloud Office",
+                    "Home Office Key", "Team Workspace", "Premium Suite",
+                    "Essential Office", "FileMaster", "Smart Documents",
+                    "Office Standard",
+                ],
+                "Навчання": [
+                    "UI/UX з нуля", "Figma для дизайнерів", "Дизайн мобільних інтерфейсів",
+                    "Графічний дизайн PRO", "Brand Identity Start", "Веб-дизайн практикум",
+                    "Типографія й композиція", "Adobe у реальних проєктах",
+                    "Дизайн-портфоліо", "Prototyping Master", "UX Research",
+                    "Адаптивний UI", "Design Systems", "Motion для інтерфейсів",
+                    "Ілюстрація у Figma", "Комерційний дизайн",
+                ],
+                "Асет": [
+                    "Fantasy Icon Pack", "Space 2D Kit", "Minimal HUD Icons",
+                    "RPG Item Set", "Pixel UI Essentials", "Cyberpunk Buttons",
+                    "Fantasy Inventory", "Game Interface Icons", "Colorful Emoji Set",
+                    "Board Game Assets", "Medieval Icons", "Retro UI Pack",
+                    "Adventure Sprites", "Magic Effects 2D", "Action Icon Bundle",
+                    "Platformer Tiles",
+                ],
+                "Послуга": [
+                    "Логотип для стартапу", "Бренд-пакет компанії", "Дизайн соціальних постів",
+                    "Розробка лендингу", "Аудит UX сайту", "Дизайн інтернет-магазину",
+                    "Презентація продукту", "Ребрендинг логотипа", "Ілюстрації для бренду",
+                    "Motion-рекламний ролик", "UI-дизайн додатка", "Фірмовий стиль",
+                    "Дизайн банера", "Редизайн головної сторінки", "Прототип MVP",
+                    "Пакет бренд-графіки",
+                ],
+                "Підписка": [
+                    "Coursera Plus", "Learning Pass", "Skill Premium",
+                    "Study Unlimited", "EduPro Місяць", "CourseBox Plus",
+                    "Knowledge Premium", "Career Learning", "Productivity Pass",
+                    "Tech Courses VIP", "Design Learning", "Soft Skills Monthly",
+                    "Smart Education", "IT Academy Pass", "Creative Studies",
+                    "Unlimited Learning",
+                ],
+            }
             for section_index, (label, path, kind, brand, item_label) in enumerate(demo_sections):
                 for item_index in range(1, 17):
                     number = section_index * 16 + item_index
+                    old_name = f"{item_label} {label} #{number}"
+                    unique_name = name_pools[label][item_index - 1]
+                    old_product = Product.objects.filter(seller=seller, name=old_name).first()
+                    if old_product is not None:
+                        old_product.name = unique_name
+                        old_product.slug = slugify(unique_name, allow_unicode=True)
+                        old_product.save(update_fields=["name", "slug"])
                     seed_products.append((
-                        f"{item_label} {label} #{number}",
+                        unique_name,
                         path,
                         kind,
                         str(600 + number * 37),
