@@ -691,6 +691,15 @@
   }
 
   function bind() {
+    document.querySelectorAll(".navbar-toggler").forEach((button) => {
+      button.addEventListener("click", (event) => {
+        if (!window.matchMedia("(max-width: 575.98px)").matches) return;
+        if (!adminAccess(state.user)) return;
+        event.preventDefault();
+        event.stopPropagation();
+        openAdminMenu();
+      });
+    });
     document.querySelectorAll("[data-logout]").forEach((el) => {
       el.addEventListener("click", (event) => {
         event.preventDefault();
@@ -713,7 +722,13 @@
       if (modal && event.target === modal) closeAdminMenu();
     });
     document.addEventListener("keydown", (event) => {
-      if (event.key === "Escape") closeAdminMenu();
+      if (event.key !== "Escape") return;
+      closeAdminMenu();
+      const sheet = document.querySelector("[data-mobile-more-sheet]");
+      const backdrop = document.querySelector("[data-mobile-more-backdrop]");
+      if (sheet) sheet.hidden = true;
+      if (backdrop) backdrop.hidden = true;
+      document.querySelector("[data-mobile-more]")?.classList.remove("is-open");
     });
   }
 
@@ -763,8 +778,73 @@
         '<span class="mobile-bottom-nav-icon" aria-hidden="true">♡</span><span data-mobile-label>Обране</span>' +
         '<span class="mobile-bottom-nav-badge" data-mobile-favorites-badge hidden>0</span></a>' +
       '<a class="mobile-bottom-nav-item" data-mobile-auth href="/pages/login.html">' +
-        '<span class="mobile-bottom-nav-icon" data-mobile-icon aria-hidden="true">○</span><span data-mobile-label>Вхід</span></a>';
+        '<span class="mobile-bottom-nav-icon" data-mobile-icon aria-hidden="true">○</span><span data-mobile-label>Вхід</span></a>' +
+      '<button class="mobile-bottom-nav-more" type="button" data-mobile-more aria-label="Додаткові розділи">⌃</button>';
     document.body.appendChild(nav);
+
+    const backdrop = document.createElement("div");
+    backdrop.className = "mobile-more-backdrop";
+    backdrop.hidden = true;
+    backdrop.setAttribute("data-mobile-more-backdrop", "");
+    document.body.appendChild(backdrop);
+
+    const sheet = document.createElement("section");
+    sheet.className = "mobile-more-sheet";
+    sheet.hidden = true;
+    sheet.setAttribute("data-mobile-more-sheet", "");
+    sheet.setAttribute("aria-label", "Додаткові розділи");
+    sheet.innerHTML =
+      '<div class="mobile-more-head">' +
+        '<div><p class="eyebrow mb-1">Швидкий доступ</p><h2 class="h6 mb-0" data-mobile-more-title>Розділи</h2></div>' +
+        '<button class="mobile-more-close" type="button" data-mobile-more-close aria-label="Закрити">×</button>' +
+      '</div><div class="mobile-more-grid" data-mobile-more-grid></div>';
+    document.body.appendChild(sheet);
+
+    const closeMore = () => {
+      sheet.hidden = true;
+      backdrop.hidden = true;
+      nav.querySelector("[data-mobile-more]").classList.remove("is-open");
+    };
+    nav.querySelector("[data-mobile-more]").addEventListener("click", () => {
+      if (!sheet.hidden) {
+        closeMore();
+        return;
+      }
+      const user = state.user || {};
+      const rights = Array.isArray(user.admin_rights) ? user.admin_rights : [];
+      const grid = sheet.querySelector("[data-mobile-more-grid]");
+      const esc = window.MS.escapeHtml;
+      let links;
+      if (adminAccess(user)) {
+        sheet.querySelector("[data-mobile-more-title]").textContent = "Адміністрування";
+        links = ADMIN_TILES.filter((tile) => {
+          try {
+            return tile.show(user, rights);
+          } catch (_error) {
+            return false;
+          }
+        });
+      } else {
+        sheet.querySelector("[data-mobile-more-title]").textContent = "Розділи";
+        links = [
+          { icon: "🛍️", label: "Мої товари", href: "/pages/seller.html", show: () => !!user.authenticated },
+          { icon: "♟", label: "Замовлення", href: "/pages/orders.html", show: () => !!user.authenticated },
+          { icon: "▲", label: "Скарги", href: "/pages/complaints.html", show: () => !!user.authenticated },
+          { icon: "🆘", label: "Підтримка", href: "/pages/support.html", show: () => true },
+          { icon: "◉", label: "Профіль", href: "/pages/profile.html", show: () => !!user.authenticated },
+        ].filter((tile) => tile.show(user, rights));
+      }
+      grid.innerHTML = links.map((tile) =>
+        '<a class="mobile-more-link" href="' + esc(tile.href) + '">' +
+          '<span class="mobile-more-icon" aria-hidden="true">' + esc(tile.icon) + '</span>' +
+          '<span>' + esc(tile.label) + '</span></a>'
+      ).join("");
+      sheet.hidden = false;
+      backdrop.hidden = false;
+      nav.querySelector("[data-mobile-more]").classList.add("is-open");
+    });
+    sheet.querySelector("[data-mobile-more-close]").addEventListener("click", closeMore);
+    backdrop.addEventListener("click", closeMore);
 
     const syncBadges = () => {
       const cart = document.querySelector("[data-cart-count]");
