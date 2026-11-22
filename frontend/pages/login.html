@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="  /static/css/base.css?v=      mobile-final-v11-20261122">
+  <link rel="stylesheet" href="/static/css/base.css?v=login-security-v12-20261122">
 </head>
 <body>
 
@@ -72,6 +72,18 @@
           </div>
 
           <button class="btn btn-primary w-100 auth-motion-item" type="submit" id="loginSubmit">Увійти</button>
+          <div class="login-security-check" id="loginSecurityCheck" hidden aria-live="polite">
+            <div class="login-security-title">
+              <span class="login-security-spinner" aria-hidden="true"></span>
+              <strong>Перевірка захищеного входу</strong>
+            </div>
+            <div class="login-security-steps">
+              <span data-login-step="0"><i>1</i>Акаунт</span>
+              <span data-login-step="1"><i>2</i>Сесія</span>
+              <span data-login-step="2"><i>3</i>Частота входів</span>
+              <span data-login-step="3"><i>4</i>Захист від ботів</span>
+            </div>
+          </div>
         </form>
 
         <hr class="divider-dashed">
@@ -300,6 +312,38 @@
       input.addEventListener("input", () => motion.clearInvalid(authCard));
     });
 
+    function runLoginSecurityCheck() {
+      const panel = document.getElementById("loginSecurityCheck");
+      const steps = Array.from(panel.querySelectorAll("[data-login-step]"));
+      panel.hidden = false;
+      panel.classList.remove("is-failed");
+      steps.forEach((step) => step.className = "");
+      return new Promise((resolve) => {
+        const delays = [650, 850, 900, 1000];
+        let elapsed = 0;
+        steps.forEach((step, index) => {
+          window.setTimeout(() => {
+            if (index > 0) steps[index - 1].classList.remove("is-active");
+            if (index > 0) steps[index - 1].classList.add("is-done");
+            step.classList.add("is-active");
+          }, elapsed);
+          elapsed += delays[index];
+          window.setTimeout(() => {
+            step.classList.remove("is-active");
+            step.classList.add("is-done");
+          }, elapsed);
+        });
+        window.setTimeout(resolve, elapsed);
+      });
+    }
+
+    function hideLoginSecurityCheck(delay) {
+      window.setTimeout(() => {
+        const panel = document.getElementById("loginSecurityCheck");
+        panel.hidden = true;
+      }, delay || 0);
+    }
+
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
       motion.clearInvalid(authCard);
@@ -321,7 +365,11 @@
 
       motion.loading(submit, true);
       try {
-        const user = await window.MS.post("/auth/login", payload);
+        const [user] = await Promise.all([
+          window.MS.post("/auth/login", payload),
+          runLoginSecurityCheck(),
+        ]);
+        hideLoginSecurityCheck(240);
         window.MSAuth.setUser(user);
         /* Гостьовий кошик зіллється з акаунтом після прийняття політики */
         window.localStorage.setItem("ms_merge_cart", "1");
@@ -343,8 +391,11 @@
         await motion.showSuccess(successOverlay);
         await navigateAfterLogin(currentUser);
       } catch (err) {
+        const panel = document.getElementById("loginSecurityCheck");
+        panel.classList.add("is-failed");
         showError(apiErrorMessage(err, "Не вдалося увійти."));
         motion.shake(authCard, [form.login, form.password]);
+        hideLoginSecurityCheck(900);
       } finally {
         motion.loading(submit, false);
       }
