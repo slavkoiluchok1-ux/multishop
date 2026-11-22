@@ -517,6 +517,14 @@ main.container .empty-state-panel a:not(.btn) { color: var(--blue); }
   .navbar [data-telegram-header] {
     display: none;
   }
+  .navbar [data-admin-coin] {
+    align-self: center;
+    display: inline-grid;
+    place-items: center;
+    margin: 0 0.08rem;
+    padding: 0;
+    transform: none;
+  }
   .navbar-collapse {
     position: absolute;
     top: 100%;
@@ -678,6 +686,141 @@ main.container .empty-state-panel a:not(.btn) { color: var(--blue); }
   .seller-product-card,
   .order-info-card {
     max-width: 100%;
+  }
+
+  /* Мобільна адмінка: таблиці товарів і видач перетворюються на картки. */
+  #issuesBody,
+  #productsBody,
+  #bansBody,
+  #complaintsBody,
+  #supportBody {
+    display: block;
+  }
+  #issuesBody tr,
+  #productsBody tr,
+  #bansBody tr,
+  #complaintsBody tr,
+  #supportBody tr {
+    display: block;
+    margin-bottom: 0.65rem;
+    padding: 0.65rem;
+    border: 1px solid rgba(194, 139, 44, 0.28);
+    border-radius: 10px;
+    background: #fff;
+  }
+  #issuesBody td,
+  #productsBody td,
+  #bansBody td,
+  #complaintsBody td,
+  #supportBody td {
+    display: block;
+    min-width: 0 !important;
+    padding: 0.32rem 0;
+    border: 0;
+    color: var(--ink);
+  }
+  .coin-table-responsive thead {
+    display: none;
+  }
+  #issueBtn {
+    width: 100%;
+  }
+  #issuesBody td[data-label] {
+    display: grid;
+    grid-template-columns: 6.5rem minmax(0, 1fr);
+    gap: 0.45rem;
+  }
+  #issuesBody td[data-label]::before {
+    content: attr(data-label);
+    color: var(--muted);
+    font-size: 0.68rem;
+    font-weight: 800;
+  }
+  #productsBody td[data-label] {
+    display: grid;
+    grid-template-columns: 7rem minmax(0, 1fr);
+    gap: 0.45rem;
+  }
+  #productsBody td[data-label]::before {
+    content: attr(data-label);
+    color: var(--muted);
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+  }
+  #productsBody td[data-label="Дії"] {
+    display: block;
+  }
+  #productsBody td[data-label="Дії"]::before {
+    display: block;
+    margin-bottom: 0.35rem;
+  }
+  #productsBody .product-actions {
+    width: 100%;
+    margin: 0;
+  }
+  #productsBody .product-actions .btn {
+    min-height: 44px;
+  }
+
+  /* Компактна пагінація адмінки й каталогу. */
+  #pager,
+  [id$="PagePager"],
+  [id*="Pager"] {
+    width: 100%;
+  }
+  #pager {
+    display: grid !important;
+    grid-template-columns: 44px minmax(0, 1fr) 44px;
+    align-items: center;
+    gap: 0.35rem;
+  }
+  #pager > button {
+    width: 44px;
+    min-width: 44px !important;
+    height: 44px;
+    padding: 0 !important;
+    border-radius: 50%;
+    font-size: 1.35rem;
+  }
+  #pager > div {
+    min-width: 0;
+    flex-wrap: nowrap !important;
+  }
+  #pager #pageInfo {
+    max-width: 100%;
+    white-space: nowrap;
+  }
+  #pager label,
+  #pager #pageJumpBtn {
+    display: none;
+  }
+  #pager #pageJump {
+    width: 3.25rem;
+    min-width: 3.25rem;
+  }
+  #prevPage,
+  #nextPage {
+    width: 44px;
+    min-width: 44px !important;
+    height: 44px;
+    padding: 0 !important;
+    border-radius: 50%;
+    font-size: 1.35rem;
+  }
+  #prevPage + div,
+  #nextPage + div {
+    min-width: 0;
+  }
+  #prevPage + div label,
+  #prevPage + div #pageJumpBtn,
+  #nextPage + div label,
+  #nextPage + div #pageJumpBtn {
+    display: none;
+  }
+  #pageJump {
+    width: 3.25rem;
+    min-width: 3.25rem;
   }
 }
 

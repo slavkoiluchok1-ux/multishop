@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/css/base.css?v=mobile-ux-v2-20261122">
+  <link rel="stylesheet" href="/static/css/base.css?v=admin-mobile-v4-20261122">
   <style>
     .product-actions {
       display: grid;
@@ -233,12 +233,12 @@
         return;
       }
       productsBody.innerHTML = results.map((item) =>
-        "<tr><td>" + esc(item.id) + "</td><td>" + esc(item.name) +
-        "</td><td>" + esc(item.seller) + "</td><td>" + esc(item.status_display) +
-        "</td><td>" + moderationBadge(item) +
-        '</td><td class="text-muted-soft small">' + esc(item.moderation_reason || "—") +
-        "</td><td>" + esc(fmtDate(item.moderated_at || item.created_at)) +
-        "</td><td>" + actionsCell(item) + "</td></tr>"
+        "<tr><td data-label=\"ID\">" + esc(item.id) + "</td><td data-label=\"Назва\">" + esc(item.name) +
+        "</td><td data-label=\"Продавець\">" + esc(item.seller) + "</td><td data-label=\"Статус\">" + esc(item.status_display) +
+        "</td><td data-label=\"Модерація\">" + moderationBadge(item) +
+        '</td><td data-label="Причина" class="text-muted-soft small">' + esc(item.moderation_reason || "—") +
+        "</td><td data-label=\"Дата\">" + esc(fmtDate(item.moderated_at || item.created_at)) +
+        "</td><td data-label=\"Дії\">" + actionsCell(item) + "</td></tr>"
       ).join("");
     }
 
@@ -258,6 +258,16 @@
         pager.hidden = state.pages <= 1;
         pageInfo.textContent = "Сторінка " + state.page + " з " + state.pages +
           " · усього " + (data.count || 0);
+        if (window.matchMedia("(max-width: 575.98px)").matches) {
+          prevBtn.textContent = "‹";
+          nextBtn.textContent = "›";
+          prevBtn.setAttribute("aria-label", "Попередня сторінка");
+          nextBtn.setAttribute("aria-label", "Наступна сторінка");
+          pageInfo.textContent = state.page + " / " + state.pages;
+        } else {
+          prevBtn.textContent = "← Назад";
+          nextBtn.textContent = "Далі →";
+        }
         pageJump.value = String(state.page);
         pageJump.max = String(state.pages);
         prevBtn.disabled = state.page <= 1;

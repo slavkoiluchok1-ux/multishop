@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/css/base.css?v=mobile-ux-v2-20261122">
+  <link rel="stylesheet" href="/static/css/base.css?v=admin-mobile-v4-20261122">
 </head>
 <body>
 
@@ -79,7 +79,7 @@
   <div class="card-soft">
     <div class="card-body">
       <h2 class="h5 mb-3">Останні видачі</h2>
-      <div class="table-responsive">
+      <div class="table-responsive coin-table-responsive">
         <table class="data-table">
           <thead>
             <tr><th>Час</th><th>Кому</th><th>Сума, MC</th><th>Хто видав</th></tr>
@@ -132,8 +132,8 @@
     function renderIssues(issues) {
       issuesBody.innerHTML = issues.length
         ? issues.map((row) =>
-            "<tr><td>" + esc(fmtDate(row.created_at)) + "</td><td>" + esc(row.to_user) +
-            "</td><td>" + esc(fmtMC(row.amount_mc)) + "</td><td>" + esc(row.issued_by) +
+            "<tr><td data-label=\"Час\">" + esc(fmtDate(row.created_at)) + "</td><td data-label=\"Кому\">" + esc(row.to_user) +
+            "</td><td data-label=\"Сума\">" + esc(fmtMC(row.amount_mc)) + " MC</td><td data-label=\"Хто видав\">" + esc(row.issued_by) +
             "</td></tr>"
           ).join("")
         : '<tr><td colspan="4">Видач ще не було.</td></tr>';

@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/css/base.css?v=mobile-ux-v2-20261122">
+  <link rel="stylesheet" href="/static/css/base.css?v=admin-mobile-v4-20261122">
 </head>
 <body>
 
@@ -444,7 +444,17 @@
         renderRows(data.results || []);
         state.page = data.page || state.page;
         state.pages = data.pages || 1;
-        $("pageInfo").textContent = "Сторінка " + state.page + " з " + state.pages;
+        if (window.matchMedia("(max-width: 575.98px)").matches) {
+          $("pageInfo").textContent = state.page + " / " + state.pages;
+          $("prevPage").textContent = "‹";
+          $("nextPage").textContent = "›";
+          $("prevPage").setAttribute("aria-label", "Попередня сторінка");
+          $("nextPage").setAttribute("aria-label", "Наступна сторінка");
+        } else {
+          $("pageInfo").textContent = "Сторінка " + state.page + " з " + state.pages;
+          $("prevPage").textContent = "← Назад";
+          $("nextPage").textContent = "Далі →";
+        }
         $("pageJump").value = String(state.page);
         $("pageJump").max = String(state.pages);
         $("prevPage").disabled = state.page <= 1;
