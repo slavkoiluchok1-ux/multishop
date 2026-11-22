@@ -393,6 +393,14 @@ html.motion-ready [data-reveal].product-card.is-removing {
   text-align: center;
 }
 .product-placeholder-icon { font-size: 2.3rem; filter: drop-shadow(0 4px 4px rgba(20, 30, 40, .15)); }
+.product-placeholder-name {
+  max-width: 90%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: .82rem;
+  font-weight: 800;
+}
 .product-placeholder-type { font-size: .72rem; font-weight: 800; letter-spacing: .04em; }
 .product-card .product-fav { transition: transform 220ms var(--ease-spring), background 200ms ease, color 200ms ease; }
 .product-fav.is-on { animation: favorite-heart-beat 360ms var(--ease-spring) both; }

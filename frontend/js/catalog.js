@@ -492,7 +492,8 @@
           : "▣";
     const placeholder = '<div class="product-thumb product-placeholder" style="--placeholder-hue:' +
       hue + 'deg"><span class="product-placeholder-icon" aria-hidden="true">' + placeholderIcon +
-      '</span><span class="product-placeholder-type">' +
+      '</span><span class="product-placeholder-name">' + window.MS.escapeHtml(product.name) + "</span>" +
+      '<span class="product-placeholder-type">' +
       window.MS.escapeHtml(product.product_type_display) + "</span></div>";
     card.innerHTML =
       '<div class="product-thumb-wrap">' +
@@ -517,6 +518,21 @@
             '" href="/pages/product.html?id=' + product.id + '">Переглянути</a>' +
         "</div>" +
       "</div>";
+
+    const image = card.querySelector("img.product-thumb");
+    if (image) {
+        image.addEventListener("error", () => {
+          const fallback = document.createElement("div");
+          fallback.className = "product-thumb product-placeholder";
+          fallback.style.setProperty("--placeholder-hue", hue + "deg");
+          fallback.innerHTML =
+            '<span class="product-placeholder-icon" aria-hidden="true">' + placeholderIcon + "</span>" +
+            '<span class="product-placeholder-name">' + window.MS.escapeHtml(product.name) + "</span>" +
+            '<span class="product-placeholder-type">' +
+            window.MS.escapeHtml(product.product_type_display) + "</span>";
+          image.replaceWith(fallback);
+        });
+    }
 
     const favBtn = card.querySelector(".product-fav");
     favBtn.addEventListener("click", () => toggleFavorite(product, favBtn));
