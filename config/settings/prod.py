@@ -59,7 +59,6 @@ MEDIA_ROOT = PUBLIC_MEDIA_ROOT
 STATIC_ROOT = BASE_DIR / "staticfiles"  # noqa: F405
 
 MIDDLEWARE = list(MIDDLEWARE)  # noqa: F405
-MIDDLEWARE.insert(1, "whitenoise.middleware.WhiteNoiseMiddleware")
 
 STORAGES = {
     "default": {
