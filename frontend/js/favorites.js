@@ -39,10 +39,14 @@
             ? '<span class="badge-soft is-blood">Недоступний</span>'
             : soldOut
               ? '<span class="badge-soft is-blood">Закінчився</span>'
-              : '<span class="badge-soft is-muted">' + esc(item.category_path) + "</span>") +
+              : '<span class="badge-soft is-muted">' +
+                esc(item.product_type_display || "") +
+                (item.category_leaf ? " · " + esc(item.category_leaf) : "") +
+                "</span>") +
         "</div>" +
         '<div class="product-foot">' +
-          '<span class="small text-muted-soft">' + esc(item.seller) + "</span>" +
+          '<span class="small text-muted-soft product-seller" title="' + esc(item.seller) + '">' +
+            esc(item.seller) + "</span>" +
           '<a class="btn btn-primary btn-sm" href="/pages/product.html?id=' + item.product_id + '">Переглянути</a>' +
         "</div>" +
       "</div>";

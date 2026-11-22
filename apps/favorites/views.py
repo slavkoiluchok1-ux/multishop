@@ -32,6 +32,9 @@ class FavoritesView(APIView):
         for favorite in favorites:
             product = favorite.product
             price = min((v.price_mc for v in product.variants.all()), default=None)
+            category_parts = [part for part in (product.category.path or "").split("›") if part.strip()]
+            category_root = category_parts[0].strip() if category_parts else ""
+            category_leaf = category_parts[-1].strip() if category_parts else product.category.name
             self._notify(favorite, product, price)
             results.append(
                 {
@@ -48,6 +51,9 @@ class FavoritesView(APIView):
                     "price_full": format_full(price),
                     "seller": product.seller.username,
                     "category_path": product.category.path,
+                    "category_root": category_root,
+                    "category_leaf": category_leaf,
+                    "product_type_display": product.get_product_type_display(),
                 }
             )
 
