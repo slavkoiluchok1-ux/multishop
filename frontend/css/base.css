@@ -854,6 +854,155 @@ main.container .empty-state-panel a:not(.btn) { color: var(--blue); }
     width: 3.25rem;
     min-width: 3.25rem;
   }
+  #prevPage,
+  #nextPage {
+    width: 48px;
+    min-width: 48px !important;
+    height: 48px;
+  }
+
+  /* Картковий вигляд адмінських списків на телефоні. */
+  .table-responsive:has(#bansBody),
+  .table-responsive:has(#groupsBody),
+  .table-responsive:has(#ticketsBody),
+  .table-responsive:has(#adminsBody),
+  .table-responsive:has(#logBody) {
+    overflow: visible;
+  }
+  .table-responsive:has(#bansBody) thead,
+  .table-responsive:has(#groupsBody) thead,
+  .table-responsive:has(#ticketsBody) thead,
+  .table-responsive:has(#adminsBody) thead,
+  .table-responsive:has(#logBody) thead {
+    display: none;
+  }
+  #bansBody,
+  #groupsBody,
+  #ticketsBody,
+  #adminsBody,
+  #logBody {
+    display: block;
+  }
+  #bansBody tr,
+  #groupsBody tr,
+  #ticketsBody tr,
+  #adminsBody tr,
+  #logBody tr {
+    display: grid;
+    gap: 0.45rem 0.55rem;
+    margin-bottom: 0.65rem;
+    padding: 0.75rem;
+    border: 1px solid rgba(194, 139, 44, 0.32);
+    border-radius: 12px;
+    background: #fff;
+  }
+  #bansBody td,
+  #groupsBody td,
+  #ticketsBody td,
+  #adminsBody td,
+  #logBody td {
+    display: block;
+    min-width: 0 !important;
+    padding: 0;
+    border: 0;
+  }
+
+  #bansBody tr {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  #bansBody td:nth-child(1) { grid-column: 1; font-weight: 800; }
+  #bansBody td:nth-child(6) { grid-column: 2; grid-row: 1; text-align: right; }
+  #bansBody td:nth-child(2),
+  #bansBody td:nth-child(3),
+  #bansBody td:nth-child(4),
+  #bansBody td:nth-child(5) { grid-column: 1 / -1; }
+  #bansBody td:nth-child(7) { grid-column: 1 / -1; }
+  #bansBody td:nth-child(7) .d-flex {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  #bansBody td:nth-child(7) .btn {
+    width: 100%;
+  }
+
+  #groupsBody tr {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  #groupsBody td:nth-child(1) { grid-column: 1 / -1; font-size: 0.92rem; }
+  #groupsBody td:nth-child(2) { grid-column: 1 / -1; color: var(--muted); }
+  #groupsBody td:nth-child(3),
+  #groupsBody td:nth-child(4) { grid-column: auto; }
+  #groupsBody td:nth-child(5) { grid-column: 1 / -1; }
+  #groupsBody td:nth-child(5) .d-flex {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  #groupsBody td:nth-child(5) .btn {
+    width: 100%;
+  }
+
+  #ticketsBody tr {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  #ticketsBody td:nth-child(1) { grid-column: 1 / -1; font-size: 0.92rem; }
+  #ticketsBody td:nth-child(2),
+  #ticketsBody td:nth-child(5) { grid-column: auto; }
+  #ticketsBody td:nth-child(3),
+  #ticketsBody td:nth-child(4),
+  #ticketsBody td:nth-child(6),
+  #ticketsBody td:nth-child(7) { grid-column: 1 / -1; }
+  #ticketsBody td:nth-child(7) .btn {
+    width: 100%;
+  }
+
+  #adminsBody tr {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  #adminsBody td:nth-child(1) { grid-column: 1; font-weight: 800; }
+  #adminsBody td:nth-child(2) { grid-column: 2; text-align: right; }
+  #adminsBody td:nth-child(3),
+  #adminsBody td:nth-child(4),
+  #adminsBody td:nth-child(5) { grid-column: 1 / -1; }
+  #adminsBody td:nth-child(5) .d-flex {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  #adminsBody td:nth-child(5) .btn {
+    width: 100%;
+  }
+
+  #logBody tr {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  #logBody td:nth-child(1) { grid-column: 1; }
+  #logBody td:nth-child(2) { grid-column: 2; text-align: right; font-weight: 800; }
+  #logBody td:nth-child(3),
+  #logBody td:nth-child(4) { grid-column: 1 / -1; }
+
+  #banBtn,
+  #issueBtn,
+  #profileClose,
+  #applyBtn,
+  #searchBtn,
+  #grantBtn,
+  #revokeBtn,
+  #saveRightsBtn,
+  #adminFilterBtn,
+  #logFilterBtn {
+    width: 100%;
+  }
+  #searchPopup {
+    position: fixed !important;
+    left: 0.65rem !important;
+    right: 0.65rem !important;
+    top: auto !important;
+    bottom: calc(4.25rem + env(safe-area-inset-bottom, 0px)) !important;
+    max-height: 52dvh !important;
+  }
+  .app-modal .app-modal-box {
+    max-height: 88dvh;
+    overflow-y: auto;
+  }
 }
 
 @media (max-width: 360px) {
