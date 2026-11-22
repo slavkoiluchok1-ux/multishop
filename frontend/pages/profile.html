@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="  /static/css/base.css?v=    mobile-floating-v10-20261122">
+  <link rel="stylesheet" href="/static/css/base.css?v=checkout-profile-v11-20261122">
 </head>
 <body>
 
@@ -134,9 +134,14 @@
         <h2 class="h5 mb-3">Основне</h2>
         <div class="row g-3">
           <div class="col-md-6">
-            <label class="form-label" for="username">Нік</label>
-            <input class="form-control" type="text" id="username" name="username" required>
-            <div class="form-error" data-error-for="username"></div>
+            <label class="form-label" for="display_name">Відображуваний нік</label>
+            <input class="form-control" type="text" id="display_name" name="display_name" maxlength="20" required>
+            <div class="form-error" data-error-for="display_name"></div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="loginUsername">Нік для входу</label>
+            <input class="form-control" type="text" id="loginUsername" readonly>
+            <div class="field-hint">Не змінюється і використовується для входу.</div>
           </div>
           <div class="col-md-6">
             <label class="form-label" for="email">Email</label>
@@ -286,7 +291,7 @@
       "phone", "telegram", "instagram", "viber", "facebook", "whatsapp", "recipient_name",
       "delivery_country", "delivery_city", "delivery_street", "delivery_postcode",
     ];
-    const formFieldNames = ["username", "email", ...profileFields, "autofill_delivery"];
+    const formFieldNames = ["display_name", "email", ...profileFields, "autofill_delivery"];
     let hasAvatar = false;
     let frozenPayoutsVisible = false;
     let savedAvatarUrl = "";
@@ -363,9 +368,9 @@
 
     function validateProfileFields() {
       const errors = {};
-      const username = document.getElementById("username");
+      const displayName = document.getElementById("display_name");
       const email = document.getElementById("email");
-      if (!username.value.trim()) errors.username = "Вкажіть нік.";
+      if (!displayName.value.trim()) errors.display_name = "Вкажіть відображуваний нік.";
       if (!email.value.trim()) errors.email = "Вкажіть email.";
       else if (email.validity.typeMismatch) errors.email = "Введіть коректну email-адресу.";
 
@@ -583,7 +588,8 @@
     }
 
     function fill(data) {
-      document.getElementById("username").value = data.username || "";
+      document.getElementById("display_name").value = data.username || data.display_name || "";
+      document.getElementById("loginUsername").value = data.login_username || data.username || "";
       document.getElementById("email").value = data.email || "";
       const profile = data.profile || {};
       profileFields.forEach((key) => {

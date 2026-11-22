@@ -42,6 +42,8 @@ def _delete_avatar_file(storage, name: str) -> None:
 def user_payload(user: CustomUser, request) -> dict:
     """Дані користувача для фронтенду."""
     data: dict[str, Any] = dict(UserSerializer(user, context={"request": request}).data)
+    data["login_username"] = user.username
+    data["username"] = str(user.display_name or user.username)
     data["authenticated"] = True
     data["policy_accepted"] = has_accepted_current(user)
     verification = SellerVerification.objects.filter(user=user).only("age", "is_locked").first()
@@ -199,9 +201,9 @@ class ProfileView(APIView):
         user_fields = []
         old_avatar_name = user.avatar.name or ""
         new_avatar_name = ""
-        if "username" in data:
-            user.username = data["username"]
-            user_fields.append("username")
+        if "display_name" in data:
+            user.display_name = str(data["display_name"]).strip() or user.username
+            user_fields.append("display_name")
         if "email" in data:
             user.email = data["email"]
             user_fields.append("email")

@@ -699,6 +699,49 @@ main.container .empty-state-panel a:not(.btn) { color: var(--blue); }
     padding: 0.65rem 0;
     background: rgba(255, 255, 255, 0.96);
   }
+  #checkoutDialog.checkout-dialog {
+    width: 100vw;
+    height: 100dvh;
+    max-height: 100dvh;
+    margin: 0;
+    padding: 0.75rem 0.65rem calc(0.75rem + env(safe-area-inset-bottom, 0px));
+    border: 0;
+    border-radius: 0;
+  }
+  #checkoutDialog form {
+    height: 100%;
+    max-height: 100dvh;
+    overflow-y: auto;
+  }
+  #checkoutDialog form > .d-flex.align-items-start {
+    position: sticky;
+    z-index: 4;
+    top: -0.75rem;
+    margin: -0.75rem -0.65rem 0.75rem;
+    padding: 0.75rem 0.65rem 0.65rem;
+    border-bottom: 1px solid rgba(194, 139, 44, 0.28);
+    background: rgba(255, 255, 255, 0.97);
+  }
+  #checkoutDialog .btn-close {
+    width: 44px;
+    height: 44px;
+    flex: 0 0 44px;
+  }
+  #checkoutDialog #checkoutNext,
+  #checkoutDialog #checkoutSubmit,
+  #checkoutDialog #checkoutBack {
+    min-height: 44px;
+  }
+  #checkoutStepOne > .d-flex.justify-content-end,
+  #checkoutStepTwo > .d-flex.justify-content-between {
+    position: sticky;
+    z-index: 3;
+    bottom: 0;
+    margin-inline: -0.65rem;
+    padding: 0.65rem;
+    border-top: 1px solid rgba(194, 139, 44, 0.28);
+    background: rgba(255, 255, 255, 0.97);
+  }
   .form-control,
   .form-select,
   .btn {

@@ -30,6 +30,7 @@ class CustomUser(AbstractUser):
         validators=[UnicodeUsernameValidator()],
         error_messages={"unique": "Такий нік уже зайнятий."},
     )
+    display_name = models.CharField("Публічний нік", max_length=20, blank=True)
 
     ROLE_USER = "user"
     ROLE_ADMIN_2 = "admin_2"
@@ -63,6 +64,8 @@ class CustomUser(AbstractUser):
 
     def save(self, *args, **kwargs):
         """Прапорці Django Admin завжди відповідають ролі: True лише в головного."""
+        if not str(self.display_name or "").strip():
+            self.display_name = self.username
         is_main = self.role == self.ROLE_ADMIN_MAIN
         self.is_staff = is_main
         self.is_superuser = is_main

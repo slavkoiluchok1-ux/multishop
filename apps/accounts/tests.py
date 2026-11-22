@@ -88,7 +88,7 @@ class ProfileUpdateApiTests(TestCase):
 
     def test_patch_persists_every_field_and_login_reads_saved_values(self):
         payload = {
-            "username": "profile-user-updated",
+            "display_name": "Публічний Олена",
             "email": "profile-user-updated@example.com",
             "phone": "+380501234567",
             "telegram": "@multishopuser",
@@ -123,7 +123,8 @@ class ProfileUpdateApiTests(TestCase):
         )
         self.user.refresh_from_db()
         self.user.profile.refresh_from_db()
-        self.assertEqual(self.user.username, payload["username"])
+        self.assertEqual(self.user.username, "profile-user")
+        self.assertEqual(self.user.display_name, payload["display_name"])
         self.assertEqual(self.user.email, payload["email"])
         for field in profile_fields:
             with self.subTest(field=field):
@@ -133,7 +134,7 @@ class ProfileUpdateApiTests(TestCase):
         self.api_client.force_authenticate(user=None)
         login = self.api_client.post(
             "/api/auth/login",
-            {"login": payload["username"], "password": "profile-password-123"},
+            {"login": "profile-user", "password": "profile-password-123"},
             format="json",
         )
         self.assertEqual(login.status_code, 200, login.data)
@@ -387,7 +388,7 @@ class ProfileAvatarApiTests(TestCase):
 
         response = self.api_client.put(
             "/api/profile",
-            {"username": "avatar-user-updated"},
+            {"display_name": "Avatar Public"},
             format="multipart",
         )
 

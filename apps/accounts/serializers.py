@@ -45,6 +45,7 @@ class RegisterSerializer(serializers.Serializer):
     def create(self, validated_data):
         validated_data.pop("password2")
         password = validated_data.pop("password")
+        validated_data["display_name"] = validated_data["username"]
         user = CustomUser(**validated_data)
         user.set_password(password)
         user.save()
@@ -64,6 +65,7 @@ class UserSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "username",
+            "display_name",
             "email",
             "role",
             "avatar",
@@ -84,7 +86,7 @@ class UserSerializer(serializers.ModelSerializer):
 class ProfileUpdateSerializer(serializers.Serializer):
     """Оновлення профілю: нік, email, фото, контакти, адреса, автопідстановка."""
 
-    username = serializers.CharField(max_length=20, required=False)
+    display_name = serializers.CharField(max_length=20, required=False, allow_blank=True)
     email = serializers.EmailField(required=False)
     avatar = serializers.FileField(required=False, allow_null=True)
     phone = serializers.CharField(max_length=32, required=False, allow_blank=True)
@@ -100,11 +102,6 @@ class ProfileUpdateSerializer(serializers.Serializer):
     recipient_name = serializers.CharField(max_length=150, required=False, allow_blank=True)
     autofill_delivery = serializers.BooleanField(required=False)
 
-    def validate_username(self, value):
-        user = self.context["user"]
-        if CustomUser.objects.filter(username__iexact=value).exclude(pk=user.pk).exists():
-            raise serializers.ValidationError("Такий нік уже зайнятий.")
-        return value
 
     def validate_email(self, value):
         user = self.context["user"]
