@@ -865,6 +865,18 @@
 }
 .tile:hover { transform: translate(-1.5px, -1.5px); box-shadow: 5px 5px 0 rgba(167, 25, 50, 0.18); }
 .tile.is-selected { border-color: var(--blue); box-shadow: 0 0 0 2px rgba(49, 93, 245, 0.28); }
+.tile { display: flex; align-items: center; gap: 0.55rem; }
+.tile .tile-icon {
+  flex: 0 0 2rem;
+  width: 2rem;
+  height: 2rem;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: linear-gradient(145deg, rgba(200, 240, 74, .75), rgba(126, 162, 255, .28));
+  font-size: 1.15rem;
+  line-height: 1;
+}
 .tile .tile-name { display: block; font-weight: 700; }
 .tile .tile-count { display: block; font-size: 0.78rem; color: var(--muted); margin-top: 0.2rem; }
 
@@ -908,38 +920,12 @@
 }
 .product-fav.is-on { background: var(--blood); color: #fff; }
 .product-card .product-body { padding: 0.75rem 0.8rem; display: flex; flex-direction: column; gap: 0.45rem; flex: 1; }
-.product-card .product-name {
-  min-width: 0;
-  max-width: 100%;
-  overflow: hidden;
-  overflow-wrap: anywhere;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  font-weight: 700;
-  color: var(--ink);
-  font-size: 0.95rem;
-  line-height: 1.25;
-}
-.product-card .product-meta {
-  min-width: 0;
-  max-width: 100%;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
-}
-.product-card .product-meta .badge-soft {
-  min-width: 0;
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
+.product-card .product-name { font-weight: 700; color: var(--ink); font-size: 0.95rem; line-height: 1.25; }
 .product-card .product-foot {
   min-width: 0;
   margin-top: auto;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 0.4rem;
@@ -947,9 +933,8 @@
 .product-card .product-seller {
   min-width: 0;
   flex: 1 1 auto;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
+  white-space: normal;
 }
 .product-card .product-foot .btn {
   flex: 0 0 auto;

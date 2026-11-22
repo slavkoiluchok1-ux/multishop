@@ -4,6 +4,31 @@
 (function () {
   "use strict";
 
+  function categoryIcon(name) {
+    const text = String(name || "").toLowerCase();
+    const rules = [
+      ["смартф", "📱"], ["планш", "🔲"], ["ноутбук", "💻"], ["комп'ют", "🖥️"],
+      ["відеокарт", "🎮"], ["навуш", "🎧"], ["колонк", "🔊"], ["телевіз", "📺"],
+      ["фото", "📷"], ["дрон", "🚁"], ["консол", "🕹️"], ["кросів", "👟"],
+      ["взут", "👞"], ["одяг", "👕"], ["сумк", "🎒"], ["рюкзак", "🎒"],
+      ["мебл", "🛋️"], ["крісл", "💺"], ["ліжк", "🛏️"], ["освіт", "💡"],
+      ["ламп", "💡"], ["декор", "🖼️"], ["кухн", "🍳"], ["інструм", "🧰"],
+      ["сад", "🌱"], ["косметик", "✨"], ["макіяж", "💄"], ["парфум", "🧴"],
+      ["спорт", "🏋️"], ["гант", "🏋️"], ["дитяч", "🧸"], ["книг", "📚"],
+      ["конструкт", "🧱"], ["кава", "☕"], ["їжа", "🍽️"], ["зоотовар", "🐾"],
+      ["гра", "🎮"], ["steam", "🎮"], ["netflix", "▶️"], ["xbox", "🎮"],
+      ["підписк", "♻️"], ["гейм", "🎮"], ["курс", "🎓"], ["дизайн", "🎨"],
+      ["послуг", "🛠️"], ["ліценз", "🔑"], ["музык", "🎵"],
+    ];
+    for (const [needle, icon] of rules) {
+      if (text.includes(needle)) return icon;
+    }
+    if (text.includes("електрон")) return "📱";
+    if (text.includes("одяг") || text.includes("взут")) return "👟";
+    if (text.includes("меб") || text.includes("дім")) return "🏠";
+    return "▣";
+  }
+
   const state = {
     view: "",
     availability: "active",
@@ -152,7 +177,9 @@
       const tile = document.createElement("button");
       tile.type = "button";
       tile.className = "tile";
-      tile.innerHTML = '<span class="tile-name">' + window.MS.escapeHtml(child.name) + "</span>";
+      tile.innerHTML =
+        '<span class="tile-icon" aria-hidden="true">' + categoryIcon(child.name) + "</span>" +
+        '<span class="tile-name">' + window.MS.escapeHtml(child.name) + "</span>";
       tile.addEventListener("click", () => {
         openCategory(child.id, state.view, state.availability);
       });

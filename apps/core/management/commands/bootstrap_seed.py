@@ -14,7 +14,7 @@ from apps.wallet.models import Wallet
 
 
 class Command(BaseCommand):
-    help = "Створює початкове дерево категорій і тестові товари лише для порожньої БД."
+    help = "Ідемпотентно створює початкове дерево категорій і демонстраційні товари."
 
     def create_categories(self, data, parent=None):
         if isinstance(data, dict):
@@ -44,10 +44,6 @@ class Command(BaseCommand):
         return parent
 
     def handle(self, *args, **options):
-        if Product.objects.exists():
-            self.stdout.write("Товари вже існують; початковий seed пропущено.")
-            return
-
         with transaction.atomic():
             self.create_categories(TREE)
 
@@ -62,8 +58,38 @@ class Command(BaseCommand):
                 seller.save(update_fields=["password"])
             Wallet.objects.get_or_create(user=seller)
 
+            seed_products = list(PRODUCTS)
+
+            demo_sections = [
+                ("Електроніка", ["Електроніка", "Смартфони й зв'язок", "Смартфони"], "physical", "SmartPhone", "Smartphone"),
+                ("Комп'ютери", ["Електроніка", "Комп'ютери й ноутбуки", "Ноутбуки", "офісні"], "physical", "OfficeBook", "Ноутбук"),
+                ("Аудіо", ["Електроніка", "Аудіо", "Навушники", "бездротові TWS"], "physical", "SoundPro", "Навушники"),
+                ("Одяг", ["Одяг, взуття, аксесуари", "Чоловічий одяг", "Футболки й поло"], "physical", "UrbanWear", "Футболка"),
+                ("Взуття", ["Одяг, взуття, аксесуари", "Взуття", "Кросівки", "повсякденні"], "physical", "StreetStep", "Кросівки"),
+                ("Меблі", ["Дім і меблі", "Меблі", "Вітальня", "дивани"], "physical", "HomeStyle", "Диван"),
+                ("Освітлення", ["Дім і меблі", "Освітлення", "Настільні лампи"], "physical", "LightHome", "Лампа"),
+                ("Ігри", ["Ігри", "PC", "Steam", "Екшен", "шутери від першого обличчя"], "digital_key", "GameForge", "Гра"),
+                ("Софт", ["Софт і ліцензії", "Офісні програми"], "digital_key", "OfficeKey", "Ліцензія"),
+                ("Навчання", ["Навчання й контент", "Курси", "Дизайн", "UI/UX"], "digital_file", "SkillUp", "Курс"),
+                ("Асет", ["Ігрові проєкти й ассети", "2D-ресурси", "Іконки"], "digital_file", "PixelCraft", "Набір"),
+                ("Послуга", ["Послуги", "Дизайн", "Логотипи й айдентика"], "service", "StudioPro", "Послуга"),
+                ("Підписка", ["Підписки", "Навчання й продуктивність", "Coursera"], "subscription", "Learning+", "Підписка"),
+            ]
+            for section_index, (label, path, kind, brand, item_label) in enumerate(demo_sections):
+                for item_index in range(1, 17):
+                    number = section_index * 16 + item_index
+                    seed_products.append((
+                        f"{item_label} {label} #{number}",
+                        path,
+                        kind,
+                        str(600 + number * 37),
+                        999 if kind in ("digital_key", "digital_file", "subscription") else 20,
+                        brand,
+                        "active",
+                    ))
+
             created_count = 0
-            for index, (name, path, kind, price, stock, brand, status) in enumerate(PRODUCTS):
+            for index, (name, path, kind, price, stock, brand, status) in enumerate(seed_products):
                 category = self.get_category(path)
                 product, created = Product.objects.update_or_create(
                     seller=seller,

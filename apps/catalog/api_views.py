@@ -363,6 +363,9 @@ def _card(product, favorite_ids):
     """Картка товару для каталогу."""
     variants = list(product.variants.all())
     price = min((v.price_mc for v in variants), default=None)
+    category_parts = [part for part in (product.category.path or "").split("›") if part.strip()]
+    category_root = category_parts[0].strip() if category_parts else ""
+    category_leaf = category_parts[-1].strip() if category_parts else product.category.name
     image = None
     if product.main_image:
         image = product.main_image.url
@@ -382,6 +385,9 @@ def _card(product, favorite_ids):
         "price_card": format_card(price),
         "image": image,
         "category_path": product.category.path,
+        "category_root": category_root,
+        "category_leaf": category_leaf,
+        "brand": product.brand,
         "seller": product.seller.username,
         "is_favorite": product.id in favorite_ids,
         # Наявність рахуємо з уже завантажених варіантів, без нових запитів.

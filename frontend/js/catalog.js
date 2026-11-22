@@ -310,7 +310,9 @@
         const tile = document.createElement("button");
         tile.type = "button";
         tile.className = "tile" + (state.categories.indexOf(String(cat.id)) !== -1 ? " is-selected" : "");
-        tile.innerHTML = '<span class="tile-name">' + window.MS.escapeHtml(cat.name) + "</span>";
+        tile.innerHTML =
+          '<span class="tile-icon" aria-hidden="true">' + categoryIcon(cat.name) + "</span>" +
+          '<span class="tile-name">' + window.MS.escapeHtml(cat.name) + "</span>";
         tile.addEventListener("click", () => window.MSTree.openCategory(cat.id, state.view, state.availability));
         els.tileGrid.appendChild(tile);
       });
@@ -445,6 +447,8 @@
       product.name,
       product.product_type,
       product.product_type_display,
+      product.category_path,
+      product.brand,
       product.price_card,
       product.seller,
       product.in_stock,
@@ -460,6 +464,100 @@
       data.pages || 1,
       results.map(productSignature),
     ]);
+  }
+
+  const CATEGORY_ICONS = [
+    ["Смартфон", "📱"], ["Планшет", "🔲"], ["Ноутбук", "💻"], ["Комп'ют", "🖥️"],
+    ["Відеокарт", "🎮"], ["Навушник", "🎧"], ["Колонк", "🔊"], ["Телевіз", "📺"],
+    ["Фото", "📷"], ["Дрон", "🚁"], ["Консол", "🕹️"], ["Кросів", "👟"],
+    ["Взут", "👞"], ["Одяг", "👕"], ["Сумк", "🎒"], ["Рюкзак", "🎒"],
+    ["Мебл", "🛋️"], ["Крісл", "💺"], ["Ліжк", "🛏️"], ["Освіт", "💡"],
+    ["Ламп", "💡"], ["Декор", "🖼️"], ["Кухн", "🍳"], ["Інструм", "🧰"],
+    ["Сад", "🌱"], ["Косметик", "✨"], ["Макіяж", "💄"], ["Парфум", "🧴"],
+    ["Спорт", "🏋️"], ["Гант", "🏋️"], ["Дитяч", "🧸"], ["Книга", "📚"],
+    ["Конструктор", "🧱"], ["Кава", "☕"], ["Їжа", "🍽️"], ["Зоотовар", "🐾"],
+    ["Гра", "🎮"], ["Steam", "🎮"], ["EA", "🎮"], ["Xbox", "🎮"],
+    ["Netflix", "▶️"], ["Game Pass", "🎮"], ["Windows", "🪟"], ["Курс", "🎓"],
+    ["Шаблон", "🎨"], ["Дизайн", "🎨"], ["Програмув", "💻"], ["Послуг", "🛠️"],
+    ["Підписк", "♻️"], ["Подарун", "🎁"], ["Ліценз", "🔑"], ["Музик", "🎵"],
+  ];
+
+  function categoryIcon(name) {
+    const text = String(name || "");
+    const exactIcons = {
+      "Смартфони": "📱", "Планшети": "🔲", "Електронні книги": "📘",
+      "Ноутбуки": "💻", "Настільні ПК": "🖥️", "Процесори": "⚙️",
+      "Відеокарти": "🎮", "Монітори": "🖥️", "Клавіатури": "⌨️",
+      "Навушники": "🎧", "Колонки": "🔊", "Мікрофони": "🎙️",
+      "Фотоапарати": "📷", "Об'єктиви": "🔭", "Екшн-камери": "📹",
+      "Дрони": "🚁", "Телевізори": "📺", "Роботи-пилососи": "🤖",
+      "Холодильники": "❄️", "Кавомашини": "☕", "Пральні й сушильні машини": "🧺",
+      "Кросівки": "👟", "Черевики й чоботи": "🥾", "Туфлі й лофери": "👞",
+      "Сукні": "👗", "Спідниці": "👗", "Сумки": "👜", "Рюкзаки": "🎒",
+      "Годинники": "⌚", "Окуляри": "🕶️", "Сережки": "💎",
+      "Меблі": "🛋️", "Дивани": "🛋️", "Ліжка": "🛏️", "Освітлення": "💡",
+      "Ковдри й подушки": "🛏️", "Посуд": "🍽️", "Ручні інструменти": "🔧",
+      "Електроінструмент": "🛠️", "Гантелі": "🏋️", "Тренажери": "🏋️",
+      "Автокрісла": "🚗", "Кава й чай": "☕", "Конструктори": "🧱",
+      "Для собак": "🐕", "Для котів": "🐈", "Книги": "📚",
+      "Steam": "🎮", "EA Sports": "🎮", "Game Pass": "🎮",
+      "Netflix": "▶️", "Windows": "🪟", "Unity": "🧩",
+      "Курси": "🎓", "Послуги": "🛠️", "Підписки": "♻️",
+    };
+    for (const [name, icon] of Object.entries(exactIcons)) {
+      if (text.toLowerCase().includes(name.toLowerCase())) return icon;
+    }
+    for (const [needle, icon] of CATEGORY_ICONS) {
+      if (text.toLowerCase().includes(needle.toLowerCase())) return icon;
+    }
+    if (/Електрон/.test(text)) return "📱";
+    if (/одяг|взут/.test(text)) return "👟";
+    if (/меб|дім/.test(text)) return "🏠";
+    return "▣";
+  }
+
+  function brandLogoUrl(brand) {
+    const key = String(brand || "").toLowerCase();
+    const brands = {
+      "ea sports fc": "easports",
+      "ea games": "easports",
+      "ea": "ea",
+      "netflix": "netflix",
+      "coursera": "coursera",
+      "microsoft": "microsoft",
+      "xbox game pass": "xbox",
+      "game pass": "xbox",
+      "steam": "steam",
+      "valve": "steam",
+      "sony": "sony",
+      "playstation": "playstation",
+      "nintendo": "nintendo",
+      "google": "google",
+      "apple": "apple",
+      "samsung": "samsung",
+      "nike": "nike",
+      "lego": "lego",
+      "unity": "unity",
+      "figma": "figma",
+      "adobe": "adobe",
+      "django": "django",
+      "python": "python",
+      "nvidia": "nvidia",
+      "amd": "amd",
+      "intel": "intel",
+      "roblox": "roblox",
+    };
+    for (const [name, slug] of Object.entries(brands)) {
+      if (key.includes(name)) {
+        return "https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/" + slug + ".svg";
+      }
+    }
+    return "";
+  }
+
+  function placeholderIconForProduct(product) {
+    const text = product.category_path + " " + product.name + " " + (product.brand || "");
+    return categoryIcon(text);
   }
 
   function logCatalogDebugStats() {
@@ -483,16 +581,14 @@
     }
     const hue = Math.abs(hash) % 360;
     const productType = String(product.product_type || "").toLowerCase();
-    const placeholderIcon = productType === "physical"
-      ? "📦"
-      : productType === "subscription"
-        ? "♻"
-        : productType === "service"
-          ? "✦"
-          : "▣";
+    const placeholderIcon = placeholderIconForProduct(product);
+    const logoUrl = brandLogoUrl(product.brand || product.name);
+    const logoMarkup = logoUrl
+      ? '<img class="product-placeholder-logo" src="' + logoUrl + '" alt="">'
+      : '<span class="product-placeholder-icon" aria-hidden="true">' + placeholderIcon + "</span>";
     const placeholder = '<div class="product-thumb product-placeholder" style="--placeholder-hue:' +
-      hue + 'deg"><span class="product-placeholder-icon" aria-hidden="true">' + placeholderIcon +
-      '</span><span class="product-placeholder-name">' + window.MS.escapeHtml(product.name) + "</span>" +
+      hue + 'deg">' + logoMarkup +
+      '<span class="product-placeholder-name">' + window.MS.escapeHtml(product.name) + "</span>" +
       '<span class="product-placeholder-type">' +
       window.MS.escapeHtml(product.product_type_display) + "</span></div>";
     card.innerHTML =
@@ -509,7 +605,8 @@
       '<div class="product-body">' +
         '<div class="product-name">' + window.MS.escapeHtml(product.name) + "</div>" +
         '<div class="product-meta"><span class="badge-soft is-muted">' +
-          window.MS.escapeHtml(product.product_type_display) + "</span>" +
+          window.MS.escapeHtml(product.product_type_display) +
+          (product.category_leaf ? " · " + window.MS.escapeHtml(product.category_leaf) : "") + "</span>" +
           (soldOut ? '<span class="badge-soft is-blood">Закінчився</span>' : "") +
         "</div>" +
         '<div class="product-foot">' +
@@ -526,13 +623,23 @@
           fallback.className = "product-thumb product-placeholder";
           fallback.style.setProperty("--placeholder-hue", hue + "deg");
           fallback.innerHTML =
-            '<span class="product-placeholder-icon" aria-hidden="true">' + placeholderIcon + "</span>" +
+            logoMarkup +
             '<span class="product-placeholder-name">' + window.MS.escapeHtml(product.name) + "</span>" +
             '<span class="product-placeholder-type">' +
             window.MS.escapeHtml(product.product_type_display) + "</span>";
           image.replaceWith(fallback);
         });
     }
+
+    card.querySelectorAll(".product-placeholder-logo").forEach((logo) => {
+      logo.addEventListener("error", () => {
+        const fallback = document.createElement("span");
+        fallback.className = "product-placeholder-icon";
+        fallback.setAttribute("aria-hidden", "true");
+        fallback.textContent = placeholderIcon;
+        logo.replaceWith(fallback);
+      });
+    });
 
     const favBtn = card.querySelector(".product-fav");
     favBtn.addEventListener("click", () => toggleFavorite(product, favBtn));
