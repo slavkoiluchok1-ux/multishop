@@ -385,6 +385,7 @@
     const gear = document.querySelector("[data-mobile-admin-gear]");
     if (window.matchMedia("(max-width: 575.98px)").matches) {
       target.classList.add("is-mobile-floating");
+      target.classList.remove("is-mobile-closing");
       if (gear) gear.hidden = true;
       const box = target.querySelector(".app-modal-box");
       if (box) {
@@ -412,18 +413,31 @@
   function closeAdminMenu() {
     const modal = document.getElementById("msAdminMenu");
     if (modal) {
-      modal.hidden = true;
-      modal.classList.remove("is-mobile-floating");
-      const box = modal.querySelector(".app-modal-box");
-      if (box) {
-        box.style.left = "";
-        box.style.top = "";
-        box.style.right = "";
-        box.style.bottom = "";
+      if (window.matchMedia("(max-width: 575.98px)").matches &&
+          modal.classList.contains("is-mobile-floating") &&
+          !modal.hidden) {
+        modal.classList.add("is-mobile-closing");
+        window.setTimeout(() => {
+          modal.hidden = true;
+          modal.classList.remove("is-mobile-floating");
+          modal.classList.remove("is-mobile-closing");
+          const box = modal.querySelector(".app-modal-box");
+          if (box) {
+            box.style.left = "";
+            box.style.top = "";
+            box.style.right = "";
+            box.style.bottom = "";
+          }
+          const gear = document.querySelector("[data-mobile-admin-gear]");
+          if (gear && adminAccess(state.user)) gear.hidden = false;
+        }, 220);
+      } else {
+        modal.hidden = true;
+        modal.classList.remove("is-mobile-floating");
       }
       const gear = document.querySelector("[data-mobile-admin-gear]");
-      if (gear && window.matchMedia("(max-width: 575.98px)").matches &&
-          adminAccess(state.user)) {
+      if (gear && !(window.matchMedia("(max-width: 575.98px)").matches &&
+          modal.classList.contains("is-mobile-closing"))) {
         gear.hidden = false;
       }
     }
@@ -891,9 +905,15 @@
     document.body.appendChild(sheet);
 
     const closeMore = () => {
-      sheet.hidden = true;
-      backdrop.hidden = true;
-      nav.querySelector("[data-mobile-more]").classList.remove("is-open");
+      sheet.classList.add("is-closing");
+      backdrop.classList.add("is-closing");
+      window.setTimeout(() => {
+        sheet.hidden = true;
+        sheet.classList.remove("is-closing");
+        backdrop.hidden = true;
+        backdrop.classList.remove("is-closing");
+        nav.querySelector("[data-mobile-more]").classList.remove("is-open");
+      }, 180);
     };
     nav.querySelector("[data-mobile-more]").addEventListener("click", () => {
       if (!sheet.hidden) {
@@ -918,6 +938,7 @@
           '<span>' + esc(tile.label) + '</span></a>'
       ).join("");
       sheet.hidden = false;
+      sheet.classList.remove("is-closing");
       backdrop.hidden = false;
       nav.querySelector("[data-mobile-more]").classList.add("is-open");
     });

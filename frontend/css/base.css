@@ -1079,6 +1079,27 @@ main.container .empty-state-panel a:not(.btn) { color: var(--blue); }
     padding: 0.55rem 0.75rem;
     border-top: 1px solid rgba(194, 139, 44, 0.18);
   }
+  @keyframes mobile-sheet-in {
+    from { opacity: 0; transform: translateY(24px) scale(.985); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  @keyframes mobile-sheet-out {
+    to { opacity: 0; transform: translateY(18px) scale(.985); }
+  }
+  @keyframes mobile-backdrop-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes mobile-backdrop-out {
+    to { opacity: 0; }
+  }
+  @keyframes mobile-admin-panel-in {
+    from { opacity: 0; transform: translateY(10px) scale(.96); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  @keyframes mobile-admin-panel-out {
+    to { opacity: 0; transform: translateY(12px) scale(.94); }
+  }
   .app-modal .app-modal-box {
     max-height: 88dvh;
     overflow-y: auto;
@@ -1182,9 +1203,13 @@ main.container .empty-state-panel a:not(.btn) { color: var(--blue); }
     color: var(--lime);
     font-size: 1.05rem;
     line-height: 1;
+    opacity: 1;
+    transition: opacity 180ms ease, transform 180ms ease;
   }
   .mobile-bottom-nav-more.is-open {
-    transform: translateY(-0.15rem) rotate(180deg);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-0.15rem) scale(0.86);
   }
   .mobile-admin-gear {
     position: fixed;
@@ -1233,6 +1258,16 @@ main.container .empty-state-panel a:not(.btn) { color: var(--blue); }
     background: #fff;
     color: var(--ink);
     box-shadow: 0 -18px 42px rgba(16, 24, 32, 0.28);
+    animation: mobile-sheet-in 220ms cubic-bezier(.2,.8,.2,1) both;
+  }
+  .mobile-more-sheet.is-closing {
+    animation: mobile-sheet-out 180ms ease both;
+  }
+  .mobile-more-backdrop {
+    animation: mobile-backdrop-in 180ms ease both;
+  }
+  .mobile-more-backdrop.is-closing {
+    animation: mobile-backdrop-out 180ms ease both;
   }
   .mobile-more-head {
     position: relative;
@@ -1245,8 +1280,8 @@ main.container .empty-state-panel a:not(.btn) { color: var(--blue); }
   }
   .mobile-more-close {
     position: absolute;
-    top: -0.1rem;
-    right: -0.1rem;
+    top: 0.15rem;
+    right: 0.15rem;
     width: 44px;
     height: 44px;
     flex: 0 0 44px;
@@ -1313,6 +1348,10 @@ main.container .empty-state-panel a:not(.btn) { color: var(--blue); }
     border: 1px solid rgba(200, 240, 74, 0.48);
     border-radius: 16px;
     box-shadow: 0 18px 46px rgba(16, 24, 32, 0.42);
+    animation: mobile-admin-panel-in 220ms cubic-bezier(.2,.8,.2,1) both;
+  }
+  #msAdminMenu.is-mobile-closing .app-modal-box {
+    animation: mobile-admin-panel-out 220ms ease both;
   }
   .mobile-admin-drag-handle {
     height: 26px;
@@ -1341,6 +1380,7 @@ main.container .empty-state-panel a:not(.btn) { color: var(--blue); }
     border-radius: 50%;
     background: #fff;
     font-size: 1.55rem;
+    z-index: 3;
   }
   .app-main,
   main.container {
