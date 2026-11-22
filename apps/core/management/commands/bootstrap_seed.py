@@ -7,7 +7,7 @@ from django.db import transaction
 from django.utils.text import slugify
 
 from apps.accounts.models import CustomUser
-from apps.catalog.category_data import TREE
+from apps.catalog.category_data import TREE, walk
 from apps.catalog.models import Category, Product, ProductVariant
 from apps.core.management.commands.seed_demo import PRODUCTS
 from apps.wallet.models import Wallet
@@ -176,6 +176,7 @@ class Command(BaseCommand):
                 ],
             }
             for section_index, (label, path, kind, brand, item_label) in enumerate(demo_sections):
+                continue
                 for item_index in range(1, 17):
                     number = section_index * 16 + item_index
                     old_name = f"{item_label} {label} #{number}"
@@ -194,6 +195,55 @@ class Command(BaseCommand):
                         brand,
                         "active",
                     ))
+
+            original_names = {name for name, *_ in seed_products}
+            Product.objects.filter(seller=seller).exclude(name__in=original_names).delete()
+
+            leaf_paths = [path for path, is_leaf in walk(TREE) if is_leaf]
+            leaves_by_root = {}
+            for path in leaf_paths:
+                leaves_by_root.setdefault(path[0], []).append(path)
+            selected_leaf_paths = []
+            leaf_round = 0
+            while len(selected_leaf_paths) < 107:
+                added = False
+                for root_paths in leaves_by_root.values():
+                    if leaf_round < len(root_paths):
+                        selected_leaf_paths.append(root_paths[leaf_round])
+                        added = True
+                        if len(selected_leaf_paths) == 107:
+                            break
+                if not added:
+                    break
+                leaf_round += 1
+            editions = [
+                "Classic", "Pro", "Plus", "Lite", "Max", "Essential", "Elite",
+                "Studio", "Mini", "Ultra", "Premium", "Compact",
+            ]
+            for leaf_index, path in enumerate(selected_leaf_paths):
+                root = path[0]
+                if root == "Підписки":
+                    kind = "subscription"
+                    brand = "Learning+" if "Навчання" in path else "MediaPass"
+                elif root in ("Ігри", "Софт і ліцензії"):
+                    kind = "digital_key"
+                    brand = "Steam" if root == "Ігри" else "Microsoft"
+                elif root in ("Навчання й контент", "Цифрові дизайн-ресурси", "Ігрові проєкти й ассети"):
+                    kind = "digital_file"
+                    brand = "DigitalLab"
+                elif root == "Послуги":
+                    kind = "service"
+                    brand = "Studio"
+                else:
+                    kind = "physical"
+                    brand = "MultiShop"
+                leaf_name = path[-1]
+                for variant_index in range(2):
+                    edition = editions[(leaf_index + variant_index) % len(editions)]
+                    unique_name = f"{leaf_name} {edition} #{leaf_index * 2 + variant_index + 1}"
+                    price = str(700 + (leaf_index * 2 + variant_index) * 43)
+                    stock = 999 if kind in ("digital_key", "digital_file", "subscription") else 20
+                    seed_products.append((unique_name, list(path), kind, price, stock, brand, "active"))
 
             created_count = 0
             for index, (name, path, kind, price, stock, brand, status) in enumerate(seed_products):
