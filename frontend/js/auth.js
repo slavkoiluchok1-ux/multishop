@@ -421,6 +421,11 @@
   function closeAdminMenu() {
     const modal = document.getElementById("msAdminMenu");
     if (modal) {
+      const gear = document.querySelector("[data-mobile-admin-gear]");
+      if (gear && window.matchMedia("(max-width: 575.98px)").matches &&
+          adminAccess(state.user)) {
+        gear.hidden = false;
+      }
       if (window.matchMedia("(max-width: 575.98px)").matches &&
           modal.classList.contains("is-mobile-floating") &&
           !modal.hidden) {
@@ -973,8 +978,11 @@
       try {
         const saved = JSON.parse(window.localStorage.getItem(gearPositionKey) || "null");
         if (saved && Number.isFinite(saved.left) && Number.isFinite(saved.top)) {
-          gear.style.left = Math.max(8, saved.left) + "px";
-          gear.style.top = Math.max(8, saved.top) + "px";
+          const size = gear.offsetWidth || 52;
+          const left = Math.max(8, Math.min(window.innerWidth - size - 8, saved.left));
+          const top = Math.max(8, Math.min(window.innerHeight - size - 90, saved.top));
+          gear.style.left = left + "px";
+          gear.style.top = top + "px";
           gear.style.right = "auto";
           gear.style.bottom = "auto";
         }
