@@ -691,15 +691,6 @@
   }
 
   function bind() {
-    document.querySelectorAll(".navbar-toggler").forEach((button) => {
-      button.addEventListener("click", (event) => {
-        if (!window.matchMedia("(max-width: 575.98px)").matches) return;
-        if (!adminAccess(state.user)) return;
-        event.preventDefault();
-        event.stopPropagation();
-        openAdminMenu();
-      });
-    });
     document.querySelectorAll("[data-logout]").forEach((el) => {
       el.addEventListener("click", (event) => {
         event.preventDefault();
@@ -754,6 +745,11 @@
       authItem.classList.toggle("is-active", authed
         ? mobilePathActive("/pages/profile.html")
         : mobilePathActive("/pages/login.html"));
+    }
+    const gear = document.querySelector("[data-mobile-admin-gear]");
+    if (gear) {
+      gear.hidden = !window.matchMedia("(max-width: 575.98px)").matches ||
+        !adminAccess(state.user);
     }
   }
 
@@ -814,26 +810,14 @@
       const rights = Array.isArray(user.admin_rights) ? user.admin_rights : [];
       const grid = sheet.querySelector("[data-mobile-more-grid]");
       const esc = window.MS.escapeHtml;
-      let links;
-      if (adminAccess(user)) {
-        sheet.querySelector("[data-mobile-more-title]").textContent = "Адміністрування";
-        links = ADMIN_TILES.filter((tile) => {
-          try {
-            return tile.show(user, rights);
-          } catch (_error) {
-            return false;
-          }
-        });
-      } else {
-        sheet.querySelector("[data-mobile-more-title]").textContent = "Розділи";
-        links = [
-          { icon: "🛍️", label: "Мої товари", href: "/pages/seller.html", show: () => !!user.authenticated },
-          { icon: "♟", label: "Замовлення", href: "/pages/orders.html", show: () => !!user.authenticated },
-          { icon: "▲", label: "Скарги", href: "/pages/complaints.html", show: () => !!user.authenticated },
-          { icon: "🆘", label: "Підтримка", href: "/pages/support.html", show: () => true },
-          { icon: "◉", label: "Профіль", href: "/pages/profile.html", show: () => !!user.authenticated },
-        ].filter((tile) => tile.show(user, rights));
-      }
+      sheet.querySelector("[data-mobile-more-title]").textContent = "Додаткові розділи";
+      const links = [
+        { icon: "🏠", label: "Політика", href: "/pages/policy.html", show: () => true },
+        { icon: "♟", label: "Замовлення", href: "/pages/orders.html", show: () => !!user.authenticated },
+        { icon: "🛍️", label: "Мої товари", href: "/pages/seller.html", show: () => !!user.authenticated },
+        { icon: "▲", label: "Скарги", href: "/pages/complaints.html", show: () => !!user.authenticated },
+        { icon: "🆘", label: "Підтримка", href: "/pages/support.html", show: () => true },
+      ].filter((tile) => tile.show(user, rights));
       grid.innerHTML = links.map((tile) =>
         '<a class="mobile-more-link" href="' + esc(tile.href) + '">' +
           '<span class="mobile-more-icon" aria-hidden="true">' + esc(tile.icon) + '</span>' +
@@ -845,6 +829,80 @@
     });
     sheet.querySelector("[data-mobile-more-close]").addEventListener("click", closeMore);
     backdrop.addEventListener("click", closeMore);
+
+    if (!document.querySelector("[data-mobile-admin-gear]")) {
+      const gear = document.createElement("button");
+      gear.type = "button";
+      gear.className = "mobile-admin-gear";
+      gear.setAttribute("data-mobile-admin-gear", "");
+      gear.setAttribute("aria-label", "Відкрити адмінпанель");
+      gear.textContent = "⚙";
+      gear.hidden = true;
+      document.body.appendChild(gear);
+
+      const gearPositionKey = "ms_mobile_admin_gear_position";
+      try {
+        const saved = JSON.parse(window.localStorage.getItem(gearPositionKey) || "null");
+        if (saved && Number.isFinite(saved.left) && Number.isFinite(saved.top)) {
+          gear.style.left = Math.max(8, saved.left) + "px";
+          gear.style.top = Math.max(8, saved.top) + "px";
+          gear.style.right = "auto";
+          gear.style.bottom = "auto";
+        }
+      } catch (_error) {}
+
+      gear.addEventListener("click", (event) => {
+        if (gear.dataset.dragMoved === "true") {
+          gear.dataset.dragMoved = "false";
+          return;
+        }
+        event.preventDefault();
+        openAdminMenu();
+      });
+
+      let dragging = false;
+      let startX = 0;
+      let startY = 0;
+      let originLeft = 0;
+      let originTop = 0;
+      gear.addEventListener("pointerdown", (event) => {
+        dragging = true;
+        gear.dataset.dragMoved = "false";
+        const rect = gear.getBoundingClientRect();
+        startX = event.clientX;
+        startY = event.clientY;
+        originLeft = rect.left;
+        originTop = rect.top;
+        gear.setPointerCapture(event.pointerId);
+      });
+      gear.addEventListener("pointermove", (event) => {
+        if (!dragging) return;
+        const dx = event.clientX - startX;
+        const dy = event.clientY - startY;
+        if (Math.abs(dx) + Math.abs(dy) > 5) gear.dataset.dragMoved = "true";
+        const size = gear.getBoundingClientRect();
+        const left = Math.max(8, Math.min(window.innerWidth - size.width - 8, originLeft + dx));
+        const top = Math.max(8, Math.min(window.innerHeight - size.height - 90, originTop + dy));
+        gear.style.left = left + "px";
+        gear.style.top = top + "px";
+        gear.style.right = "auto";
+        gear.style.bottom = "auto";
+      });
+      gear.addEventListener("pointerup", (event) => {
+        if (!dragging) return;
+        dragging = false;
+        try {
+          gear.releasePointerCapture(event.pointerId);
+        } catch (_error) {}
+        const rect = gear.getBoundingClientRect();
+        try {
+          window.localStorage.setItem(gearPositionKey, JSON.stringify({
+            left: Math.round(rect.left),
+            top: Math.round(rect.top),
+          }));
+        } catch (_error) {}
+      });
+    }
 
     const syncBadges = () => {
       const cart = document.querySelector("[data-cart-count]");
