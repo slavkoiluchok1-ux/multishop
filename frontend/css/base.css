@@ -799,9 +799,8 @@ main.container .empty-state-panel a:not(.btn) { color: var(--blue); }
     padding: 0.1rem;
   }
   .pagination-bar {
-    position: sticky;
-    z-index: 20;
-    bottom: calc(4.25rem + env(safe-area-inset-bottom, 0px));
+    position: static;
+    z-index: auto;
     padding: 0.45rem;
     border: 1px solid rgba(194, 139, 44, 0.28);
     border-radius: 12px;

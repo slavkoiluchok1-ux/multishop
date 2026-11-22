@@ -971,10 +971,30 @@
 .pagination-bar .catalog-page-input { flex: 0 0 5.25rem; width: 5.25rem; }
 
 @media (max-width: 600px) {
-  .pagination-bar { display: grid; grid-template-columns: auto 1fr auto; }
-  .pagination-bar > button:first-child { justify-self: start; }
-  .pagination-bar > button:last-child { justify-self: end; }
-  .pagination-bar .pagination-controls { grid-column: 1 / -1; grid-row: 2; justify-self: center; }
+  .pagination-bar {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+  }
+  .pagination-bar .pagination-controls { display: none; }
+  .catalog-page-status {
+    min-width: 4.25rem;
+    text-align: center;
+    color: var(--ink);
+    font-size: 0.82rem;
+    font-weight: 800;
+  }
+  .catalog-page-arrow {
+    width: 44px;
+    min-width: 44px !important;
+    height: 44px;
+    padding: 0 !important;
+    border-radius: 50%;
+    font-size: 1.35rem;
+    line-height: 1;
+  }
 }
 
 /* ---------- Повноекранне вікно підтипів ---------- */

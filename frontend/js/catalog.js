@@ -769,6 +769,42 @@
     els.pagination.hidden = pages <= 1;
     if (pages <= 1) return;
 
+    if (window.matchMedia("(max-width: 575.98px)").matches) {
+      const previous = document.createElement("button");
+      previous.type = "button";
+      previous.className = "btn btn-outline-primary btn-sm catalog-page-arrow";
+      previous.textContent = "‹";
+      previous.setAttribute("aria-label", "Попередня сторінка");
+      previous.disabled = page <= 1;
+      if (!previous.disabled) {
+        previous.addEventListener("click", () => {
+          state.page = page - 1;
+          refresh();
+        });
+      }
+      els.pagination.appendChild(previous);
+
+      const status = document.createElement("span");
+      status.className = "catalog-page-status";
+      status.textContent = page + " / " + pages;
+      els.pagination.appendChild(status);
+
+      const next = document.createElement("button");
+      next.type = "button";
+      next.className = "btn btn-outline-primary btn-sm catalog-page-arrow";
+      next.textContent = "›";
+      next.setAttribute("aria-label", "Наступна сторінка");
+      next.disabled = page >= pages;
+      if (!next.disabled) {
+        next.addEventListener("click", () => {
+          state.page = page + 1;
+          refresh();
+        });
+      }
+      els.pagination.appendChild(next);
+      return;
+    }
+
     const addButton = (label, target, disabled) => {
       const button = document.createElement("button");
       button.type = "button";
