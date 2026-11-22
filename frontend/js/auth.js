@@ -600,6 +600,7 @@
   function setUser(user) {
     state.user = user;
     applyNav(user);
+    syncMobileNav();
     showBanNotice(user);
     return user;
   }
@@ -716,6 +717,82 @@
     });
   }
 
+  function mobilePathActive(path) {
+    return window.location.pathname === path ||
+      (path !== "/" && window.location.pathname.startsWith(path));
+  }
+
+  function syncMobileNav() {
+    const nav = document.querySelector("[data-mobile-nav]");
+    if (!nav) return;
+    nav.querySelectorAll("[data-mobile-link]").forEach((link) => {
+      link.classList.toggle("is-active", mobilePathActive(link.dataset.mobileLink));
+      link.setAttribute("aria-current", mobilePathActive(link.dataset.mobileLink) ? "page" : "false");
+    });
+    const authItem = nav.querySelector("[data-mobile-auth]");
+    if (authItem) {
+      const authed = !!(state.user && state.user.authenticated);
+      authItem.dataset.mobileLink = authed ? "/pages/profile.html" : "/pages/login.html";
+      authItem.href = authed ? "/pages/profile.html" : "/pages/login.html";
+      authItem.querySelector("[data-mobile-label]").textContent = authed ? "Профіль" : "Вхід";
+      authItem.querySelector("[data-mobile-icon]").textContent = authed ? "●" : "○";
+      authItem.classList.toggle("is-active", authed
+        ? mobilePathActive("/pages/profile.html")
+        : mobilePathActive("/pages/login.html"));
+    }
+  }
+
+  function setupMobileNav() {
+    if (document.querySelector("[data-mobile-nav]")) {
+      syncMobileNav();
+      return;
+    }
+    const nav = document.createElement("nav");
+    nav.className = "mobile-bottom-nav";
+    nav.setAttribute("data-mobile-nav", "");
+    nav.setAttribute("aria-label", "Основна навігація");
+    nav.innerHTML =
+      '<a class="mobile-bottom-nav-item" data-mobile-link="/" href="/">' +
+        '<span class="mobile-bottom-nav-icon" aria-hidden="true">⌂</span><span data-mobile-label>Головна</span></a>' +
+      '<a class="mobile-bottom-nav-item" data-mobile-link="/pages/catalog.html" href="/pages/catalog.html">' +
+        '<span class="mobile-bottom-nav-icon" aria-hidden="true">▦</span><span data-mobile-label>Каталог</span></a>' +
+      '<a class="mobile-bottom-nav-item" data-mobile-link="/pages/cart.html" href="/pages/cart.html">' +
+        '<span class="mobile-bottom-nav-icon" aria-hidden="true">◫</span><span data-mobile-label>Кошик</span>' +
+        '<span class="mobile-bottom-nav-badge" data-mobile-cart-badge hidden>0</span></a>' +
+      '<a class="mobile-bottom-nav-item" data-mobile-link="/pages/favorites.html" href="/pages/favorites.html">' +
+        '<span class="mobile-bottom-nav-icon" aria-hidden="true">♡</span><span data-mobile-label>Обране</span>' +
+        '<span class="mobile-bottom-nav-badge" data-mobile-favorites-badge hidden>0</span></a>' +
+      '<a class="mobile-bottom-nav-item" data-mobile-auth href="/pages/login.html">' +
+        '<span class="mobile-bottom-nav-icon" data-mobile-icon aria-hidden="true">○</span><span data-mobile-label>Вхід</span></a>';
+    document.body.appendChild(nav);
+
+    const syncBadges = () => {
+      const cart = document.querySelector("[data-cart-count]");
+      const favorite = document.querySelector('[data-counter="favorites"]');
+      const cartBadge = nav.querySelector("[data-mobile-cart-badge]");
+      const favoriteBadge = nav.querySelector("[data-mobile-favorites-badge]");
+      [[cart, cartBadge], [favorite, favoriteBadge]].forEach(([source, badge]) => {
+        if (!source || !badge) return;
+        const count = Number(String(source.textContent || "").replace(/\D/g, "")) || 0;
+        badge.textContent = count > 99 ? "99+" : String(count);
+        badge.hidden = count <= 0;
+      });
+    };
+    syncBadges();
+    [document.querySelector("[data-cart-count]"), document.querySelector('[data-counter="favorites"]')].forEach((source) => {
+      if (!source || !("MutationObserver" in window)) return;
+      new MutationObserver(syncBadges).observe(source, {
+        childList: true,
+        characterData: true,
+        subtree: true,
+        attributes: true,
+      });
+    });
+    document.addEventListener("ms:auth", syncMobileNav);
+    document.addEventListener("ms:counters", syncBadges);
+    syncMobileNav();
+  }
+
   const cachedUser = readCachedUser();
   if (cachedUser) {
     balanceText = cachedUser.balance || "";
@@ -729,6 +806,7 @@
 
   document.addEventListener("DOMContentLoaded", () => {
     bind();
+    setupMobileNav();
     ready();
   });
 

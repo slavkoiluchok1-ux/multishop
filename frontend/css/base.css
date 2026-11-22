@@ -500,6 +500,35 @@ main.container .empty-state-panel a:not(.btn) { color: var(--blue); }
   .navbar .navbar-toggler {
     padding: 0.2rem 0.35rem;
   }
+  .navbar {
+    min-height: 3.25rem;
+  }
+  .navbar-brand {
+    width: 6.1rem;
+    min-width: 6.1rem;
+    flex-basis: 6.1rem;
+  }
+  .navbar [data-wallet-balance] {
+    width: 4.7rem;
+    min-width: 4.7rem;
+    flex-basis: 4.7rem;
+    font-size: 0.64rem;
+  }
+  .navbar [data-telegram-header] {
+    display: none;
+  }
+  .navbar-collapse {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    max-height: calc(100dvh - 3.25rem);
+    overflow-y: auto;
+    padding: 0.55rem 0.65rem 0.75rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(16, 24, 32, 0.98);
+    box-shadow: 0 16px 28px rgba(16, 24, 32, 0.28);
+  }
   .navbar-collapse {
     width: 100%;
     flex-basis: 100%;
@@ -517,6 +546,12 @@ main.container .empty-state-panel a:not(.btn) { color: var(--blue); }
     margin: 0;
     border-radius: 0;
     padding: 0.75rem 0.65rem 1.25rem;
+  }
+  body {
+    padding-bottom: calc(4.7rem + env(safe-area-inset-bottom, 0px));
+  }
+  .footer {
+    padding-bottom: calc(5.25rem + env(safe-area-inset-bottom, 0px)) !important;
   }
   .section-heading-panel {
     padding: 0.85rem;
@@ -648,13 +683,130 @@ main.container .empty-state-panel a:not(.btn) { color: var(--blue); }
 
 @media (max-width: 360px) {
   .product-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .product-card .product-thumb {
-    height: 180px;
+    height: 125px;
   }
   .tile-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.mobile-bottom-nav {
+  display: none;
+}
+
+@media (max-width: 575.98px) {
+  .mobile-bottom-nav {
+    position: fixed;
+    z-index: 1080;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    min-height: calc(4.25rem + env(safe-area-inset-bottom, 0px));
+    padding: 0.35rem 0.25rem env(safe-area-inset-bottom, 0px);
+    border-top: 1px solid rgba(194, 139, 44, 0.38);
+    background: rgba(16, 24, 32, 0.97);
+    box-shadow: 0 -10px 28px rgba(16, 24, 32, 0.22);
+    backdrop-filter: blur(14px);
+  }
+  .mobile-bottom-nav-item {
+    position: relative;
+    min-width: 0;
+    min-height: 3.55rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.12rem;
+    border-radius: 10px;
+    color: #e5edf4;
+    text-decoration: none;
+    font-size: 0.64rem;
+    font-weight: 700;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .mobile-bottom-nav-item:active {
+    transform: scale(0.94);
+  }
+  .mobile-bottom-nav-item.is-active {
+    background: rgba(200, 240, 74, 0.14);
+    color: var(--lime);
+  }
+  .mobile-bottom-nav-icon {
+    height: 1.35rem;
+    display: grid;
+    place-items: center;
+    font-size: 1.15rem;
+    line-height: 1;
+  }
+  .mobile-bottom-nav-badge {
+    position: absolute;
+    top: 0.12rem;
+    right: calc(50% - 1.25rem);
+    min-width: 1.15rem;
+    height: 1.15rem;
+    display: grid;
+    place-items: center;
+    padding: 0 0.22rem;
+    border: 1.5px solid #fff4e1;
+    border-radius: 999px;
+    background: #d63143;
+    color: #fff;
+    font-size: 0.58rem;
+    line-height: 1;
+  }
+  .mobile-bottom-nav-badge[hidden] {
+    display: none;
+  }
+  .app-main,
+  main.container {
+    scroll-padding-bottom: 5.5rem;
+  }
+  .product-card {
+    border-radius: 10px;
+  }
+  .product-fav {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+  .product-card .product-foot {
+    min-height: 44px;
+  }
+  .product-card .product-foot .btn {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+  .filter-chip,
+  .view-tab,
+  .tile {
+    min-height: 44px;
+  }
+  .form-control,
+  .form-select,
+  .btn,
+  .nav-link {
+    touch-action: manipulation;
+  }
+  .catalog-controls-panel {
+    border-radius: 12px;
+  }
+  .catalog-controls-inner {
+    padding: 0.1rem;
+  }
+  .pagination-bar {
+    position: sticky;
+    z-index: 20;
+    bottom: calc(4.25rem + env(safe-area-inset-bottom, 0px));
+    padding: 0.45rem;
+    border: 1px solid rgba(194, 139, 44, 0.28);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(10px);
   }
 }
 
