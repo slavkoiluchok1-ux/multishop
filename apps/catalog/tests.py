@@ -284,8 +284,8 @@ class SellerProductApiTests(TestCase):
 
         self.assertEqual(response.status_code, 201, response.data)
         wallet.refresh_from_db()
-        self.assertEqual(wallet.free_balance_mc, Decimal("5"))
-        self.assertEqual(wallet.deposit_locked_mc, Decimal("15"))
+        self.assertEqual(wallet.free_balance_mc, Decimal("15"))
+        self.assertEqual(wallet.deposit_locked_mc, Decimal("5"))
         self.assertEqual(Product.objects.filter(seller=self.seller).count(), 1)
 
     def test_seller_with_decimal_debt_cannot_publish_active_product(self):
@@ -454,7 +454,7 @@ class SellerProductApiTests(TestCase):
 
         self.assertEqual(response.status_code, 201, response.data)
         wallet.refresh_from_db()
-        self.assertEqual(wallet.deposit_locked_mc, Decimal("3"))
+        self.assertEqual(wallet.deposit_locked_mc, Decimal("1"))
 
     def test_inactive_product_requires_no_deposit(self):
         wallet = self.verify_seller()
@@ -472,7 +472,7 @@ class SellerProductApiTests(TestCase):
         created = api_post(self.api_client, "/api/products/mine", self.payload, format="json")
         self.assertEqual(created.status_code, 201, created.data)
         wallet.refresh_from_db()
-        self.assertEqual(wallet.deposit_locked_mc, Decimal("15"))
+        self.assertEqual(wallet.deposit_locked_mc, Decimal("5"))
 
         response = api_patch(
             self.api_client,
@@ -484,8 +484,8 @@ class SellerProductApiTests(TestCase):
         self.assertEqual(response.status_code, 200, response.data)
         wallet.refresh_from_db()
         self.assertEqual(wallet.deposit_locked_mc, Decimal("0"))
-        self.assertEqual(wallet.frozen_mc, Decimal("15"))
-        self.assertEqual(wallet.free_balance_mc, Decimal("5"))
+        self.assertEqual(wallet.frozen_mc, Decimal("5"))
+        self.assertEqual(wallet.free_balance_mc, Decimal("15"))
         self.assertEqual(FrozenPayout.objects.filter(seller=self.seller).count(), 1)
 
     def test_pausing_sale_freezes_deposit_for_two_weeks(self):
@@ -505,7 +505,7 @@ class SellerProductApiTests(TestCase):
 
         wallet.refresh_from_db()
         payout = FrozenPayout.objects.get(seller=self.seller)
-        self.assertEqual(wallet.frozen_mc, Decimal("15"))
+        self.assertEqual(wallet.frozen_mc, Decimal("5"))
         self.assertEqual(wallet.total_mc, total_before)  # загальна сума не змінюється
         self.assertAlmostEqual(
             (payout.release_at - timezone.now()).days, 14, delta=1
@@ -533,9 +533,9 @@ class SellerProductApiTests(TestCase):
             7,
         )
         wallet.refresh_from_db()
-        self.assertEqual(wallet.deposit_locked_mc, Decimal("21"))
-        self.assertEqual(wallet.free_balance_mc, Decimal("29"))
-        self.assertEqual(api_response_data(response)["additional_deposit_mc"], "6.000000")
+        self.assertEqual(wallet.deposit_locked_mc, Decimal("7"))
+        self.assertEqual(wallet.free_balance_mc, Decimal("43"))
+        self.assertEqual(api_response_data(response)["additional_deposit_mc"], "2.000000")
 
     def test_price_increase_locks_deposit_from_new_price_and_stock(self):
         wallet = self.verify_seller(balance="50")
@@ -557,10 +557,10 @@ class SellerProductApiTests(TestCase):
         self.assertEqual(ProductVariant.objects.get(pk=variant_id).price_mc, Decimal("200"))
         self.assertTrue(api_response_data(response)["variants"][0]["can_change_price"])
         wallet.refresh_from_db()
-        self.assertEqual(wallet.deposit_locked_mc, Decimal("30"))
-        self.assertEqual(wallet.free_balance_mc, Decimal("20"))
+        self.assertEqual(wallet.deposit_locked_mc, Decimal("10"))
+        self.assertEqual(wallet.free_balance_mc, Decimal("40"))
         self.assertEqual(
-            api_response_data(response)["additional_deposit_mc"], "15.000000"
+            api_response_data(response)["additional_deposit_mc"],             "5.000000"
         )
         self.assertEqual(api_response_data(response)["returned_deposit_mc"], "0")
 
@@ -582,12 +582,12 @@ class SellerProductApiTests(TestCase):
 
         self.assertEqual(response.status_code, 200, response.data)
         wallet.refresh_from_db()
-        self.assertEqual(wallet.deposit_locked_mc, Decimal("7.5"))
-        self.assertEqual(wallet.frozen_mc, Decimal("7.5"))
-        self.assertEqual(wallet.free_balance_mc, Decimal("35"))
-        self.assertEqual(api_response_data(response)["returned_deposit_mc"], "7.500000")
+        self.assertEqual(wallet.deposit_locked_mc, Decimal("2.5"))
+        self.assertEqual(wallet.frozen_mc, Decimal("2.5"))
+        self.assertEqual(wallet.free_balance_mc, Decimal("45"))
+        self.assertEqual(api_response_data(response)["returned_deposit_mc"],         "2.500000")
         payout = FrozenPayout.objects.get(seller=self.seller)
-        self.assertEqual(payout.amount_mc, Decimal("7.5"))
+        self.assertEqual(payout.amount_mc, Decimal("2.5"))
         self.assertAlmostEqual(
             (payout.release_at - timezone.now()).days, 14, delta=1
         )
@@ -598,6 +598,8 @@ class SellerProductApiTests(TestCase):
             self.api_client, "/api/products/mine", self.payload, format="json"
         )
         self.assertEqual(created.status_code, 201, created.data)
+        wallet.free_balance_mc = Decimal("4")
+        wallet.save(update_fields=["free_balance_mc"])
         product_data = api_response_data(created)
         variant_id = product_data["variants"][0]["id"]
 
@@ -611,8 +613,8 @@ class SellerProductApiTests(TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(ProductVariant.objects.get(pk=variant_id).price_mc, Decimal("100"))
         wallet.refresh_from_db()
-        self.assertEqual(wallet.deposit_locked_mc, Decimal("15"))
-        self.assertEqual(wallet.free_balance_mc, Decimal("5"))
+        self.assertEqual(wallet.deposit_locked_mc, Decimal("5"))
+        self.assertEqual(wallet.free_balance_mc, Decimal("4"))
 
     def test_sold_variant_price_cannot_be_changed(self):
         self.verify_seller(balance="50")
@@ -680,8 +682,8 @@ class SellerProductApiTests(TestCase):
         self.assertEqual(response.status_code, 200, response.data)
         self.assertEqual(api_response_data(response)["status"], "active")
         wallet.refresh_from_db()
-        self.assertEqual(wallet.deposit_locked_mc, Decimal("3"))
-        self.assertEqual(wallet.free_balance_mc, Decimal("47"))
+        self.assertEqual(wallet.deposit_locked_mc, Decimal("1"))
+        self.assertEqual(wallet.free_balance_mc, Decimal("49"))
 
     def test_restock_with_insufficient_balance_rolls_back_stock_and_deposit(self):
         wallet = self.verify_seller(balance="20")
@@ -689,6 +691,8 @@ class SellerProductApiTests(TestCase):
             self.api_client, "/api/products/mine", self.payload, format="json"
         )
         self.assertEqual(created.status_code, 201, created.data)
+        wallet.free_balance_mc = Decimal("1")
+        wallet.save(update_fields=["free_balance_mc"])
         product_data = api_response_data(created)
         variant_id = product_data["variants"][0]["id"]
 
@@ -702,8 +706,8 @@ class SellerProductApiTests(TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(ProductVariant.objects.get(pk=variant_id).stock, 5)
         wallet.refresh_from_db()
-        self.assertEqual(wallet.deposit_locked_mc, Decimal("15"))
-        self.assertEqual(wallet.free_balance_mc, Decimal("5"))
+        self.assertEqual(wallet.deposit_locked_mc, Decimal("5"))
+        self.assertEqual(wallet.free_balance_mc, Decimal("1"))
 
 
 class ProductDetailAttributeTests(TestCase):
@@ -1669,9 +1673,9 @@ class ProductModerationAdminTests(TestCase):
 
     def test_blocked_product_excluded_from_seller_deposit(self):
         recalculate_seller_deposit(self.seller)
-        self.assertEqual(seller_deposit_required(self.seller.id), Decimal("15"))
+        self.assertEqual(seller_deposit_required(self.seller.id), Decimal("5"))
         wallet = Wallet.objects.get(user=self.seller)
-        self.assertEqual(wallet.deposit_locked_mc, Decimal("15"))
+        self.assertEqual(wallet.deposit_locked_mc, Decimal("5"))
 
         self.grant_products(self.admin2)
         self.block(self.client_for(self.admin2))
@@ -1679,7 +1683,7 @@ class ProductModerationAdminTests(TestCase):
         self.assertEqual(seller_deposit_required(self.seller.id), Decimal("0"))
         wallet.refresh_from_db()
         self.assertEqual(wallet.deposit_locked_mc, Decimal("0"))
-        self.assertEqual(wallet.frozen_mc, Decimal("15"))
+        self.assertEqual(wallet.frozen_mc, Decimal("5"))
 
     def test_seller_cannot_edit_blocked_product_and_is_notified(self):
         self.grant_products(self.admin2)

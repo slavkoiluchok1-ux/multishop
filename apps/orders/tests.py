@@ -296,15 +296,15 @@ class OrderMoneyFlowTests(TestCase):
         payout = FrozenPayout.objects.get(
             order=order,
             status="frozen",
-            amount_mc=Decimal("97"),
+            amount_mc=Decimal("99"),
         )
 
         self.assertEqual(order.status, "delivered")
         self.assertIsNotNone(order.received_at)
         self.assertEqual(hold.status, "released")
-        self.assertEqual(payout.amount_mc, Decimal("97"))
+        self.assertEqual(payout.amount_mc, Decimal("99"))
         self.assertEqual(self.buyer_wallet.held_mc, Decimal("0"))
-        self.assertEqual(self.seller_wallet.frozen_mc, Decimal("100"))
+        self.assertEqual(self.seller_wallet.frozen_mc, Decimal("110"))
 
     def test_mutual_cancellation_refunds_buyer_and_restores_stock(self):
         payload = self.checkout()
@@ -437,7 +437,7 @@ class OrderMoneyFlowTests(TestCase):
         # Застава не збільшується, нічого не заморожено, покупка не падає
         self.assertEqual(self.seller_wallet.deposit_locked_mc, Decimal("0"))
         self.assertEqual(self.seller_wallet.frozen_mc, Decimal("0"))
-        self.assertEqual(deposit.required_mc, Decimal("12"))
+        self.assertEqual(deposit.required_mc, Decimal("4"))
 
     def test_confirm_received_does_not_fail_without_deposit_funds(self):
         self.drain_seller_deposit()
