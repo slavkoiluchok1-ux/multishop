@@ -18,7 +18,7 @@ AVATAR_FORMAT_EXTENSIONS = {"JPEG": ".jpg", "PNG": ".png", "WEBP": ".webp"}
 class RegisterSerializer(serializers.Serializer):
     """Реєстрація: нік (унікальний), email (унікальний), пароль із підтвердженням."""
 
-    username = serializers.CharField(max_length=150)
+    username = serializers.CharField(max_length=20)
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True)
     password2 = serializers.CharField(write_only=True)
@@ -84,7 +84,7 @@ class UserSerializer(serializers.ModelSerializer):
 class ProfileUpdateSerializer(serializers.Serializer):
     """Оновлення профілю: нік, email, фото, контакти, адреса, автопідстановка."""
 
-    username = serializers.CharField(max_length=150, required=False)
+    username = serializers.CharField(max_length=20, required=False)
     email = serializers.EmailField(required=False)
     avatar = serializers.FileField(required=False, allow_null=True)
     phone = serializers.CharField(max_length=32, required=False, allow_blank=True)

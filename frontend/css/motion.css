@@ -355,6 +355,7 @@ html.motion-ready [data-reveal].product-card.is-removing {
   display: -webkit-box;
   min-height: 2.4em;
   overflow: hidden;
+  overflow-wrap: anywhere;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
 }

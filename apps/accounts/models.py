@@ -1,5 +1,6 @@
 """Акаунти: користувач, профіль, права адмінів, верифікація, бани, журнал."""
 from django.contrib.auth.models import AbstractUser, UserManager as DjangoUserManager
+from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.db import models
 from django.db.models.functions import Lower
 from django.utils import timezone
@@ -22,6 +23,13 @@ class CustomUser(AbstractUser):
 
     id: int
     profile: "UserProfile"
+    username = models.CharField(
+        "Нік",
+        max_length=20,
+        unique=True,
+        validators=[UnicodeUsernameValidator()],
+        error_messages={"unique": "Такий нік уже зайнятий."},
+    )
 
     ROLE_USER = "user"
     ROLE_ADMIN_2 = "admin_2"

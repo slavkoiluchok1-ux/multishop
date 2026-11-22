@@ -650,7 +650,7 @@ class CheckoutView(APIView):
                             amount_mc=-fee,
                             kind="fee",
                             order=order,
-                            note="Комісія сайту 3%",
+                            note="Комісія сайту 1%",
                         )
                     settings_row = SiteSettings.get_solo()
                     FrozenPayout.objects.create(
@@ -909,7 +909,7 @@ class ConfirmReceivedView(APIView):
                         amount_mc=-hold.fee_mc,
                         kind="fee",
                         order=order,
-                        note="Комісія сайту 3%",
+                        note="Комісія сайту 1%",
                     )
                 FrozenPayout.objects.create(
                     seller=order.seller,

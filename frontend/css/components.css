@@ -920,7 +920,19 @@
 }
 .product-fav.is-on { background: var(--blood); color: #fff; }
 .product-card .product-body { padding: 0.75rem 0.8rem; display: flex; flex-direction: column; gap: 0.45rem; flex: 1; }
-.product-card .product-name { font-weight: 700; color: var(--ink); font-size: 0.95rem; line-height: 1.25; }
+.product-card .product-name {
+  font-weight: 700;
+  color: var(--ink);
+  font-size: 0.95rem;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+.product-card .product-meta .badge-soft {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
 .product-card .product-foot {
   min-width: 0;
   margin-top: auto;
@@ -932,8 +944,9 @@
 .product-card .product-seller {
   min-width: 0;
   flex: 1 1 auto;
-  overflow-wrap: anywhere;
-  white-space: normal;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .product-card .product-foot .btn {
   flex: 0 0 auto;

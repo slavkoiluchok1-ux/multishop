@@ -10,7 +10,7 @@ class SiteSettings(models.Model):
     """Глобальні налаштування сайту. Має бути один запис."""
 
     commission_percent = models.DecimalField(
-        "Комісія сайту, %", max_digits=5, decimal_places=2, default=Decimal("3")
+        "Комісія сайту, %", max_digits=5, decimal_places=2, default=Decimal("1")
     )
     mc_to_uah = models.DecimalField(
         "1 MC у гривнях", max_digits=10, decimal_places=2, default=Decimal("10")

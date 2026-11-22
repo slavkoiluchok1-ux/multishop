@@ -175,7 +175,7 @@ REST_FRAMEWORK = {
 
 # --- Налаштування сайту за замовчуванням (дублюють SiteSettings) ---
 SITE_DEFAULTS = {
-    "commission_percent": "3",
+    "commission_percent": "1",
     "mc_to_uah": "10",
     "deposit_percent": "1",
     "max_upload_mb": 100,
