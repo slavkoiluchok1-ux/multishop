@@ -490,8 +490,13 @@ html.motion-ready [data-reveal].cart-row.is-removing {
 
 #myOrders,
 #incomingOrders,
-#ticketList {
-  min-height: 8rem;
+#ticketList,
+#complaintList {
+  min-height: 0;
+}
+
+.empty-state-inline {
+  margin: .35rem 0 0;
 }
 
 #myOrders > [data-order-id],

@@ -456,7 +456,7 @@ main.container .seller-product-card h5 { color: var(--ink); }
 }
 /* Reserved verification/loading/error states — no default form flash. */
 .verification-status {
-  min-height: 140px;
+  min-height: 0;
 }
 
 .verification-neutral {

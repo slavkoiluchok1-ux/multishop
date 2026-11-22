@@ -20,7 +20,15 @@ class Command(BaseCommand):
                 or "ТИМЧАСОВИЙ ТЕКСТ-ЗАГЛУШКА" in first_text.upper()
                 or "заглуш" in first_text.casefold()
             )
-            if first is not None and second is None and is_placeholder:
+            if second is not None:
+                text = self.load_full_policy()
+                with transaction.atomic():
+                    PolicyVersion.objects.update(is_current=False)
+                    second.text = text
+                    second.is_current = True
+                    second.save(update_fields=["text", "is_current"])
+                self.stdout.write("Повну редакцію №2 оновлено.")
+            elif first is not None and is_placeholder:
                 text = self.load_full_policy()
                 with transaction.atomic():
                     PolicyVersion.objects.update(is_current=False)
