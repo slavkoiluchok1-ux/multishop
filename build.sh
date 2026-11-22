@@ -8,3 +8,6 @@ pip install -r requirements.txt
 
 python manage.py collectstatic --noinput
 python manage.py migrate --noinput
+python manage.py bootstrap_admin
+python manage.py bootstrap_seed
+python manage.py bootstrap_policy
