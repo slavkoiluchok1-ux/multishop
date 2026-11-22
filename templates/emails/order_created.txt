@@ -1,0 +1,11 @@
+Замовлення №{{ order.id }} оформлено
+
+Дякуємо за покупку в MultiShop. Продавець: {{ order.seller.username }}.
+{% for item in order.items.all %}
+- {{ item.product_name }} × {{ item.quantity }} — {{ item.unit_price_mc }} MC
+{% endfor %}
+
+Разом: {{ order.total_mc }} MC
+{% if order.delivery_address %}Отримувач: {{ order.recipient_name }}
+Адреса: {{ order.delivery_address }}{% endif %}
+Статус: {{ order.get_status_display }}.

@@ -1,0 +1,499 @@
+# DATA_PLAN — MultiShop
+Оновлено: 2026-11-22, відповідає поточному стану коду
+
+Цей файл описує моделі даних, типи товарів, статуси, поля, зв'язки і сховище файлів.
+Архітектура застосунків наведена у PROJECT_STRUCTURE.txt.
+Бізнес-правила грошових переходів наведені у PROJECT_VISION.txt.
+
+Зміст
+  1. Загальні правила даних
+  2. Core і налаштування
+  3. Облікові записи й права
+  4. Політика
+  5. Гаманець і транзакції
+  6. Каталог і характеристики
+  7. Товари й варіанти
+  8. Кошик й обране
+  9. Замовлення
+  10. Скарги
+  11. Підтримка
+  12. Сповіщення й Telegram
+  13. Файлове сховище
+  14. Міграції й індекси
+  15. Тестові дані й сидування
+  16. Терміни й скорочення
+
+1. ЗАГАЛЬНІ ПРАВИЛА ДАНИХ
+
+1.1 Типи і точність
+  Грошові суми зберігаються як Decimal із max_digits=15 і decimal_places=6.
+  Код не використовує float для грошових операцій.
+  Ціна не перевищує 999999999 MC.
+  1 MC = 10 грн.
+  Кількість товару й залишку зберігається як ціле невід'ємне число.
+
+1.2 Міграції
+  Кожен застосунок має міграції у apps/<apply>/migrations.
+  Зміни моделі застосовуються через Django migrations.
+  Поточний стан перевіряється командою manage.py makemigrations --check --dry-run.
+
+1.3 Статуси
+  Статуси зберігаються текстовими значеннями й показуються через choices.
+  Дані не повинні містити дублюючі поля для похідної інформації.
+
+2. CORE І НАЛАШТУВАННЯ
+
+2.1 SiteSettings
+  Поля:
+  - commission_percent: Decimal 3,2, default 3.
+  - mc_to_uah: Decimal 10,2, default 10.
+  - deposit_percent: Decimal 3,2, default 3.
+  - max_upload_mb: PositiveInteger, default 100.
+  - max_decimals: PositiveSmallInteger, default 6.
+  - payout_freeze_days: PositiveSmallInteger, default 14.
+  - complaint_deadline_days: PositiveSmallInteger, default 14.
+  - false_complaints_limit: PositiveSmallInteger, default 3.
+  - complaints_block_first_days: PositiveSmallInteger, default 30.
+  - complaints_block_repeat_days: PositiveSmallInteger, default 365.
+  Запис завжди має pk=1 завдяки get_solo() і save().
+
+2.2 SiteBlock
+  - key: Slug, unique.
+  - eyebrow: CharField, max_length=80, blank.
+  - title: CharField, max_length=200.
+  - text: TextField.
+  - layout: compact, standard або wide.
+  - style: paper, accent або dark.
+  - order: PositiveInteger.
+  Запис і видалення блоку очищають кеш site:homepage-blocks:v1.
+
+3. ОБЛІКОВІ ЗАПИСИ Й ПРАВА
+
+3.1 CustomUser
+  Спадкує AbstractUser.
+  Поля:
+  - username: успадковане поле Django, унікальний логін.
+  - email: EmailField, унікальний без урахування регістру.
+  - avatar: публічне ImageField у avatars/.
+  - role: user, admin_2, admin_1, admin_main.
+  - must_change_password: BooleanField.
+  - created_at: DateTimeField, auto_now_add.
+  is_staff і is_superuser у save() встановлюються True лише для admin_main.
+  Зміна role синхронізує прапорці навіть при update_fields.
+
+3.2 AdminRight
+  - user: ForeignKey до CustomUser із related_name=admin_rights.
+  - right: home, products, support, complaints, bans, wallet, orders.
+  Унікальна пара (user, right).
+  Права застосовуються до admin_2; admin_1 і admin_main мають усі права.
+
+3.3 UserProfile
+  Створюється сигналом як one-to-one до CustomUser.
+  - phone, telegram, instagram, viber, facebook, whatsapp.
+  - delivery_country, delivery_city, delivery_street, delivery_postcode.
+  - recipient_name.
+  - autofill_delivery: default true.
+  - false_complaints_count: default 0.
+  - complaints_blocked_until: nullable DateTimeField.
+  - complaints_block_count: default 0.
+
+3.4 SellerVerification
+  - user: OneToOneField.
+  - photo: приватне ImageField, upload_to=verification/.
+  - age: PositiveSmallIntegerField.
+  - is_locked: default true.
+  - created_at: auto_now_add.
+  Запис створюється лише для віку від 18 років.
+
+3.5 Ban
+  - user: ForeignKey.
+  - issued_by: ForeignKey із SET_NULL.
+  - issued_by_role: admin_2, admin_1, admin_main, system.
+  - reason: TextField.
+  - source: admin, complaint, verification.
+  - complaint: ForeignKey із SET_NULL.
+  - starts_at: auto_now_add.
+  - ends_at: null означає назавжди.
+  - lifted_by і lifted_at.
+  - expired_notified_at.
+  ActiveManager повертає не скасовані й ще не завершені бани.
+
+3.6 AdminLog
+  - actor: ForeignKey із SET_NULL.
+  - action: CharField(max_length=255).
+  - target: ForeignKey із SET_NULL.
+  - created_at: auto_now_add.
+  Індекс: (actor, created_at).
+
+4. ПОЛІТИКА
+
+4.1 PolicyVersion
+  - number: PositiveInteger, unique.
+  - text: TextField.
+  - published_at: auto_now_add.
+  - is_current: BooleanField.
+  У save() поточним залишаються записи з is_current=true для останньої обраної редакції.
+
+4.2 PolicyAcceptance
+  - user: ForeignKey.
+  - version: ForeignKey.
+  - accepted_at: auto_now_add.
+  Унікальна пара (user, version).
+
+5. ГАМАНЕЦЬ І ТРАНЗАКЦІЇ
+
+5.1 Wallet
+  - free_balance_mc: доступні.
+  - held_mc: утримані.
+  - frozen_mc: заморожені.
+  - deposit_locked_mc: застава.
+  - debt_mc: борг.
+  - updated_at: auto_now.
+  User — one-to-one.
+
+5.2 WalletTransaction
+  - wallet: ForeignKey.
+  - amount_mc: Decimal.
+  - kind: coin_issue, escrow_hold, escrow_to_frozen, frozen_release, fee, refund,
+    deposit_lock, deposit_return, deposit_forfeit, debt_add, debt_pay.
+  - order: nullable ForeignKey.
+  - note: CharField(max_length=255).
+  - created_at: auto_now_add.
+  Індекс: (wallet, created_at).
+
+5.3 CoinIssue
+  - issued_by: ForeignKey із PROTECT.
+  - to_user: ForeignKey із CASCADE.
+  - amount_mc: Decimal.
+  - created_at: auto_now_add.
+  Запис створюється лише головним адміном через адмінський API.
+
+5.4 EscrowHold
+  - order, buyer, seller.
+  - amount_mc і fee_mc.
+  - status: held, released, refunded.
+  - created_at і resolved_at.
+  Утримання належить конкретному замовленню й двом сторонам.
+
+5.5 FrozenPayout
+  - seller: ForeignKey.
+  - order: nullable ForeignKey із SET_NULL.
+  - amount_mc і release_at.
+  - status: frozen, released, used_for_refund.
+  - created_at і resolved_at.
+  Звільняється після release_at лише за відсутності нової чи в роботі скарги на замовлення.
+
+5.6 SellerDeposit
+  - seller: OneToOneField.
+  - required_mc: Decimal.
+  - updated_at.
+  Фактично заблокована сума зберігається у Wallet.deposit_locked_mc.
+  Потрібна сума дорівнює deposit_percent × сума ціни × залишок активних і прихованих товарів.
+
+6. КАТАЛОГ І ХАРАКТЕРИСТИКИ
+
+6.1 Категорії
+  Category:
+  - name: CharField(max_length=200).
+  - slug: SlugField(unique, max_length=220).
+  - parent: ForeignKey на себе, related_name=children.
+  - path: CharField(max_length=600).
+  - is_active: default true.
+  - order: PositiveInteger.
+  В save() slug генерується автоматично для порожнього значення.
+  Усі нащадки включаються у результаті Category.descendants().
+
+6.2 Характеристики
+  Attribute:
+  - category: ForeignKey до Category.
+  - name: CharField(max_length=120).
+  - kind: single, multiple, number, bool.
+  - unit: CharField(max_length=32).
+  - required: BooleanField.
+  - order: PositiveInteger.
+
+  AttributeOption:
+  - attribute: ForeignKey.
+  - value: CharField(max_length=120).
+
+6.3 Структура видів товарів
+  physical: Фізичний товар.
+  digital_file: Цифровий файл.
+  digital_key: Ключ, акаунт або ліцензія.
+  service: Послуга.
+  subscription: Підписка.
+  Вид не є вузлом дерева; він фільтрує поле product_type.
+
+6.4 Дерево категорій
+  Канонічне дерево розміщене у apps/catalog/category_data.py.
+  Основні гілки:
+  - Електроніка.
+  - Одяг, взуття й аксесуари.
+  - Дім і меблі.
+  - Сад, ремонт і інструменти.
+  - краса й здоров'я.
+  - Книги, канцелярія і хобі.
+  - Спорт і туризм.
+  - Авто й мото.
+  - Зоотовари.
+  - Дитячі товари.
+  - Їжа й напої.
+  - Подарунки й набори.
+  - Ігри і цифрові проєкти.
+  - Софт і ліцензії.
+  - Навчання й контент.
+  - Цифрові дизайн-ресурси.
+  - Послуги й підписки.
+
+  Вид видимості і види наведені у розділі 7.
+  Повна структура вузлів і характеристик завантажується командою seed_demo.
+
+7. ТОВАРИ Й ВАРІАНТИ
+
+7.1 Product
+  - seller: ForeignKey.
+  - category: ForeignKey із PROTECT до листка дерева.
+  - name: CharField(max_length=200).
+  - slug: SlugField(unique).
+  - description: TextField.
+  - brand: CharField(max_length=120).
+  - portfolio_url: URLField(max_length=500).
+  - product_type: physical, digital_file, digital_key, service, subscription.
+  - status: active, inactive, sold_out, hidden.
+  - hidden_token: випадковий токен для прихованого товару.
+  - main_image: публічне ImageField.
+  - moderation: ok, blocked, deleted.
+  - moderation_reason і moderated_by/moderated_at.
+  - created_at і updated_at.
+  Індекс: (status, moderation, created_at).
+
+7.2 ProductVariant
+  - product: ForeignKey.
+  - sku: CharField(max_length=64).
+  - price_mc: Decimal із max_digits=15, decimal_places=6.
+  - stock: PositiveInteger.
+  - license_type: personal або commercial.
+  - image: публічне ImageField варіанта.
+
+7.3 VariantAttributeValue
+  - variant: ForeignKey.
+  - attribute: ForeignKey.
+  - value: CharField(max_length=255).
+  Унікальна комбінація (variant, attribute, value).
+
+7.4 ProductImage
+  - product: ForeignKey.
+  - variant: nullable ForeignKey.
+  - image: ImageField.
+  - order: PositiveInteger.
+
+7.5 DigitalFile
+  - product: ForeignKey.
+  - variant: nullable ForeignKey.
+  - file: приватне поле upload_to=digital_files/.
+  - is_trial: безкоштовна пробна версія.
+  - title: CharField.
+
+7.6 Review і ReviewMedia
+  Review:
+  - product, author, nullable order, text, created_at.
+  Моделює коментар після купівлі.
+  ReviewMedia:
+  - review: ForeignKey.
+  - file: публічне завантаження до reviews/.
+  - kind: photo або video.
+
+7.7 Статуси товару
+  active: доступний для продажу.
+  inactive: продавець зупинив.
+  sold_out: усі варіанти мають stock=0.
+  hidden: публічний каталог приховує товар; властець керує ним у своєму списку.
+  hidden_token відкриває пряме посилання /catalog/h/<token>.
+
+8. КОШИК Й ОБРАНЕ
+
+8.1 Cart і CartItem
+  Cart має user або session_key.
+  CartItem зберігає cart, variant, quantity і price_at_add.
+  Унікальна пара (cart, variant).
+  Кількість обмежена доступним залишком при оформленні.
+
+8.2 Favorite
+  Унікальна пара (user, product).
+  last_price і last_status використовуються для подієвих сповіщень.
+
+9. ЗАМОВЛЕННЯ
+
+9.1 Order
+  - checkout_id: UUID з db_index.
+  - buyer і seller із PROTECT.
+  - status: pending, paid, shipped, delivered, cancelled, dispute.
+  - total_mc і fee_mc.
+  - contact_email, contact_phone, contact_telegram, contact_other.
+  - delivery_address і recipient_name.
+  - paid_at, received_at, complaint_deadline_at.
+  - created_at.
+  pending не зберігається як остаточний стан оплати.
+  Для digital_file received_at і complaint_deadline_at встановлюються одразу після оплати.
+
+9.2 OrderItem
+  - order, variant із PROTECT.
+  - product_name — знімок назви.
+  - unit_price_mc — знімок ціни.
+  - quantity.
+
+9.3 ActivationCode
+  - variant із PROTECT.
+  - nullable order_item із PROTECT.
+  - code і code_key.
+  code_key — SHA-подібний хеш для перевірки унікальності.
+  Індекс: (variant, order_item).
+
+9.4 Решта моделей замовлення
+  OrderStatusHistory: old_status, new_status, changed_by, note, created_at.
+  OrderCancellation: complaint/mutual, статуси й согласні сторони.
+  OrderComment: текст і автор у межах замовлення.
+  DownloadGrant: унікальна пара (order_item, file).
+  Refund: сума, анульована комісія, джерело, борг і approved_by.
+
+10. СКАРГИ
+
+10.1 ComplaintType
+  - name, parent, path.
+  - view: orders, products, users_content.
+  - required_fields і evidence_required у JSON.
+  - handler_rights у JSON.
+  - default_consequence у JSON.
+  - is_active.
+
+10.2 Complaint
+  - author із PROTECT.
+  - complaint_type із PROTECT.
+  - target_kind: order, product, user, comment, admin.
+  - nullable order, product, target_user, comment.
+  - text, status, handled_by.
+  - consequences у JSON.
+  - refund_amount_mc і resolution.
+  - fields у JSON.
+  - created_at і resolved_at.
+  Індекси: (author, status, created_at) і (target_user, status, created_at).
+
+10.3 ComplaintEvidence і ComplaintComment
+  ComplaintEvidence зберігає приватне upload_to=complaint_evidence/.
+  ComplaintComment має side: complainant, respondent, admin.
+  Коментарі сортуються за created_at і id.
+
+11. ПІДТРИМКА
+
+11.1 SupportTicket
+  - user nullable для гостьового звернення.
+  - request_type: unban, appeal, bug, account, payment, order, product,
+    policy, suggestion, other.
+  - контакти й target_username/order_reference.
+  - subject, desired_outcome.
+  - status: open, answered, closed.
+  - assigned_admin.
+  - from_banned, parent_ticket, appeal_ban, appeal_rejection.
+  - bug_status і idea_status.
+  - internal_note і created_at.
+  Індекси: (status, created_at) і (request_type, status, created_at).
+
+11.2 Решта моделей
+  SupportAction: історія внутрішніх і зовнішніх дій адміна.
+  SupportMessage: приватне attachment у support/.
+  AccountRecovery: зв'язує звернення, цільовий акаунт і адміністратора.
+
+12. СПОВІЩЕННЯ Й TELEGRAM
+
+12.1 Notification
+  Секції: orders, wallet, complaints, favorites, support, moderation,
+  admin, products, admin_complaints, admin_support.
+  Поля: kind, text, payload, is_read, created_at.
+  Індекс: (user, is_read, section).
+
+12.2 TelegramLink
+  - user: OneToOne.
+  - chat_id і telegram_user_id: унікальні.
+  - telegram_username.
+  - is_active і prefs.
+  - admin_digest_sent_at.
+  - linked_at і created_at.
+
+12.3 TelegramLinkCode і TelegramRecoveryCode
+  Зберігають тільки хеш коду, expires_at, used_at і created_at.
+  RecoveryCode має revoked_at.
+
+12.4 TelegramDelivery і TelegramBotState
+  TelegramDelivery: notification one-to-one, status, attempts, last_error,
+  sent_at, next_attempt_at, created_at.
+  Індекс: (status, next_attempt_at).
+  TelegramBotState зберігає останній update_id.
+
+13. ФАЙЛОВЕ СХОВИЩЕ
+
+13.1 Публічні шляхи
+  - media/public/products/
+  - media/public/avatars/
+  - media/public/reviews/
+  У production корінь: DATA_DIR/media/public.
+
+13.2 Приватні шляхи
+  - media/private/verification/
+  - media/private/digital_files/
+  - media/private/complaint_evidence/
+  - media/private/support/
+  У production корінь: DATA_DIR/media/private.
+
+13.3 Ліміти
+  Максимум одного файла — 100 МБ.
+  Дозволені зображення: jpg, jpeg, png, webp, gif.
+  Відео: mp4, webm, mov.
+  Документи: pdf, txt.
+  Архіви: zip, 7z, rar.
+  Цифрові типи: epub, mp3, wav, ogg, json, fbx, obj, gltf, glb,
+  psd, ttf, otf, unitypackage.
+  Зображення додатково перевіряються Pillow.
+
+14. МІГРАЦІЇ Й ІНДЕКСИ
+
+14.1 Основні індекси
+  AdminLog: (actor, created_at).
+  Complaint: (author, status, created_at) і (target_user, status, created_at).
+  Product: (status, moderation, created_at).
+  WalletTransaction: (wallet, created_at).
+  SupportTicket: (status, created_at) і (request_type, status, created_at).
+  Notification: (user, is_read, section).
+  TelegramDelivery: (status, next_attempt_at).
+  ActivationCode: (variant, order_item).
+
+14.2 Міграційні пакети
+  Accounts, Catalog, Orders, Support, Core, Notifications, Telegrambot,
+  Complaints, Wallet, Cart, Favorites і Policy мають власні migration-файли.
+  Міграційний стан перевіряється без запису через --check --dry-run.
+
+15. ТЕСТОВІ ДАНІ Й СИДУВАННЯ
+
+15.1 seed_demo
+  Команда створює ідемпотентно типи категорій, характеристики, товари і демонстраційні дані.
+  Повторний запуск не створює дублікати.
+  Налаштування seed складають вивід у public/products.
+
+15.2 seed_complaint_types
+  Команда наповнює дерево ComplaintType і поля required_fields/evidence_required/handler_rights.
+  Повторний запуск оновлює канонічні записи.
+
+15.3 create_main_admin
+  Створює або оновлює головного адміна за MAIN_ADMIN_NICK, MAIN_ADMIN_EMAIL,
+  MAIN_ADMIN_PASSWORD.
+  Секрети мають зчитуватися тільки зі змінних оточення або локального .env.
+
+16. ТЕРМІНИ Й СКОРОЧЕННЯ
+  MC — внутрішня валюта.
+  Утримані кошти — held_mc.
+  Заморожені кошти — frozen_mc.
+  Застава — deposit_locked_mc.
+  Борг — debt_mc.
+  Ескроу — утримання коштів за замовлення.
+  hidden_token — випадковий токен прямого посилання на прихований товар.
+  outbox — черга TelegramDelivery.
+

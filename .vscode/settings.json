@@ -1,0 +1,17 @@
+{
+  "python-envs.defaultEnvManager": "ms-python.python:venv",
+  "python.defaultInterpreterPath": ".venv\\Scripts\\python.exe",
+  "python.analysis.excludeLibraryDiagnostics": true,
+  "python.analysis.typeCheckingMode": "off",
+  "python.analysis.diagnosticMode": "openFilesOnly",
+  "python.analysis.diagnosticSeverityOverrides": {
+    "reportAttributeAccessIssue": "none",
+    "reportOptionalMemberAccess": "none",
+    "reportArgumentType": "none",
+    "reportOptionalSubscript": "none",
+    "reportCallIssue": "none",
+    "reportIndexIssue": "none"
+  },
+  "python.testing.pytestEnabled": true,
+  "python.testing.unittestEnabled": false
+}

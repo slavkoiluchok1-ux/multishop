@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MultiShop — замовлення</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/base.css?v=particles-v4-bloom-20261122">
+</head>
+<body>
+<nav class="navbar navbar-expand-xl navbar-dark mb-4">
+  <div class="container">
+    <a class="navbar-brand me-3 brand-mark" href="/">🛍️ <span>Multi<span class="brand-slash">Shop</span></span></a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false" aria-label="Меню">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="mainNavbar">
+      <ul class="navbar-nav ms-auto align-items-center">
+        <li class="nav-item"><a class="nav-link nav-pill" href="/pages/policy.html">Політика</a></li>
+        <li class="nav-item"><a class="nav-link nav-pill" href="/">Головна</a></li>
+        <li class="nav-item"><a class="nav-link nav-pill" href="/pages/catalog.html">Каталог</a></li>
+        <li class="nav-item"><a class="nav-link nav-pill" href="/pages/cart.html">Кошик<span class="nav-counter is-cart" data-cart-count hidden>0</span></a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/favorites.html">Обране<span class="nav-counter" data-counter="favorites" hidden>0</span></a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill active" href="/pages/orders.html" aria-current="page">Замовлення<span class="nav-counter" data-counter="orders" hidden>0</span></a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/complaints.html">Скарги<span class="nav-counter" data-counter="complaints" hidden>0</span></a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/seller.html">Мої товари</a></li>
+        <li class="nav-item" data-auth="guest"><a class="nav-link nav-pill" href="/pages/support.html">Підтримка</a></li><li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/support.html">Підтримка</a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/profile.html">Профіль</a></li>
+        <li class="nav-item" data-auth="guest"><a class="nav-link nav-pill" href="/pages/login.html">Вхід</a></li>
+        <li class="nav-item" data-auth="guest"><a class="nav-link nav-pill" href="/pages/register.html">Реєстрація</a></li>
+        <li class="nav-item" data-auth="user" hidden>
+          <span class="nav-user"><img class="avatar" alt="" data-user-avatar hidden><span class="nav-user-name" data-user-name></span></span>
+        </li>
+        <li class="nav-item" data-auth="user" hidden>
+          <button class="nav-link nav-pill border-0 bg-transparent" type="button" data-logout>Вийти</button>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+<main class="container app-main py-3 py-md-4">
+  <div class="section-heading-panel mb-4">
+    <p class="eyebrow mb-1">Покупки та продажі</p>
+    <h1 class="section-title mb-2">Замовлення</h1>
+    <p class="text-muted-soft mb-0">Переглядайте покупки й замовлення, які очікують на вас як продавця.</p>
+  </div>
+  <div class="alert-soft is-danger mb-3" id="ordersError" hidden></div>
+
+  <ul class="nav nav-pills gap-2 mb-4" id="orderTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active" type="button" data-tab="buy" role="tab">Мої замовлення</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" type="button" data-tab="sell" role="tab">Замовлення в мене</button>
+    </li>
+  </ul>
+
+  <section id="buySection">
+    <div id="myOrders" class="d-grid gap-3"></div>
+    <p class="text-muted-soft" id="myOrdersEmpty" hidden>Покупок ще немає.</p>
+  </section>
+  <section id="sellSection" hidden>
+    <div id="incomingOrders" class="d-grid gap-3"></div>
+    <p class="text-muted-soft" id="incomingOrdersEmpty" hidden>Замовлень ще немає.</p>
+  </section>
+</main>
+
+<dialog class="checkout-dialog" id="orderDialog">
+  <div class="d-flex justify-content-between gap-3 mb-3">
+    <div>
+      <p class="eyebrow mb-1" id="orderDialogTitle">Замовлення</p>
+      <h2 class="h4 mb-0" id="orderDialogStatus"></h2>
+    </div>
+    <button class="btn-close" type="button" id="orderDialogClose" aria-label="Закрити"></button>
+  </div>
+  <div id="orderDialogBody" class="dialog-scroll"></div>
+  <div class="d-flex flex-wrap gap-2 mt-3" id="orderDialogActions"></div>
+</dialog>
+
+<dialog class="checkout-dialog" id="activationCodesDialog">
+  <div class="d-flex justify-content-between gap-3 mb-3">
+    <div>
+      <p class="eyebrow mb-1">Покупку оформлено</p>
+      <h2 class="h4 mb-0">Ваші коди активації</h2>
+    </div>
+    <button class="btn-close" type="button" id="activationCodesClose" aria-label="Закрити"></button>
+  </div>
+  <div id="activationCodesBody" class="dialog-scroll"></div>
+</dialog>
+
+<dialog class="checkout-dialog" id="complaintDialog">
+  <form id="complaintForm">
+    <div class="d-flex justify-content-between gap-3 mb-3">
+      <div><p class="eyebrow mb-1">Скасування через скаргу</p><h2 class="h4 mb-0">Опишіть проблему</h2></div>
+      <button class="btn-close" type="button" id="complaintClose" aria-label="Закрити"></button>
+    </div>
+    <div class="alert-soft is-danger mb-3" id="complaintError" hidden></div>
+    <label class="form-label d-block">Тип скарги</label>
+    <div id="complaintTypePath" class="mb-3"></div>
+    <div id="complaintFields" class="mb-3"></div>
+    <label class="form-label" for="complaintText">Коментар</label>
+    <textarea class="form-control" id="complaintText" rows="4" required></textarea>
+    <div class="d-flex justify-content-end mt-3">
+      <button class="btn btn-primary" type="submit">Надіслати скаргу</button>
+    </div>
+  </form>
+</dialog>
+<dialog class="checkout-dialog" id="reviewDialog">
+  <form id="reviewForm">
+    <div class="d-flex justify-content-between gap-3 mb-3">
+      <div><p class="eyebrow mb-1">Після покупки</p><h2 class="h4 mb-0">Відгук про товар</h2></div>
+      <button class="btn-close" type="button" id="reviewClose" aria-label="Закрити"></button>
+    </div>
+    <div class="alert-soft is-danger mb-3" id="reviewError" hidden></div>
+    <label class="form-label" for="reviewText">Ваш відгук</label>
+    <textarea class="form-control mb-3" id="reviewText" rows="4" required></textarea>
+    <label class="form-label" for="reviewMedia">Фото або відео (необов'язково)</label>
+    <input class="form-control" id="reviewMedia" type="file" multiple accept="image/*,video/mp4,video/webm,video/quicktime">
+    <div class="d-flex justify-content-end mt-3"><button class="btn btn-primary" type="submit">Надіслати відгук</button></div>
+  </form>
+</dialog>
+
+<footer class="footer py-4">
+  <div class="container d-flex flex-column flex-md-row justify-content-between gap-2">
+    <p class="mb-0">MultiShop — навчальний маркетплейс. Розрахунки у MultiCoins (MC).</p>
+    <a href="/pages/policy.html" class="text-decoration-none">Політика платформи →</a>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/static/js/api.js"></script>
+<script src="/static/js/price-format.js?v=price-3dp-20261114"></script>
+<script src="/static/js/auth.js?v=auth-header-tooltip-v1-20261122"></script>
+<script src="/static/js/password-change.js?v=password-change-20261114"></script>
+<script src="/static/js/policy-gate.js?v=policy-after-login-v2-20261122"></script>
+<script src="/static/js/notifications.js"></script>
+<script src="/static/js/complaint-tree.js?v=skeleton-swr-v5-20261123"></script>
+<script src="/static/js/complaint-form.js?v=complaint-form-scope-20261114"></script>
+<script src="/static/js/orders.js?v=orders-motion-v1-20261122"></script>
+<script src="/static/js/motion.js?v=motion-orders-support-v1-20261122"></script>
+<script src="/static/js/particles.js?v=particles-v4-bloom-20261122"></script>
+</body>
+</html>

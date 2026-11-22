@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MultiShop — кошик</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/base.css?v=particles-v4-bloom-20261122">
+</head>
+<body>
+
+<nav class="navbar navbar-expand-xl navbar-dark mb-4">
+  <div class="container">
+    <a class="navbar-brand me-3 brand-mark" href="/">🛍️ <span>Multi<span class="brand-slash">Shop</span></span></a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false" aria-label="Меню">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="mainNavbar">
+      <ul class="navbar-nav ms-auto align-items-center">
+        <li class="nav-item"><a class="nav-link nav-pill" href="/pages/policy.html">Політика</a></li>
+        <li class="nav-item"><a class="nav-link nav-pill" href="/">Головна</a></li>
+        <li class="nav-item"><a class="nav-link nav-pill" href="/pages/catalog.html">Каталог</a></li>
+        <li class="nav-item"><a class="nav-link nav-pill active" href="/pages/cart.html" aria-current="page">Кошик<span class="nav-counter is-cart" data-cart-count hidden>0</span></a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/favorites.html">Обране<span class="nav-counter" data-counter="favorites" hidden>0</span></a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/orders.html">Замовлення<span class="nav-counter" data-counter="orders" hidden>0</span></a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/complaints.html">Скарги<span class="nav-counter" data-counter="complaints" hidden>0</span></a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/seller.html">Мої товари</a></li>
+        <li class="nav-item" data-auth="guest"><a class="nav-link nav-pill" href="/pages/support.html">Підтримка</a></li><li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/support.html">Підтримка</a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/profile.html">Профіль</a></li>
+        <li class="nav-item" data-auth="guest"><a class="nav-link nav-pill" href="/pages/login.html">Вхід</a></li>
+        <li class="nav-item" data-auth="guest"><a class="nav-link nav-pill" href="/pages/register.html">Реєстрація</a></li>
+        <li class="nav-item" data-auth="user" hidden>
+          <span class="nav-user">
+            <img class="avatar" alt="" data-user-avatar hidden>
+            <span class="nav-user-name" data-user-name></span>
+          </span>
+        </li>
+        <li class="nav-item" data-auth="user" hidden>
+          <button class="nav-link nav-pill border-0 bg-transparent" type="button" data-logout>Вийти</button>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<main class="container app-main py-3 py-md-4">
+  <div class="section-heading-panel mb-3">
+    <p class="eyebrow mb-1">Покупка</p>
+    <h1 class="section-title mb-2">Ваш кошик</h1>
+    <p class="text-muted-soft mb-0">Кількість можна змінювати, зайве — прибрати.</p>
+  </div>
+
+  <div class="alert-soft is-info mb-3" data-policy-warning hidden>
+    Ви увійшли, але ще не прийняли поточну редакцію політики.
+    <a href="/pages/policy.html">Перейти до політики →</a>
+  </div>
+
+  <div class="alert-soft mb-3" data-auth="guest">
+    Ви як гість: кошик зберігається в сесії. Після входу він автоматично
+    <a href="/pages/login.html">злиється</a> з вашим кошиком в акаунті.
+  </div>
+
+  <article class="cart-list" id="cartItems"></article>
+  <p class="text-muted-soft text-center my-4" id="cartEmpty" hidden>Кошик порожній. Додайте товари з каталогу.</p>
+
+  <div class="card-soft mt-3" id="cartSummary" hidden>
+    <div class="card-body">
+      <div class="cart-total">
+        <div>
+          <p class="eyebrow mb-1">Разом</p>
+          <p class="text-muted-soft small mb-0">Товарів у кошику: <span id="cartCount">0</span></p>
+        </div>
+        <span class="price-tag" id="cartTotal">0 MC</span>
+      </div>
+      <hr class="divider-dashed">
+      <div class="d-flex flex-wrap gap-2 align-items-center">
+        <button class="btn btn-primary" type="button" id="checkoutStart" disabled>Оформити замовлення</button>
+        <a class="btn btn-outline-primary" href="/pages/catalog.html">Продовжити покупки</a>
+        <span class="text-muted-soft small" id="checkoutHint">Увійдіть, щоб оформити покупку з балансу гаманця.</span>
+      </div>
+    </div>
+  </div>
+
+  <dialog class="checkout-dialog" id="checkoutDialog" aria-labelledby="checkoutTitle">
+    <form id="checkoutForm">
+      <div class="d-flex align-items-start justify-content-between gap-3 mb-3">
+        <div>
+          <p class="eyebrow mb-1" id="checkoutStepLabel">Крок 1 із 2</p>
+          <h2 class="h4 mb-0" id="checkoutTitle">Контакти й доставка</h2>
+        </div>
+        <button class="btn-close" type="button" id="checkoutClose" aria-label="Закрити"></button>
+      </div>
+      <div class="alert-soft is-danger mb-3" id="checkoutError" hidden></div>
+      <section id="checkoutStepOne">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label" for="checkoutEmail">Email</label>
+            <input class="form-control" id="checkoutEmail" type="email">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="checkoutPhone">Телефон</label>
+            <input class="form-control" id="checkoutPhone" type="tel">
+          </div>
+          <div class="col-12">
+            <label class="form-label" for="checkoutTelegram">Telegram</label>
+            <input class="form-control" id="checkoutTelegram" type="text">
+          </div>
+          <div class="col-12">
+            <label class="form-label d-block">Додаткові способи зв’язку</label>
+            <div id="checkoutOtherContacts"></div>
+            <button class="btn btn-outline-primary btn-sm mt-2" type="button" id="checkoutAddContact">Додати контакт</button>
+          </div>
+          <div class="col-12">
+            <label class="form-label" for="checkoutComment">Коментар до замовлення</label>
+            <textarea class="form-control" id="checkoutComment" rows="3" maxlength="2000" placeholder="Побажання або уточнення для продавця (необов’язково)"></textarea>
+          </div>
+        </div>
+        <div id="checkoutDeliveryFields">
+          <hr class="divider-dashed">
+          <h3 class="h6">Доставка</h3>
+          <div class="row g-3">
+            <div class="col-md-6"><label class="form-label" for="checkoutRecipient">Отримувач</label><input class="form-control" id="checkoutRecipient"></div>
+            <div class="col-md-6"><label class="form-label" for="checkoutCountry">Країна</label><input class="form-control" id="checkoutCountry"></div>
+            <div class="col-md-6"><label class="form-label" for="checkoutCity">Місто</label><input class="form-control" id="checkoutCity"></div>
+            <div class="col-md-6"><label class="form-label" for="checkoutPostcode">Поштовий індекс</label><input class="form-control" id="checkoutPostcode"></div>
+            <div class="col-12"><label class="form-label" for="checkoutStreet">Адреса</label><input class="form-control" id="checkoutStreet"></div>
+          </div>
+          <p class="small text-muted-soft mt-2 mb-0">Контакти й адресу можна змінити перед оплатою. Адреса підставляється з профілю, якщо ввімкнено автозаповнення.</p>
+        </div>
+        <div class="d-flex justify-content-end mt-4">
+          <button class="btn btn-primary" type="button" id="checkoutNext">Перевірити замовлення</button>
+        </div>
+      </section>
+      <section id="checkoutStepTwo" hidden>
+        <p class="text-muted-soft">Замовлення буде створено окремо для кожного продавця.</p>
+        <div class="balance-row"><span class="balance-label">До сплати</span><strong id="checkoutTotal">0 MC</strong></div>
+        <div class="balance-row"><span class="balance-label">Доступно в гаманці</span><strong id="checkoutBalance">0 MC</strong></div>
+        <p class="small text-muted-soft mt-3 mb-0">Оплата спишеться зараз. Фізичне замовлення залишиться в ескроу до підтвердження отримання.</p>
+        <div class="d-flex justify-content-between mt-4">
+          <button class="btn btn-outline-primary" type="button" id="checkoutBack">Назад</button>
+          <button class="btn btn-primary" type="submit" id="checkoutSubmit">Оплатити й оформити</button>
+        </div>
+      </section>
+    </form>
+  </dialog>
+</main>
+
+<footer class="footer py-4">
+  <div class="container d-flex flex-column flex-md-row justify-content-between gap-2">
+    <p class="mb-0">MultiShop — навчальний маркетплейс. Розрахунки у MultiCoins (MC).</p>
+    <a href="/pages/policy.html" class="text-decoration-none">Політика платформи →</a>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/static/js/api.js"></script>
+<script src="/static/js/price-format.js?v=price-3dp-20261114"></script>
+<script src="/static/js/auth.js?v=auth-header-tooltip-v1-20261122"></script>
+<script src="/static/js/password-change.js?v=password-change-20261114"></script>
+<script src="/static/js/policy-gate.js?v=policy-after-login-v2-20261122"></script>
+<script src="/static/js/notifications.js"></script>
+<script src="/static/js/cart.js?v=skeleton-swr-v5-20261123"></script>
+<script src="/static/js/checkout.js?v=checkout-contact-rows-order-comment-20261120"></script>
+<script src="/static/js/motion.js?v=skeleton-swr-v5-20261123"></script>
+<script src="/static/js/particles.js?v=particles-v4-bloom-20261122"></script>
+</body>
+</html>

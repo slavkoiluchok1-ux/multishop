@@ -1,0 +1,13 @@
+.env
+.env.*
+!.env.example
+!docker/.env.docker.example
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+db.sqlite3
+db.sqlite3-shm
+db.sqlite3-wal
+media/
+staticfiles/

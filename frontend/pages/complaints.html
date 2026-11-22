@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MultiShop — скарги</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/base.css?v=particles-v4-bloom-20261122">
+</head>
+<body>
+
+<nav class="navbar navbar-expand-xl navbar-dark mb-4">
+  <div class="container">
+    <a class="navbar-brand me-3 brand-mark" href="/">🛍️ <span>Multi<span class="brand-slash">Shop</span></span></a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false" aria-label="Меню">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="mainNavbar">
+      <ul class="navbar-nav ms-auto align-items-center">
+        <li class="nav-item"><a class="nav-link nav-pill" href="/pages/policy.html">Політика</a></li>
+        <li class="nav-item"><a class="nav-link nav-pill" href="/">Головна</a></li>
+        <li class="nav-item"><a class="nav-link nav-pill" href="/pages/catalog.html">Каталог</a></li>
+        <li class="nav-item"><a class="nav-link nav-pill" href="/pages/cart.html">Кошик<span class="nav-counter is-cart" data-cart-count hidden>0</span></a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/favorites.html">Обране<span class="nav-counter" data-counter="favorites" hidden>0</span></a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/orders.html">Замовлення<span class="nav-counter" data-counter="orders" hidden>0</span></a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill active" href="/pages/complaints.html" aria-current="page">Скарги<span class="nav-counter" data-counter="complaints" hidden>0</span></a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/seller.html">Мої товари</a></li>
+        <li class="nav-item" data-auth="guest"><a class="nav-link nav-pill" href="/pages/support.html">Підтримка</a></li><li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/support.html">Підтримка</a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/profile.html">Профіль</a></li>
+        <li class="nav-item" data-auth="guest"><a class="nav-link nav-pill" href="/pages/login.html">Вхід</a></li>
+        <li class="nav-item" data-auth="guest"><a class="nav-link nav-pill" href="/pages/register.html">Реєстрація</a></li>
+        <li class="nav-item" data-auth="user" hidden>
+          <span class="nav-user"><img class="avatar" alt="" data-user-avatar hidden><span class="nav-user-name" data-user-name></span></span>
+        </li>
+        <li class="nav-item" data-auth="user" hidden>
+          <button class="nav-link nav-pill border-0 bg-transparent" type="button" data-logout>Вийти</button>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<main class="container app-main py-3 py-md-4">
+  <div class="section-heading-panel mb-4">
+    <p class="eyebrow mb-1">Спори та порушення</p>
+    <h1 class="section-title mb-2">Скарги</h1>
+    <p class="text-muted-soft mb-0">Подавайте скарги на замовлення, товари й користувачів та стежте за розглядом.</p>
+  </div>
+
+  <div class="alert-soft is-danger mb-3" id="complaintsError" hidden></div>
+
+  <div class="d-flex flex-wrap gap-2 mb-3">
+    <button class="btn btn-primary" type="button" id="newComplaintBtn">Подати скаргу</button>
+    <a class="btn btn-outline-primary" href="/pages/support.html">Написати в підтримку</a>
+  </div>
+
+  <ul class="nav nav-pills gap-2 mb-4" id="complaintTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active" type="button" data-tab="mine" role="tab">Мої скарги</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" type="button" data-tab="against" role="tab">Скарги на мене</button>
+    </li>
+  </ul>
+
+  <div id="complaintList" class="d-grid gap-3"></div>
+  <p class="text-muted-soft" id="complaintEmpty" hidden>Скарг немає.</p>
+</main>
+
+<!-- Перегляд скарги -->
+<div class="app-modal" id="viewModal" hidden>
+  <div class="app-modal-box is-lg">
+    <button class="app-modal-close" type="button" id="viewClose" aria-label="Закрити">×</button>
+    <p class="eyebrow mb-1" id="viewType"></p>
+    <h2 class="h5 mb-2" id="viewStatus"></h2>
+    <div class="alert-soft is-danger mb-2" id="viewError" hidden></div>
+    <div id="viewBody" class="modal-scroll"></div>
+    <div id="viewCommentForm" class="mt-3" hidden>
+      <label class="form-label" for="commentText">Ваш коментар</label>
+      <textarea class="form-control mb-2" id="commentText" rows="3"></textarea>
+      <button class="btn btn-primary btn-sm" type="button" id="commentSend">Надіслати</button>
+    </div>
+  </div>
+</div>
+
+<footer class="footer py-4">
+  <div class="container d-flex flex-column flex-md-row justify-content-between gap-2">
+    <p class="mb-0">MultiShop — навчальний маркетплейс. Розрахунки у MultiCoins (MC).</p>
+    <a href="/pages/policy.html" class="text-decoration-none">Політика платформи →</a>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/static/js/api.js"></script>
+<script src="/static/js/auth.js?v=auth-header-tooltip-v1-20261122"></script>
+<script src="/static/js/password-change.js?v=password-change-20261114"></script>
+<script src="/static/js/policy-gate.js?v=policy-after-login-v2-20261122"></script>
+<script src="/static/js/notifications.js"></script>
+<script src="/static/js/complaint-tree.js?v=skeleton-swr-v5-20261123"></script>
+<script src="/static/js/complaint-form.js?v=complaint-form-scope-20261114"></script>
+<script>
+  (function () {
+    "use strict";
+    const $ = (id) => document.getElementById(id);
+    const esc = window.MS.escapeHtml;
+
+    let currentTab = "mine";
+    let openComplaintId = null;
+
+    function showError(message) {
+      $("complaintsError").textContent = message || "";
+      $("complaintsError").hidden = !message;
+    }
+
+    function fmtDate(value) {
+      if (!value) return "—";
+      const date = new Date(value);
+      return isNaN(date.getTime()) ? "—" : date.toLocaleString("uk-UA");
+    }
+
+    /* ---------- Список ---------- */
+
+    function renderList(results) {
+      $("complaintList").innerHTML = results.map((row) =>
+        '<article class="card-soft is-clickable" data-complaint="' + row.id + '">' +
+        '<div class="card-body">' +
+        '<div class="d-flex flex-wrap justify-content-between gap-2">' +
+        '<div><p class="eyebrow mb-1">' + esc(row.type_path) + '</p>' +
+        '<h3 class="h6 mb-1">' + esc(row.status_display) + " · " + esc(row.counterparty) + "</h3>" +
+        '<div class="small text-muted-soft">' + esc((row.text || "").slice(0, 120)) + "</div></div>" +
+        '<div class="small text-muted-soft">' + esc(fmtDate(row.created_at)) + "</div>" +
+        "</div></div></article>"
+      ).join("");
+      $("complaintEmpty").hidden = results.length > 0;
+    }
+
+    async function loadList() {
+      showError("");
+      const cacheKey = window.MSSkeletons.cacheKey("/complaints?tab=" + currentTab);
+      const cached = window.MSSkeletons.getCachedData(cacheKey);
+      if (cached !== undefined) renderList(cached.results || []);
+      const loading = cached === undefined
+        ? window.MSSkeletons.showSkeleton($("complaintList"), "complaint", 4)
+        : null;
+      try {
+        const data = await window.MS.get("/complaints?tab=" + currentTab);
+        window.MSSkeletons.setCachedData(cacheKey, data);
+        if (loading) await loading.finish(() => renderList(data.results || []));
+        else renderList(data.results || []);
+        try {
+          await window.MS.post("/notifications/read", { section: "complaints" });
+        } catch (err) {
+          window.MS.toast(err.message || "Не вдалося оновити сповіщення.", "danger");
+        }
+        if (window.MSCounters) window.MSCounters.refresh();
+      } catch (err) {
+        const message = window.MSSkeletons.friendlyErrorMessage(err, "Не вдалося завантажити скарги.");
+        if (loading) {
+          await loading.finish(() => {
+            window.MSSkeletons.renderRetryError($("complaintsError"), message, loadList, true);
+          });
+        } else {
+          window.MSSkeletons.renderRetryError($("complaintsError"), message, loadList, true);
+        }
+      }
+    }
+
+    /* ---------- Перегляд ---------- */
+
+    function evidenceHtml(rows) {
+      if (!rows || !rows.length) return "";
+      return '<h3 class="h6 mb-2">Докази</h3><div class="d-flex flex-wrap gap-2 mb-3">' +
+        rows.map((row) => '<a class="btn btn-outline-primary btn-sm" href="' + esc(row.url) +
+          '" target="_blank" rel="noopener">' + esc(row.name) + "</a>").join("") + "</div>";
+    }
+
+    function commentsHtml(rows) {
+      if (!rows || !rows.length) return '<p class="text-muted-soft small">Коментарів немає.</p>';
+      return rows.map((row) =>
+        '<div class="order-comment small mb-2"><strong>' + esc(row.author) + "</strong> · " +
+        esc(fmtDate(row.created_at)) + "<div>" + esc(row.text) + "</div></div>"
+      ).join("");
+    }
+
+    function renderDetail(data) {
+      $("viewType").textContent = data.type_path;
+      $("viewStatus").textContent = data.status_display;
+      $("viewBody").innerHTML =
+        "<p>" + esc(data.text) + "</p>" +
+        '<p class="small text-muted-soft">Створено: ' + esc(fmtDate(data.created_at)) +
+        (data.resolved_at ? " · Вирішено: " + esc(fmtDate(data.resolved_at)) : "") + "</p>" +
+        (data.resolution ? '<div class="alert-soft mb-3"><strong>Рішення:</strong> ' +
+          esc(data.resolution) + "</div>" : "") +
+        (data.refund_amount_mc ? '<p class="small">Повернено: ' + esc(data.refund_amount_mc) +
+          " MC</p>" : "") +
+        evidenceHtml(data.evidence) +
+        '<h3 class="h6 mb-2">Коментарі</h3><div id="commentsMount">' + commentsHtml(data.comments) + "</div>";
+      $("viewCommentForm").hidden = !data.can_comment;
+      $("commentText").value = "";
+    }
+
+    async function openComplaint(id) {
+      openComplaintId = id;
+      $("viewError").hidden = true;
+      $("viewModal").hidden = false;
+      try {
+        const data = await window.MS.get("/complaints/" + id);
+        renderDetail(data);
+      } catch (err) {
+        $("viewError").textContent = err.message || "Не вдалося відкрити скаргу.";
+        $("viewError").hidden = false;
+      }
+    }
+
+    async function sendComment() {
+      const text = $("commentText").value.trim();
+      if (!text) {
+        window.MS.toast("Напишіть коментар.", "danger");
+        return;
+      }
+      try {
+        await window.MS.post("/complaints/" + openComplaintId + "/comments", { text: text });
+        await openComplaint(openComplaintId);
+      } catch (err) {
+        $("viewError").textContent = err.message || "Не вдалося надіслати коментар.";
+        $("viewError").hidden = false;
+      }
+    }
+
+    /* ---------- Форма подачі (спільний компонент complaint-form.js) ---------- */
+
+    function openSubmitForm() {
+      window.MSComplaintForm.open({ onSent: loadList });
+    }
+
+    /* ---------- Події ---------- */
+
+    document.addEventListener("DOMContentLoaded", () => {
+      document.querySelectorAll("#complaintTabs [data-tab]").forEach((button) => {
+        button.addEventListener("click", () => {
+          currentTab = button.dataset.tab;
+          document.querySelectorAll("#complaintTabs [data-tab]").forEach((el) => {
+            el.classList.toggle("active", el.dataset.tab === currentTab);
+          });
+          loadList();
+        });
+      });
+
+      $("complaintList").addEventListener("click", (event) => {
+        const card = event.target.closest("[data-complaint]");
+        if (card) openComplaint(card.getAttribute("data-complaint"));
+      });
+
+      $("newComplaintBtn").addEventListener("click", openSubmitForm);
+
+      $("viewClose").addEventListener("click", () => { $("viewModal").hidden = true; });
+      $("commentSend").addEventListener("click", sendComment);
+
+      window.MSAuth.ready().then((user) => {
+        if (!user || !user.authenticated) {
+          window.location.href = "/pages/login.html";
+          return;
+        }
+        loadList();
+      });
+    });
+  })();
+</script>
+<script src="/static/js/motion.js?v=skeleton-swr-v5-20261123"></script>
+<script src="/static/js/particles.js?v=particles-v4-bloom-20261122"></script>
+</body>
+</html>

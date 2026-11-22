@@ -1,0 +1,163 @@
+"""Маршрути API підтримки: гостьове звернення, звернення користувача, адмінка."""
+from django.urls import path
+
+from .admin_api import (
+    AdminSupportRecoverView,
+    AdminSupportStatusView,
+    AdminSupportTicketDetailView,
+    AdminSupportTicketsView,
+)
+from .actions_api import (
+    AdminSupportBanLiftView,
+    AdminSupportBanReduceView,
+    AdminSupportBanRejectView,
+    AdminSupportBugStatusView,
+    AdminSupportCategoryView,
+    AdminSupportCoinIssueView,
+    AdminSupportHeldRefundView,
+    AdminSupportIdeaStatusView,
+    AdminSupportInternalNoteView,
+    AdminSupportOrderView,
+    AdminSupportOrderPayView,
+    AdminSupportOrderRefundView,
+    AdminSupportProductView,
+    AdminSupportProductDeactivateView,
+    AdminSupportProductRestoreView,
+    AdminSupportTemplateReplyView,
+    AdminSupportWalletView,
+)
+from .api_views import (
+    SupportAttachmentView,
+    SupportGuestView,
+    SupportTicketDetailView,
+    SupportTicketAppealView,
+    SupportTicketMessagesView,
+    SupportTicketsView,
+)
+
+urlpatterns = [
+    path("support/guest", SupportGuestView.as_view(), name="api-support-guest"),
+    path("support/tickets", SupportTicketsView.as_view(), name="api-support-tickets"),
+    path(
+        "support/tickets/<int:pk>",
+        SupportTicketDetailView.as_view(),
+        name="api-support-ticket-detail",
+    ),
+    path(
+        "support/tickets/<int:pk>/messages",
+        SupportTicketMessagesView.as_view(),
+        name="api-support-ticket-messages",
+    ),
+    path(
+        "support/tickets/<int:pk>/appeals",
+        SupportTicketAppealView.as_view(),
+        name="api-support-ticket-appeal",
+    ),
+    path(
+        "support/attachments/<int:pk>",
+        SupportAttachmentView.as_view(),
+        name="api-support-attachment",
+    ),
+    # Адмінські маршрути підтримки (право «support»)
+    path("admin/support", AdminSupportTicketsView.as_view(), name="api-admin-support"),
+    path(
+        "admin/support/<int:pk>",
+        AdminSupportTicketDetailView.as_view(),
+        name="api-admin-support-detail",
+    ),
+    path(
+        "admin/support/<int:pk>/status",
+        AdminSupportStatusView.as_view(),
+        name="api-admin-support-status",
+    ),
+    path(
+        "admin/support/<int:pk>/recover-account",
+        AdminSupportRecoverView.as_view(),
+        name="api-admin-support-recover",
+    ),
+    path(
+        "admin/support/<int:pk>/category",
+        AdminSupportCategoryView.as_view(),
+        name="api-admin-support-category",
+    ),
+    path(
+        "admin/support/<int:pk>/bug/status",
+        AdminSupportBugStatusView.as_view(),
+        name="api-admin-support-bug-status",
+    ),
+    path(
+        "admin/support/<int:pk>/idea/status",
+        AdminSupportIdeaStatusView.as_view(),
+        name="api-admin-support-idea-status",
+    ),
+    path(
+        "admin/support/<int:pk>/internal-note",
+        AdminSupportInternalNoteView.as_view(),
+        name="api-admin-support-internal-note",
+    ),
+    path(
+        "admin/support/<int:pk>/template-reply",
+        AdminSupportTemplateReplyView.as_view(),
+        name="api-admin-support-template-reply",
+    ),
+    path(
+        "admin/support/<int:pk>/ban/lift",
+        AdminSupportBanLiftView.as_view(),
+        name="api-admin-support-ban-lift",
+    ),
+    path(
+        "admin/support/<int:pk>/ban/reduce",
+        AdminSupportBanReduceView.as_view(),
+        name="api-admin-support-ban-reduce",
+    ),
+    path(
+        "admin/support/<int:pk>/ban/reject",
+        AdminSupportBanRejectView.as_view(),
+        name="api-admin-support-ban-reject",
+    ),
+    path(
+        "admin/support/<int:pk>/wallet",
+        AdminSupportWalletView.as_view(),
+        name="api-admin-support-wallet",
+    ),
+    path(
+        "admin/support/<int:pk>/wallet/issue",
+        AdminSupportCoinIssueView.as_view(),
+        name="api-admin-support-wallet-issue",
+    ),
+    path(
+        "admin/support/<int:pk>/wallet/refund-held",
+        AdminSupportHeldRefundView.as_view(),
+        name="api-admin-support-wallet-refund",
+    ),
+    path(
+        "admin/support/<int:pk>/order",
+        AdminSupportOrderView.as_view(),
+        name="api-admin-support-order",
+    ),
+    path(
+        "admin/support/<int:pk>/order/pay-seller",
+        AdminSupportOrderPayView.as_view(),
+        name="api-admin-support-order-pay",
+    ),
+    path(
+        "admin/support/<int:pk>/order/refund-buyer",
+        AdminSupportOrderRefundView.as_view(),
+        name="api-admin-support-order-refund",
+    ),
+    path(
+        "admin/support/<int:pk>/product",
+        AdminSupportProductView.as_view(),
+        name="api-admin-support-product",
+    ),
+    path(
+        "admin/support/<int:pk>/product/deactivate",
+        AdminSupportProductDeactivateView.as_view(),
+        name="api-admin-support-product-deactivate",
+    ),
+    path(
+        "admin/support/<int:pk>/product/restore",
+        AdminSupportProductRestoreView.as_view(),
+        name="api-admin-support-product-restore",
+    ),
+]

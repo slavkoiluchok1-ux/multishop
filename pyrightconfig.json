@@ -1,0 +1,16 @@
+{
+  "include": ["apps", "config", "tests"],
+  "exclude": ["**/.venv", "**/__pycache__", "**/migrations", "media", "staticfiles"],
+  "venvPath": ".",
+  "venv": ".venv",
+  "pythonVersion": "3.13",
+  "typeCheckingMode": "off",
+  "reportAttributeAccessIssue": "none",
+  "reportOptionalMemberAccess": "none",
+  "reportArgumentType": "none",
+  "reportOptionalSubscript": "none",
+  "reportCallIssue": "none",
+  "reportIndexIssue": "none",
+  "reportGeneralTypeIssues": "none",
+  "reportReturnType": "none"
+}

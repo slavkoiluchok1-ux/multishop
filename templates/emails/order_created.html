@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="uk">
+  <body>
+    <h1>Замовлення №{{ order.id }} оформлено</h1>
+    <p>Дякуємо за покупку в MultiShop. Продавець: {{ order.seller.username }}.</p>
+    <ul>
+      {% for item in order.items.all %}
+        <li>{{ item.product_name }} × {{ item.quantity }} — {{ item.unit_price_mc }} MC</li>
+      {% endfor %}
+    </ul>
+    <p>Разом: {{ order.total_mc }} MC</p>
+    {% if order.delivery_address %}
+      <p>Отримувач: {{ order.recipient_name }}<br>{{ order.delivery_address }}</p>
+    {% endif %}
+    <p>Статус замовлення: {{ order.get_status_display }}.</p>
+  </body>
+</html>

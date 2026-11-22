@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MultiShop — профіль</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/base.css?v=particles-v4-bloom-20261122">
+</head>
+<body>
+
+<nav class="navbar navbar-expand-xl navbar-dark mb-4">
+  <div class="container">
+    <a class="navbar-brand me-3 brand-mark" href="/">🛍️ <span>Multi<span class="brand-slash">Shop</span></span></a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false" aria-label="Меню">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="mainNavbar">
+      <ul class="navbar-nav ms-auto align-items-center">
+        <li class="nav-item"><a class="nav-link nav-pill" href="/pages/policy.html">Політика</a></li>
+        <li class="nav-item"><a class="nav-link nav-pill" href="/">Головна</a></li>
+        <li class="nav-item"><a class="nav-link nav-pill" href="/pages/catalog.html">Каталог</a></li>
+        <li class="nav-item"><a class="nav-link nav-pill" href="/pages/cart.html">Кошик<span class="nav-counter is-cart" data-cart-count hidden>0</span></a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/favorites.html">Обране<span class="nav-counter" data-counter="favorites" hidden>0</span></a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/orders.html">Замовлення<span class="nav-counter" data-counter="orders" hidden>0</span></a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/complaints.html">Скарги<span class="nav-counter" data-counter="complaints" hidden>0</span></a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/seller.html">Мої товари</a></li>
+        <li class="nav-item" data-auth="guest"><a class="nav-link nav-pill" href="/pages/support.html">Підтримка</a></li><li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/support.html">Підтримка</a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill active" href="/pages/profile.html" aria-current="page">Профіль</a></li>
+        <li class="nav-item" data-auth="guest"><a class="nav-link nav-pill" href="/pages/login.html">Вхід</a></li>
+        <li class="nav-item" data-auth="guest"><a class="nav-link nav-pill" href="/pages/register.html">Реєстрація</a></li>
+        <li class="nav-item" data-auth="user" hidden>
+          <span class="nav-user">
+            <img class="avatar" alt="" data-user-avatar hidden>
+            <span class="nav-user-name" data-user-name></span>
+          </span>
+        </li>
+        <li class="nav-item" data-auth="user" hidden>
+          <button class="nav-link nav-pill border-0 bg-transparent" type="button" data-logout>Вийти</button>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<main class="container app-main py-3 py-md-4">
+  <div class="section-heading-panel mb-3">
+    <p class="eyebrow mb-1">Особистий кабінет</p>
+    <h1 class="section-title mb-2">Профіль користувача</h1>
+    <p class="text-muted-soft mb-0">Керуйте контактами, адресою доставки та фото профілю.</p>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-lg-5">
+      <div class="card-soft h-100">
+        <div class="card-body">
+          <span class="badge-soft is-lime mb-3">Гаманець</span>
+          <button class="btn btn-sm btn-outline-primary mb-3" type="button" id="toggleFrozenPayouts" hidden>
+            Показати заморожені виплати
+          </button>
+          <div class="balance-list" id="walletBox"></div>
+          <div class="text-muted-soft small mt-3" id="walletNote"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-7">
+      <div class="card-soft h-100">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-3 mb-3">
+            <img class="avatar avatar-lg" alt="Аватар" id="avatarPreview" hidden>
+            <span class="avatar avatar-lg avatar-placeholder" id="avatarPlaceholder" aria-hidden="true">?</span>
+            <div>
+              <div class="h5 mb-0" id="profileName">…</div>
+              <div class="text-muted-soft small" id="profileRole"></div>
+            </div>
+          </div>
+          <div class="d-flex flex-wrap gap-2 mb-2">
+            <button class="btn btn-outline-primary" type="button" id="chooseAvatarBtn">Додати фото</button>
+            <button class="btn btn-outline-danger" type="button" id="deleteAvatarBtn" hidden>Видалити фото</button>
+            <input type="file" id="avatarInput" accept="image/jpeg,image/png,image/webp" hidden>
+          </div>
+          <div class="field-hint mb-2">JPG, PNG або WebP, до 5 МБ.</div>
+          <div class="form-error mb-2" id="avatarError" role="alert" aria-live="polite" hidden></div>
+          <hr class="divider-dashed">
+          <p class="text-muted-soft small mb-0">
+            Нік, email та фото зберігаються в акаунті. Контакти й адреса — в окремому профілі доставки.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section class="card-soft mt-4" aria-labelledby="telegramProfileTitle">
+    <div class="card-body">
+      <h2 class="h5 mb-2" id="telegramProfileTitle">Telegram</h2>
+      <p class="text-muted-soft mb-3" id="telegramProfileStatus" aria-live="polite">
+        Перевіряємо підключення…
+      </p>
+      <div class="form-error mb-3" id="telegramProfileError" role="alert" hidden></div>
+      <div class="alert-soft is-success mb-3" id="telegramProfileSuccess" role="status" hidden></div>
+      <div class="d-flex flex-wrap gap-2 mb-3">
+        <button class="btn btn-primary" type="button" id="telegramProfileConnect">Підключити</button>
+        <button class="btn btn-outline-danger" type="button" id="telegramProfileUnlink" hidden>Відключити</button>
+      </div>
+      <div id="telegramProfilePending" class="mb-3" hidden>
+        <p class="small mb-2">Код діє 10 хвилин. Відкрийте бота та надішліть йому код:</p>
+        <div class="d-flex flex-wrap align-items-center gap-2">
+          <code id="telegramProfileCode"></code>
+          <button class="btn btn-sm btn-outline-primary" type="button" id="telegramProfileCopy">Скопіювати код</button>
+          <a class="btn btn-sm btn-outline-primary" id="telegramProfileDeepLink" href="#">Відкрити бота</a>
+        </div>
+        <div class="small text-muted-soft mt-2" id="telegramProfileCountdown"></div>
+      </div>
+      <div id="telegramProfilePreferences" class="row g-2" hidden></div>
+    </div>
+  </section>
+
+  <div class="d-flex flex-wrap gap-2 mt-4">
+    <a class="btn btn-outline-primary" href="/pages/orders.html">Мої замовлення</a>
+    <a class="btn btn-outline-primary" href="/pages/seller.html">Кабінет продавця</a>
+    <button class="btn btn-outline-primary" type="button" data-change-password>Змінити пароль</button>
+  </div>
+
+  <div class="card-soft mt-4">
+    <div class="card-body">
+      <div class="alert-soft is-danger mb-3" id="profileError" role="alert" hidden></div>
+      <div class="alert-soft is-success mb-3" id="profileSuccess" role="status" aria-live="polite" hidden></div>
+
+      <form id="profileForm" class="profile-form" novalidate>
+        <h2 class="h5 mb-3">Основне</h2>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label" for="username">Нік</label>
+            <input class="form-control" type="text" id="username" name="username" required>
+            <div class="form-error" data-error-for="username"></div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="email">Email</label>
+            <input class="form-control" type="email" id="email" name="email" required>
+            <div class="form-error" data-error-for="email"></div>
+          </div>
+        </div>
+
+        <hr class="divider-dashed">
+        <h2 class="h5 mb-3">Контакти</h2>
+        <div class="row g-3">
+          <div class="col-12">
+            <label class="form-label" for="phone">Телефон</label>
+            <input class="form-control" type="text" id="phone" name="phone" maxlength="32" autocomplete="tel" placeholder="+380…">
+            <div class="form-error" data-error-for="phone" role="alert" aria-live="polite"></div>
+          </div>
+          <div class="col-12">
+            <label class="form-label" for="telegram">Telegram</label>
+            <input class="form-control" type="text" id="telegram" name="telegram" maxlength="64" placeholder="@nickname">
+            <div class="form-error" data-error-for="telegram" role="alert" aria-live="polite"></div>
+          </div>
+          <div class="col-12">
+            <label class="form-label" for="instagram">Instagram</label>
+            <input class="form-control" type="text" id="instagram" name="instagram" maxlength="64" placeholder="@nickname">
+            <div class="form-error" data-error-for="instagram" role="alert" aria-live="polite"></div>
+          </div>
+          <div class="col-12">
+            <label class="form-label" for="viber">Viber</label>
+            <input class="form-control" type="text" id="viber" name="viber" maxlength="32" placeholder="+380…">
+            <div class="form-error" data-error-for="viber" role="alert" aria-live="polite"></div>
+          </div>
+          <div class="col-12">
+            <label class="form-label" for="facebook">Facebook</label>
+            <input class="form-control" type="text" id="facebook" name="facebook" maxlength="128" placeholder="https://facebook.com/…">
+            <div class="form-error" data-error-for="facebook" role="alert" aria-live="polite"></div>
+          </div>
+          <div class="col-12">
+            <label class="form-label" for="whatsapp">WhatsApp</label>
+            <input class="form-control" type="text" id="whatsapp" name="whatsapp" maxlength="32" placeholder="+380…">
+            <div class="form-error" data-error-for="whatsapp" role="alert" aria-live="polite"></div>
+          </div>
+        </div>
+
+        <hr class="divider-dashed">
+        <h2 class="h5 mb-3">Адреса доставки</h2>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label" for="recipient_name">Отримувач</label>
+            <input class="form-control" type="text" id="recipient_name" name="recipient_name">
+            <div class="form-error" data-error-for="recipient_name" role="alert" aria-live="polite"></div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="delivery_country">Країна</label>
+            <input class="form-control" type="text" id="delivery_country" name="delivery_country">
+            <div class="form-error" data-error-for="delivery_country" role="alert" aria-live="polite"></div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="delivery_city">Місто</label>
+            <input class="form-control" type="text" id="delivery_city" name="delivery_city">
+            <div class="form-error" data-error-for="delivery_city" role="alert" aria-live="polite"></div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="delivery_postcode">Індекс</label>
+            <input class="form-control" type="text" id="delivery_postcode" name="delivery_postcode">
+            <div class="form-error" data-error-for="delivery_postcode" role="alert" aria-live="polite"></div>
+          </div>
+          <div class="col-12">
+            <label class="form-label" for="delivery_street">Вулиця, будинок, квартира</label>
+            <input class="form-control" type="text" id="delivery_street" name="delivery_street">
+            <div class="form-error" data-error-for="delivery_street" role="alert" aria-live="polite"></div>
+          </div>
+          <div class="col-12">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="autofill_delivery" name="autofill_delivery">
+              <label class="form-check-label" for="autofill_delivery">
+                Підставляти ці дані автоматично під час оформлення замовлення
+              </label>
+            </div>
+            <div class="form-error" data-error-for="autofill_delivery" role="alert" aria-live="polite"></div>
+          </div>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2 mt-4">
+          <button class="btn btn-primary profile-save-button" type="submit" id="saveBtn">Зберегти зміни</button>
+          <a class="btn btn-outline-primary" href="/pages/policy.html">Політика</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</main>
+
+<dialog class="checkout-dialog" id="avatarDeleteDialog" aria-labelledby="avatarDeleteTitle">
+  <h2 class="h5 mb-2" id="avatarDeleteTitle">Видалити фото профілю?</h2>
+  <p class="text-muted-soft mb-4">Фото буде видалено з вашого профілю.</p>
+  <div class="d-flex flex-wrap justify-content-end gap-2">
+    <button class="btn btn-outline-primary" type="button" id="cancelAvatarDelete">Скасувати</button>
+    <button class="btn btn-outline-danger" type="button" id="confirmAvatarDelete">Видалити</button>
+  </div>
+</dialog>
+
+<footer class="footer py-4">
+  <div class="container d-flex flex-column flex-md-row justify-content-between gap-2">
+    <p class="mb-0">MultiShop — навчальний маркетплейс. Розрахунки у MultiCoins (MC).</p>
+    <a href="/pages/policy.html" class="text-decoration-none">Політика платформи →</a>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/static/js/api.js"></script>
+<script src="/static/js/price-format.js?v=price-3dp-20261114"></script>
+<script src="/static/js/auth.js?v=auth-header-tooltip-v1-20261122"></script>
+<script src="/static/js/password-change.js?v=password-change-v2-20261114"></script>
+<script src="/static/js/notifications.js"></script>
+<script src="/static/js/policy-gate.js?v=policy-after-login-v2-20261122"></script>
+<script src="/static/js/telegram-profile.js"></script>
+<script>
+  (function () {
+    const ROLE_LABELS = {
+      buyer: "Покупець",
+      seller: "Продавець",
+      admin_main: "Головний адміністратор",
+      admin_1: "Адміністратор",
+      admin_2: "Модератор",
+    };
+
+    const form = document.getElementById("profileForm");
+    const errorBox = document.getElementById("profileError");
+    const successBox = document.getElementById("profileSuccess");
+    const saveBtn = document.getElementById("saveBtn");
+    const avatarPreview = document.getElementById("avatarPreview");
+    const avatarPlaceholder = document.getElementById("avatarPlaceholder");
+    const avatarInput = document.getElementById("avatarInput");
+    const chooseAvatarBtn = document.getElementById("chooseAvatarBtn");
+    const deleteAvatarBtn = document.getElementById("deleteAvatarBtn");
+    const avatarError = document.getElementById("avatarError");
+    const avatarDeleteDialog = document.getElementById("avatarDeleteDialog");
+    const cancelAvatarDelete = document.getElementById("cancelAvatarDelete");
+    const confirmAvatarDelete = document.getElementById("confirmAvatarDelete");
+    const profileName = document.getElementById("profileName");
+    const profileRole = document.getElementById("profileRole");
+    const walletBox = document.getElementById("walletBox");
+    const walletNote = document.getElementById("walletNote");
+    const toggleFrozenPayouts = document.getElementById("toggleFrozenPayouts");
+    const allowedAvatarTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
+    const maxAvatarSize = 5 * 1024 * 1024;
+    const profileFields = [
+      "phone", "telegram", "instagram", "viber", "facebook", "whatsapp", "recipient_name",
+      "delivery_country", "delivery_city", "delivery_street", "delivery_postcode",
+    ];
+    const formFieldNames = ["username", "email", ...profileFields, "autofill_delivery"];
+    let hasAvatar = false;
+    let frozenPayoutsVisible = false;
+    let savedAvatarUrl = "";
+    let avatarBusy = false;
+    let avatarBusyText = "Завантаження…";
+    let avatarPreviewObjectUrl = "";
+    let savedFormSnapshot = null;
+    let saveStatusTimer = 0;
+    let saveInProgress = false;
+
+    function setError(message) {
+      errorBox.textContent = message || "";
+      errorBox.hidden = !message;
+    }
+
+    function setSuccess(message) {
+      successBox.textContent = message || "";
+      successBox.hidden = !message;
+    }
+
+    function setAvatarError(message) {
+      avatarError.textContent = message || "";
+      avatarError.hidden = !message;
+    }
+
+    function currentFormSnapshot() {
+      return JSON.stringify(formFieldNames.map((key) => [key, fieldValue(key)]));
+    }
+
+    function fieldValue(key) {
+      const field = document.getElementById(key);
+      return field.type === "checkbox" ? field.checked : field.value;
+    }
+
+    function setFieldValue(key, value) {
+      const field = document.getElementById(key);
+      if (field.type === "checkbox") field.checked = !!value;
+      else field.value = value;
+    }
+
+    function buildProfileData(excludedFields) {
+      const excluded = new Set(excludedFields);
+      const data = new FormData();
+      formFieldNames.forEach((key) => {
+        if (excluded.has(key)) return;
+        const value = fieldValue(key);
+        data.append(key, key === "autofill_delivery" ? (value ? "true" : "false") : value.trim());
+      });
+      return data;
+    }
+
+    function responseFieldErrors(payload) {
+      if (!payload || typeof payload !== "object") return {};
+      const fields = payload.fields && typeof payload.fields === "object" ? payload.fields : payload;
+      return Object.fromEntries(Object.entries(fields).filter(([key]) => formFieldNames.includes(key)));
+    }
+
+    function rememberFormSnapshot() {
+      savedFormSnapshot = currentFormSnapshot();
+    }
+
+    function setSaveButtonState(state) {
+      window.clearTimeout(saveStatusTimer);
+      saveBtn.classList.remove("is-saved", "is-shaking");
+      saveBtn.disabled = state === "saving";
+      saveBtn.textContent = state === "saving"
+        ? "Зберігаю…"
+        : state === "saved" ? "Збережено ✓" : "Зберегти зміни";
+      if (state === "saved") {
+        saveBtn.classList.add("is-saved");
+        saveStatusTimer = window.setTimeout(() => setSaveButtonState("idle"), 1800);
+      }
+    }
+
+    function validateProfileFields() {
+      const errors = {};
+      const username = document.getElementById("username");
+      const email = document.getElementById("email");
+      if (!username.value.trim()) errors.username = "Вкажіть нік.";
+      if (!email.value.trim()) errors.email = "Вкажіть email.";
+      else if (email.validity.typeMismatch) errors.email = "Введіть коректну email-адресу.";
+
+      const phone = fieldValue("phone").trim();
+      const telegram = fieldValue("telegram").trim();
+      const facebook = fieldValue("facebook").trim();
+      if (phone && !/^\+380\d{9}$/.test(phone)) {
+        errors.phone = "Введіть номер у форматі +380XXXXXXXXX.";
+      }
+      if (telegram && !/^@[A-Za-z0-9_]{5,32}$/.test(telegram)) {
+        errors.telegram = "Введіть Telegram-нік у форматі @nickname.";
+      }
+      if (facebook) {
+        let validFacebook = false;
+        try {
+          const parsed = new URL(facebook);
+          validFacebook = ["http:", "https:"].includes(parsed.protocol) &&
+            (parsed.hostname === "facebook.com" || parsed.hostname.endsWith(".facebook.com"));
+        } catch (_error) {
+          validFacebook = false;
+        }
+        if (!validFacebook) errors.facebook = "Введіть посилання на профіль Facebook.";
+      }
+      return errors;
+    }
+
+    function shakeSaveButton() {
+      saveBtn.classList.remove("is-shaking");
+      void saveBtn.offsetWidth;
+      saveBtn.classList.add("is-shaking");
+    }
+
+    window.addEventListener("beforeunload", (event) => {
+      if (savedFormSnapshot !== null && !saveInProgress && currentFormSnapshot() !== savedFormSnapshot) {
+        event.preventDefault();
+        event.returnValue = "";
+      }
+    });
+
+    function avatarInitial(username) {
+      const first = Array.from((username || "").trim())[0];
+      return first ? first.toLocaleUpperCase() : "?";
+    }
+
+    function cacheBustedUrl(url) {
+      return url + (url.indexOf("?") === -1 ? "?" : "&") + "v=" + Date.now();
+    }
+
+    function updateHeaderAvatar(url, username) {
+      document.querySelectorAll("[data-user-avatar]").forEach((image) => {
+        const parent = image.parentElement;
+        if (!parent) return;
+        let fallback = parent.querySelector("[data-user-avatar-fallback]");
+        if (!fallback) {
+          fallback = document.createElement("span");
+          fallback.className = "avatar avatar-placeholder";
+          fallback.setAttribute("data-user-avatar-fallback", "");
+          fallback.setAttribute("aria-hidden", "true");
+          parent.insertBefore(fallback, image);
+        }
+        if (url) {
+          image.src = cacheBustedUrl(url);
+          image.hidden = false;
+          fallback.hidden = true;
+        } else {
+          image.hidden = true;
+          fallback.textContent = avatarInitial(username);
+          fallback.hidden = false;
+        }
+      });
+    }
+
+    function renderAvatar(url, username, updateHeader) {
+      hasAvatar = !!url;
+      savedAvatarUrl = url || "";
+      avatarPlaceholder.textContent = avatarInitial(username);
+      if (hasAvatar) {
+        avatarPreview.src = cacheBustedUrl(url);
+        avatarPreview.hidden = false;
+        avatarPlaceholder.hidden = true;
+      } else {
+        avatarPreview.removeAttribute("src");
+        avatarPreview.hidden = true;
+        avatarPlaceholder.hidden = false;
+      }
+      chooseAvatarBtn.textContent = avatarBusy
+        ? avatarBusyText
+        : hasAvatar ? "Змінити фото" : "Додати фото";
+      deleteAvatarBtn.hidden = !hasAvatar;
+      if (updateHeader) updateHeaderAvatar(url, username);
+    }
+
+    function setAvatarBusy(busy, label) {
+      avatarBusy = busy;
+      avatarBusyText = label || "Завантаження…";
+      chooseAvatarBtn.disabled = busy;
+      deleteAvatarBtn.disabled = busy;
+      avatarInput.disabled = busy;
+      chooseAvatarBtn.textContent = busy
+        ? avatarBusyText
+        : hasAvatar ? "Змінити фото" : "Додати фото";
+    }
+
+    function avatarRequestError(error) {
+      const payload = error && error.payload;
+      const fields = payload && typeof payload === "object"
+        ? payload.fields && typeof payload.fields === "object" ? payload.fields : payload
+        : null;
+      const value = fields && fields.avatar;
+      if (Array.isArray(value) && value.length) return value.join(" ");
+      if (typeof value === "string") return value;
+      return "Не вдалося завантажити, спробуйте ще раз";
+    }
+
+    chooseAvatarBtn.addEventListener("click", () => avatarInput.click());
+
+    avatarInput.addEventListener("change", async () => {
+      const file = avatarInput.files && avatarInput.files[0];
+      if (!file) return;
+      setAvatarError("");
+      setSuccess("");
+
+      if (file.size > maxAvatarSize) {
+        setAvatarError("Файл завеликий (максимум 5 МБ)");
+        avatarInput.value = "";
+        return;
+      }
+      if (file.type && !allowedAvatarTypes.has(file.type)) {
+        setAvatarError("Дозволені формати: JPG, PNG, WebP");
+        avatarInput.value = "";
+        return;
+      }
+
+      if (avatarPreviewObjectUrl) URL.revokeObjectURL(avatarPreviewObjectUrl);
+      avatarPreviewObjectUrl = URL.createObjectURL(file);
+      avatarPreview.src = avatarPreviewObjectUrl;
+      avatarPreview.hidden = false;
+      avatarPlaceholder.hidden = true;
+
+      const upload = new FormData();
+      upload.append("avatar", file);
+      setAvatarBusy(true, "Завантаження…");
+      try {
+        const updated = await window.MS.put("/profile", upload);
+        await window.MSAuth.refresh();
+        if (avatarPreviewObjectUrl) URL.revokeObjectURL(avatarPreviewObjectUrl);
+        avatarPreviewObjectUrl = "";
+        fill(updated);
+        renderAvatar(updated.avatar, updated.username, true);
+        setAvatarError("");
+        setSuccess("Фото профілю оновлено.");
+      } catch (error) {
+        if (avatarPreviewObjectUrl) URL.revokeObjectURL(avatarPreviewObjectUrl);
+        avatarPreviewObjectUrl = "";
+        renderAvatar(savedAvatarUrl, profileName.textContent, false);
+        setAvatarError(avatarRequestError(error));
+      } finally {
+        setAvatarBusy(false);
+        avatarInput.value = "";
+      }
+    });
+
+    deleteAvatarBtn.addEventListener("click", () => {
+      if (!avatarDeleteDialog.open) avatarDeleteDialog.showModal();
+    });
+    cancelAvatarDelete.addEventListener("click", () => avatarDeleteDialog.close());
+    confirmAvatarDelete.addEventListener("click", async () => {
+      avatarDeleteDialog.close();
+      setAvatarError("");
+      setSuccess("");
+      setAvatarBusy(true, "Видалення…");
+      try {
+        const updated = await window.MS.del("/profile/avatar");
+        await window.MSAuth.refresh();
+        renderAvatar(updated.avatar, updated.username || profileName.textContent, true);
+        setSuccess("Фото профілю видалено.");
+      } catch (error) {
+        setAvatarError("Не вдалося видалити фото, спробуйте ще раз.");
+      } finally {
+        setAvatarBusy(false);
+      }
+    });
+
+    function clearFieldErrors() {
+      document.querySelectorAll("[data-error-for]").forEach((el) => {
+        el.textContent = "";
+        const input = document.getElementById(el.dataset.errorFor);
+        if (input) {
+          input.classList.remove("is-invalid");
+          input.removeAttribute("aria-invalid");
+        }
+      });
+    }
+
+    function showFieldErrors(payload) {
+      if (!payload || typeof payload !== "object") return false;
+      // Бекенд обгортає помилки полів у { error, fields: { field: [...] } }.
+      const fields = payload.fields && typeof payload.fields === "object" ? payload.fields : payload;
+      let shown = false;
+      Object.keys(fields).forEach((key) => {
+        const value = fields[key];
+        const text = Array.isArray(value) ? value.join(" ") : String(value);
+        const target = document.querySelector('[data-error-for="' + key + '"]');
+        if (target) {
+          target.textContent = text;
+          const input = document.getElementById(key);
+          if (input) {
+            input.classList.add("is-invalid");
+            input.setAttribute("aria-invalid", "true");
+          }
+          shown = true;
+        }
+      });
+      return shown;
+    }
+
+    function fill(data) {
+      document.getElementById("username").value = data.username || "";
+      document.getElementById("email").value = data.email || "";
+      const profile = data.profile || {};
+      profileFields.forEach((key) => {
+        const el = document.getElementById(key);
+        if (el) el.value = profile[key] || "";
+      });
+      document.getElementById("autofill_delivery").checked = !!profile.autofill_delivery;
+
+      profileName.textContent = data.username || "—";
+      profileRole.textContent = ROLE_LABELS[data.role] || data.role || "";
+      renderAvatar(data.avatar, data.username, false);
+      rememberFormSnapshot();
+    }
+
+    async function loadProfile() {
+      try {
+        const data = await window.MS.get("/profile");
+        fill(data);
+      } catch (err) {
+        setError(err.message || "Не вдалося завантажити профіль.");
+      }
+    }
+
+    function renderWallet(data) {
+      const fmt = window.MSPrice.formatMCShort;
+      const balance = data.balance || {};
+      const frozenPayoutsTotal = data.frozen_payouts_total || balance.frozen_mc;
+      const rows = [
+        ["Вільний баланс", balance.free_balance_mc],
+        ["Утримано (ескроу)", balance.held_mc],
+        ["Заморожено", frozenPayoutsTotal],
+        ["Застава", balance.deposit_locked_mc],
+        ["Борг", balance.debt_mc],
+      ];
+      const payouts = data.frozen_payouts || [];
+      toggleFrozenPayouts.hidden = payouts.length === 0;
+      toggleFrozenPayouts.textContent = frozenPayoutsVisible
+        ? "Сховати заморожені виплати"
+        : "Показати заморожені виплати";
+      const payoutsHtml = frozenPayoutsVisible && payouts.length
+        ? '<div class="frozen-payouts">' + payouts.map((p) =>
+            '<div class="balance-row"><span class="balance-label small">Заморожена виплата</span>' +
+            '<span class="balance-value money">' + fmt(p.amount_mc) + " MC → " +
+            p.release_at + "</span></div>"
+          ).join("") + "</div>"
+        : "";
+      walletBox.innerHTML = rows.map((row) =>
+        '<div class="balance-row"><span class="balance-label">' + row[0] +
+        '</span><span class="balance-value money">' + fmt(row[1]) + " MC</span></div>" +
+        (row[0] === "Заморожено" ? payoutsHtml : "")
+      ).join("");
+      walletNote.textContent = "Разом на гаманці: " + fmt(balance.total_mc) + " MC";
+    }
+
+    async function loadWallet() {
+      const cacheKey = window.MSSkeletons.cacheKey("/wallet");
+      const cached = window.MSSkeletons.getCachedData(cacheKey);
+      if (cached !== undefined) renderWallet(cached);
+      const loading = cached === undefined
+        ? window.MSSkeletons.showSkeleton(walletBox, "profile", 5)
+        : null;
+      try {
+        const data = await window.MS.get("/wallet");
+        window.MSSkeletons.setCachedData(cacheKey, data);
+        if (loading) await loading.finish(() => renderWallet(data));
+        else renderWallet(data);
+      } catch (err) {
+        toggleFrozenPayouts.hidden = true;
+        if (err.status === 403) {
+          window.MSSkeletons.setCachedData(cacheKey, undefined);
+          const showPolicyHint = () => {
+            walletBox.replaceChildren();
+            walletNote.textContent = "Гаманець доступний після прийняття політики.";
+          };
+          if (loading) await loading.finish(showPolicyHint);
+          else showPolicyHint();
+          return;
+        }
+        const message = window.MSSkeletons.friendlyErrorMessage(err, "Не вдалося завантажити гаманець.");
+        walletNote.textContent = "";
+        if (loading) {
+          await loading.finish(() =>
+            window.MSSkeletons.renderRetryError(walletBox, message, loadWallet)
+          );
+        } else {
+          window.MSSkeletons.renderRetryError(walletBox, message, loadWallet, true);
+        }
+      }
+    }
+
+    toggleFrozenPayouts.addEventListener("click", () => {
+      frozenPayoutsVisible = !frozenPayoutsVisible;
+      toggleFrozenPayouts.textContent = frozenPayoutsVisible
+        ? "Сховати заморожені виплати"
+        : "Показати заморожені виплати";
+      loadWallet();
+    });
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      if (saveInProgress) return;
+      setError("");
+      setSuccess("");
+      clearFieldErrors();
+
+      const clientErrors = validateProfileFields();
+      showFieldErrors({ fields: clientErrors });
+      const invalidValues = {};
+      Object.keys(clientErrors).forEach((key) => {
+        invalidValues[key] = fieldValue(key);
+      });
+
+      saveInProgress = true;
+      setSaveButtonState("saving");
+      try {
+        let updated;
+        let shownErrors = clientErrors;
+        try {
+          updated = await window.MS.request("/profile", {
+            method: "PATCH",
+            body: buildProfileData(Object.keys(clientErrors)),
+          });
+        } catch (requestError) {
+          const serverErrors = responseFieldErrors(requestError.payload);
+          const failedFields = Object.keys(serverErrors);
+          const canRetry = requestError.status === 400 &&
+            failedFields.length > 0 &&
+            failedFields.every((key) => formFieldNames.includes(key));
+          if (!canRetry) throw requestError;
+
+          failedFields.forEach((key) => {
+            invalidValues[key] = fieldValue(key);
+          });
+          shownErrors = Object.assign({}, clientErrors, serverErrors);
+          updated = await window.MS.request("/profile", {
+            method: "PATCH",
+            body: buildProfileData([...Object.keys(clientErrors), ...failedFields]),
+          });
+        }
+        fill(updated);
+        Object.keys(invalidValues).forEach((key) => {
+          setFieldValue(key, invalidValues[key]);
+        });
+        clearFieldErrors();
+        showFieldErrors({ fields: shownErrors });
+        setSuccess(Object.keys(shownErrors).length
+          ? "Інші зміни збережено."
+          : "Зміни збережено.");
+        if (Object.keys(shownErrors).length) {
+          setError("Виправте позначені поля, щоб зберегти й ці дані.");
+        }
+        setSaveButtonState("saved");
+        window.MS.toast("Профіль оновлено.", "success");
+        try {
+          await window.MSAuth.refresh();
+        } catch (refreshError) {
+          console.error("Не вдалося оновити меню після збереження профілю.", refreshError);
+        }
+      } catch (err) {
+        if (!showFieldErrors(err.payload)) setError(err.message || "Не вдалося зберегти зміни.");
+        shakeSaveButton();
+      } finally {
+        saveInProgress = false;
+        if (!saveBtn.classList.contains("is-saved")) setSaveButtonState("idle");
+      }
+    });
+
+    document.addEventListener("DOMContentLoaded", () => {
+      window.MSAuth.ready().then((user) => {
+        if (!user || !user.authenticated) {
+          window.location.href = "/pages/login.html";
+          return;
+        }
+        loadProfile();
+        loadWallet();
+      });
+    });
+  })();
+</script>
+<script src="/static/js/motion.js?v=skeleton-swr-v5-20261123"></script>
+<script src="/static/js/particles.js?v=particles-v4-bloom-20261122"></script>
+</body>
+</html>

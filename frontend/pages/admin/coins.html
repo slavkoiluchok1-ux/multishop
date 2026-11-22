@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MultiShop — видача MC</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/base.css?v=particles-v4-bloom-20261122">
+</head>
+<body>
+
+<nav class="navbar navbar-expand-xl navbar-dark mb-4">
+  <div class="container">
+    <a class="navbar-brand me-3 brand-mark" href="/">🛍️ <span>Multi<span class="brand-slash">Shop</span></span></a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false" aria-label="Меню">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="mainNavbar">
+      <ul class="navbar-nav ms-auto align-items-center">
+        <li class="nav-item"><a class="nav-link nav-pill" href="/pages/policy.html">Політика</a></li>
+        <li class="nav-item"><a class="nav-link nav-pill" href="/">Головна</a></li>
+        <li class="nav-item"><a class="nav-link nav-pill" href="/pages/catalog.html">Каталог</a></li>
+        <li class="nav-item"><a class="nav-link nav-pill" href="/pages/cart.html">Кошик<span class="nav-counter is-cart" data-cart-count hidden>0</span></a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/favorites.html">Обране<span class="nav-counter" data-counter="favorites" hidden>0</span></a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/orders.html">Замовлення<span class="nav-counter" data-counter="orders" hidden>0</span></a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/complaints.html">Скарги<span class="nav-counter" data-counter="complaints" hidden>0</span></a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/seller.html">Мої товари</a></li>
+        <li class="nav-item" data-auth="guest"><a class="nav-link nav-pill" href="/pages/support.html">Підтримка</a></li><li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/support.html">Підтримка</a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/profile.html">Профіль</a></li>
+        <li class="nav-item" data-auth="guest"><a class="nav-link nav-pill" href="/pages/login.html">Вхід</a></li>
+        <li class="nav-item" data-auth="guest"><a class="nav-link nav-pill" href="/pages/register.html">Реєстрація</a></li>
+        <li class="nav-item" data-auth="user" hidden>
+          <span class="nav-user">
+            <img class="avatar" alt="" data-user-avatar hidden>
+            <span class="nav-user-name" data-user-name></span>
+          </span>
+        </li>
+        <li class="nav-item" data-auth="user" hidden>
+          <button class="nav-link nav-pill border-0 bg-transparent" type="button" data-logout>Вийти</button>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<main class="container app-main py-3 py-md-4">
+  <div class="section-heading-panel mb-3">
+    <p class="eyebrow mb-1">Адміністрування</p>
+    <h1 class="section-title mb-2">Видача MultiCoins</h1>
+    <p class="text-muted-soft mb-0">Видавати MC може лише головний адміністратор. 1 MC = 10 ₴.</p>
+  </div>
+
+  <div class="alert-soft is-danger mb-3" id="coinError" hidden></div>
+  <div class="alert-soft is-success mb-3" id="coinSuccess" hidden></div>
+
+  <div class="card-soft mb-3">
+    <div class="card-body">
+      <h2 class="h5 mb-3">Видати MC</h2>
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label" for="login">Нік користувача</label>
+          <input class="form-control" type="text" id="login" placeholder="нік">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="amount">Сума, MC</label>
+          <input class="form-control" type="text" id="amount" inputmode="decimal" placeholder="наприклад 100">
+          <div class="field-hint" id="amountHint"></div>
+        </div>
+      </div>
+      <div class="d-flex flex-wrap gap-2 mt-3">
+        <button class="btn btn-primary" type="button" id="issueBtn">Видати</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card-soft">
+    <div class="card-body">
+      <h2 class="h5 mb-3">Останні видачі</h2>
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr><th>Час</th><th>Кому</th><th>Сума, MC</th><th>Хто видав</th></tr>
+          </thead>
+          <tbody id="issuesBody">
+            <tr><td colspan="4">Завантаження…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="footer py-4">
+  <div class="container d-flex flex-column flex-md-row justify-content-between gap-2">
+    <p class="mb-0">MultiShop — навчальний маркетплейс. Розрахунки у MultiCoins (MC).</p>
+    <a href="/pages/policy.html" class="text-decoration-none">Політика платформи →</a>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/static/js/api.js"></script>
+<script src="/static/js/price-format.js?v=price-3dp-20261114"></script>
+<script src="/static/js/auth.js?v=auth-header-tooltip-v1-20261122"></script>
+<script src="/static/js/password-change.js?v=password-change-20261114"></script>
+<script src="/static/js/notifications.js"></script>
+<script src="/static/js/policy-gate.js?v=policy-after-login-v2-20261122"></script>
+<script>
+  (function () {
+    const errorBox = document.getElementById("coinError");
+    const successBox = document.getElementById("coinSuccess");
+    const issuesBody = document.getElementById("issuesBody");
+    const amountHint = document.getElementById("amountHint");
+    const esc = window.MS.escapeHtml;
+    const fmtMC = window.MSPrice.formatMCShort;
+
+    function setError(message) {
+      errorBox.textContent = message || "";
+      errorBox.hidden = !message;
+    }
+    function setSuccess(message) {
+      successBox.textContent = message || "";
+      successBox.hidden = !message;
+    }
+    function fmtDate(value) {
+      if (!value) return "—";
+      return new Date(value).toLocaleString("uk-UA");
+    }
+
+    function renderIssues(issues) {
+      issuesBody.innerHTML = issues.length
+        ? issues.map((row) =>
+            "<tr><td>" + esc(fmtDate(row.created_at)) + "</td><td>" + esc(row.to_user) +
+            "</td><td>" + esc(fmtMC(row.amount_mc)) + "</td><td>" + esc(row.issued_by) +
+            "</td></tr>"
+          ).join("")
+        : '<tr><td colspan="4">Видач ще не було.</td></tr>';
+    }
+
+    async function load() {
+      try {
+        const data = await window.MS.get("/admin/coins/issue");
+        renderIssues(data.issues || []);
+      } catch (err) {
+        setError(err.message || "Не вдалося завантажити видачі.");
+      }
+    }
+
+    function updateHint() {
+      const value = document.getElementById("amount").value.trim();
+      if (!value) {
+        amountHint.textContent = "";
+        return;
+      }
+      const parsed = Number(String(value).replace(/\s+/g, "").replace(",", "."));
+      amountHint.textContent = isNaN(parsed) || parsed <= 0
+        ? ""
+        : "≈ " + window.MSPrice.formatUAH(String(parsed)) + " за курсом 1 MC = 10 ₴";
+    }
+
+    async function submit() {
+      setError("");
+      setSuccess("");
+      const login = document.getElementById("login").value.trim();
+      const amount = document.getElementById("amount").value.trim();
+      if (!login) {
+        setError("Укажіть нік користувача.");
+        return;
+      }
+      if (!amount) {
+        setError("Укажіть суму MC.");
+        return;
+      }
+      try {
+        const data = await window.MS.post("/admin/coins/issue", {
+          login: login,
+          amount_mc: amount,
+        });
+        setSuccess("Видано " + fmtMC(data.amount_mc) + " MC користувачу " + login + ".");
+        window.dispatchEvent(new Event("ms:wallet-changed"));
+        window.MS.toast("MC видано.", "success");
+        document.getElementById("login").value = "";
+        document.getElementById("amount").value = "";
+        updateHint();
+        await load();
+      } catch (err) {
+        setError(err.message || "Не вдалося видати MC.");
+      }
+    }
+
+    document.getElementById("amount").addEventListener("input", updateHint);
+    document.getElementById("issueBtn").addEventListener("click", submit);
+
+    document.addEventListener("DOMContentLoaded", () => {
+      window.MSAuth.ready().then((user) => {
+        if (!user || !user.authenticated) {
+          window.location.href = "/pages/login.html";
+          return;
+        }
+        if (!user.is_admin_main) {
+          window.location.href = "/";
+          return;
+        }
+        load();
+      });
+    });
+  })();
+</script>
+<script src="/static/js/motion.js?v=skeleton-swr-v5-20261123"></script>
+<script src="/static/js/particles.js?v=particles-v4-bloom-20261122"></script>
+</body>
+</html>

@@ -1,0 +1,1184 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MultiShop — підтримка (адмін)</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/support-admin.css?v=wallet-fit-20261115-2">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/base.css?v=particles-v4-bloom-20261122">
+</head>
+<body>
+
+<nav class="navbar navbar-expand-xl navbar-dark mb-4">
+  <div class="container">
+    <a class="navbar-brand me-3 brand-mark" href="/">🛍️ <span>Multi<span class="brand-slash">Shop</span></span></a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false" aria-label="Меню">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="mainNavbar">
+      <ul class="navbar-nav ms-auto align-items-center">
+        <li class="nav-item"><a class="nav-link nav-pill" href="/pages/policy.html">Політика</a></li>
+        <li class="nav-item"><a class="nav-link nav-pill" href="/">Головна</a></li>
+        <li class="nav-item"><a class="nav-link nav-pill" href="/pages/catalog.html">Каталог</a></li>
+        <li class="nav-item"><a class="nav-link nav-pill" href="/pages/cart.html">Кошик<span class="nav-counter is-cart" data-cart-count hidden>0</span></a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/favorites.html">Обране<span class="nav-counter" data-counter="favorites" hidden>0</span></a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/orders.html">Замовлення<span class="nav-counter" data-counter="orders" hidden>0</span></a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/complaints.html">Скарги<span class="nav-counter" data-counter="complaints" hidden>0</span></a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/seller.html">Мої товари</a></li>
+        <li class="nav-item" data-auth="guest"><a class="nav-link nav-pill" href="/pages/support.html">Підтримка</a></li><li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/support.html">Підтримка</a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/profile.html">Профіль</a></li>
+        <li class="nav-item" data-auth="guest"><a class="nav-link nav-pill" href="/pages/login.html">Вхід</a></li>
+        <li class="nav-item" data-auth="guest"><a class="nav-link nav-pill" href="/pages/register.html">Реєстрація</a></li>
+        <li class="nav-item" data-auth="user" hidden>
+          <span class="nav-user"><img class="avatar" alt="" data-user-avatar hidden><span class="nav-user-name" data-user-name></span></span>
+        </li>
+        <li class="nav-item" data-auth="user" hidden>
+          <button class="nav-link nav-pill border-0 bg-transparent" type="button" data-logout>Вийти</button>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<main class="container app-main py-3 py-md-4">
+  <div class="section-heading-panel mb-3">
+    <p class="eyebrow mb-1">Адміністрування</p>
+    <h1 class="section-title mb-2">Підтримка</h1>
+    <p class="text-muted-soft mb-0">Звернення людей (у т.ч. гостей і забанених). Ви бачите контакти й можете відповісти або відновити акаунт.</p>
+  </div>
+
+  <div class="alert-soft is-danger mb-3" id="pageError" hidden></div>
+  <div class="alert-soft is-success mb-3" id="pageSuccess" hidden></div>
+
+  <div class="card-soft mb-3">
+    <div class="card-body">
+      <div class="row g-3 align-items-end">
+        <div class="col-md-4">
+          <label class="form-label" for="statusFilter">Статус</label>
+          <select class="form-select" id="statusFilter">
+            <option value="all">Усі</option>
+            <option value="open">Відкриті</option>
+            <option value="answered">Відповіли</option>
+            <option value="closed">Закриті</option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label" for="typeFilter">Тип звернення</label>
+          <select class="form-select" id="typeFilter">
+            <option value="all">Усі типи</option>
+            <option value="unban">Розбан або оскарження блокування</option>
+            <option value="appeal">Апеляція</option>
+            <option value="bug">Виправлення помилки</option>
+            <option value="account">Проблема з акаунтом</option>
+            <option value="payment">Оплата або баланс MC</option>
+            <option value="order">Замовлення або доставка</option>
+            <option value="product">Товар або продавець</option>
+            <option value="policy">Питання щодо правил</option>
+            <option value="suggestion">Пропозиція або побажання</option>
+            <option value="other">Інше</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <button class="btn btn-primary w-100" type="button" id="applyBtn">Застосувати</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card-soft">
+    <div class="card-body">
+      <h2 class="h5 mb-3">Звернення</h2>
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr><th>Тема</th><th>Тип</th><th>Від кого</th><th>Контакти</th><th>Статус</th><th>Створено</th><th>Дії</th></tr>
+          </thead>
+          <tbody id="ticketsBody">
+            <tr><td colspan="7">Завантаження…</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3">
+        <button class="btn btn-outline-primary btn-sm" type="button" id="prevPage">← Назад</button>
+        <div class="d-flex flex-wrap align-items-center justify-content-center gap-2">
+          <span class="small text-muted-soft" id="pageInfo"></span>
+          <label class="small text-muted-soft" for="pageJump">Сторінка</label>
+          <input class="form-control form-control-sm admin-page-jump" type="number" id="pageJump" min="1" value="1">
+          <button class="btn btn-outline-primary btn-sm" type="button" id="pageJumpBtn">Перейти</button>
+        </div>
+        <button class="btn btn-outline-primary btn-sm" type="button" id="nextPage">Далі →</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="footer py-4">
+  <div class="container d-flex flex-column flex-md-row justify-content-between gap-2">
+    <p class="mb-0">MultiShop — навчальний маркетплейс. Розрахунки у MultiCoins (MC).</p>
+    <a href="/pages/policy.html" class="text-decoration-none">Політика платформи →</a>
+  </div>
+</footer>
+
+<!-- Звернення: перегляд, відповідь, відновлення акаунта -->
+<div class="app-modal" id="ticketModal" hidden>
+  <div class="app-modal-box is-xl">
+    <button class="app-modal-close" type="button" id="ticketClose" aria-label="Закрити">×</button>
+    <p class="eyebrow mb-1" id="ticketEyebrow"></p>
+    <h2 class="h5 mb-2" id="ticketTitle"></h2>
+    <div class="alert-soft is-danger mb-2" id="ticketError" hidden></div>
+    <div id="ticketBody" class="modal-scroll"></div>
+
+    <div id="categoryActions" class="mt-3">
+      <hr class="divider-dashed">
+      <h3 class="h6 mb-2">Категорія звернення</h3>
+      <div class="row g-2 align-items-end">
+        <div class="col-md-6">
+          <label class="form-label" for="ticketCategory">Категорія</label>
+          <select class="form-select" id="ticketCategory">
+            <option value="unban">Розбан або оскарження блокування</option>
+            <option value="bug">Виправлення помилки</option>
+            <option value="account">Проблема з акаунтом</option>
+            <option value="payment">Оплата або баланс MC</option>
+            <option value="order">Замовлення або доставка</option>
+            <option value="product">Товар або продавець</option>
+            <option value="policy">Питання щодо правил</option>
+            <option value="suggestion">Пропозиція або побажання</option>
+            <option value="other">Інше</option>
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="categoryReason">Причина зміни</label>
+          <input class="form-control" id="categoryReason" maxlength="4000">
+        </div>
+        <div class="col-12">
+          <button class="btn btn-outline-primary btn-sm" type="button" id="categorySave">Змінити категорію</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="unbanActions" class="mt-3" hidden>
+      <hr class="divider-dashed">
+      <h3 class="h6 mb-2">Перегляд бану</h3>
+      <div id="banDetails" class="card-soft mb-2"><div class="card-body small"></div></div>
+      <div id="banControls">
+        <label class="form-label" for="banReason">Обов'язкова примітка або причина рішення</label>
+        <textarea class="form-control mb-2" id="banReason" rows="2"></textarea>
+        <div class="row g-2 align-items-end mb-2">
+          <div class="col-md-5">
+            <label class="form-label" for="banEndDate">Скоротити бан до дати</label>
+            <input class="form-control" id="banEndDate" type="date">
+          </div>
+          <div class="col-md-7 d-flex flex-wrap gap-2">
+            <button class="btn btn-outline-primary btn-sm" type="button" id="banReduce">Скоротити бан</button>
+            <button class="btn btn-primary btn-sm" type="button" id="banLift">Зняти бан</button>
+            <button class="btn btn-outline-primary btn-sm" type="button" id="banReject">Відхилити розбан</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="bugActions" class="mt-3" hidden>
+      <hr class="divider-dashed">
+      <h3 class="h6 mb-2">Опрацювання помилки</h3>
+      <label class="form-label" for="bugStatus">Статус багу</label>
+      <select class="form-select mb-2" id="bugStatus">
+        <option value="accepted">Прийнято</option><option value="in_progress">В роботі</option>
+        <option value="fixed">Виправлено</option><option value="not_reproduced">Не відтворюється</option>
+      </select>
+      <label class="form-label" for="bugInternalNote">Внутрішня примітка (лише для адмінів)</label>
+      <textarea class="form-control mb-2" id="bugInternalNote" rows="2"></textarea>
+      <div class="d-flex flex-wrap gap-2">
+        <button class="btn btn-primary btn-sm" type="button" id="bugSave">Зберегти статус</button>
+        <select class="form-select form-select-sm w-auto" id="bugTemplate">
+          <option value="received">Дякуємо, передали розробникам</option>
+          <option value="fixed">Виправлено, перевірте ще раз</option>
+          <option value="not_reproduced">Не вдалося відтворити, опишіть кроки</option>
+        </select>
+        <button class="btn btn-outline-primary btn-sm" type="button" id="bugTemplateSend">Відповісти шаблоном</button>
+      </div>
+    </div>
+
+    <div id="paymentActions" class="mt-3" hidden>
+      <hr class="divider-dashed">
+      <h3 class="h6 mb-2">Гаманець користувача</h3>
+      <div id="walletDetails" class="card-soft wallet-panel mb-2"><div class="card-body small">Завантаження…</div></div>
+      <label class="form-label" for="walletReason">Причина дії</label>
+      <input class="form-control mb-2" id="walletReason" maxlength="4000">
+      <div class="row g-2 mb-2">
+        <div class="col-md-5">
+          <label class="form-label" for="heldOrderId">Номер замовлення з утриманими коштами</label>
+          <input class="form-control" id="heldOrderId" type="number" min="1">
+        </div>
+        <div class="col-md-7 d-flex align-items-end">
+          <button class="btn btn-outline-primary btn-sm" type="button" id="walletRefund">Повернути утримані кошти</button>
+        </div>
+      </div>
+      <div id="issueCoinsBox" class="row g-2 align-items-end" hidden>
+        <div class="col-md-5">
+          <label class="form-label" for="issueAmount">Видати MC (до 6 знаків після коми)</label>
+          <input class="form-control" id="issueAmount" type="number" min="0.000001" step="0.000001">
+        </div>
+        <div class="col-md-7"><button class="btn btn-primary btn-sm" type="button" id="issueCoins">Видати MC</button></div>
+      </div>
+    </div>
+
+    <div id="orderActions" class="mt-3" hidden>
+      <hr class="divider-dashed">
+      <h3 class="h6 mb-2">Замовлення</h3>
+      <div class="row g-2 align-items-end mb-2">
+        <div class="col-md-6">
+          <label class="form-label" for="orderId">Номер замовлення</label>
+          <input class="form-control" id="orderId" type="number" min="1">
+        </div>
+        <div class="col-md-6"><button class="btn btn-outline-primary btn-sm" type="button" id="orderFind">Знайти замовлення</button></div>
+      </div>
+      <div id="orderDetails" class="card-soft mb-2" hidden></div>
+      <label class="form-label" for="orderReason">Обов'язкова причина дії</label>
+      <input class="form-control mb-2" id="orderReason" maxlength="4000">
+      <div class="d-flex flex-wrap gap-2">
+        <a class="btn btn-outline-primary btn-sm" id="orderComplaintLink" href="/pages/admin/complaints.html">Відкрити скарги</a>
+        <button class="btn btn-outline-primary btn-sm" type="button" data-order-action="pay_seller">Примусово виплатити продавцю</button>
+        <button class="btn btn-primary btn-sm" type="button" data-order-action="refund_buyer">Повернути кошти покупцю</button>
+      </div>
+    </div>
+
+    <div id="productActions" class="mt-3" hidden>
+      <hr class="divider-dashed">
+      <h3 class="h6 mb-2">Товар або продавець</h3>
+      <div class="row g-2 align-items-end mb-2">
+        <div class="col-md-8">
+          <label class="form-label" for="productQuery">ID/назва товару або нік продавця</label>
+          <input class="form-control" id="productQuery">
+        </div>
+        <div class="col-md-4"><button class="btn btn-outline-primary w-100" type="button" id="productFind">Знайти</button></div>
+      </div>
+      <div id="productResults"></div>
+      <label class="form-label mt-2" for="productReason">Причина дії з товаром</label>
+      <input class="form-control mb-2" id="productReason" maxlength="4000">
+    </div>
+
+    <div id="policyActions" class="mt-3" hidden>
+      <hr class="divider-dashed">
+      <h3 class="h6 mb-2">Відповідь щодо правил</h3>
+      <label class="form-label" for="policySection">Розділ політики платформи</label>
+      <select class="form-select mb-2" id="policySection">
+        <option value="1">1. Загальні положення</option>
+        <option value="2">2. Валюта та розрахунки</option>
+        <option value="3">3. Гаманець</option>
+        <option value="4">4. Комісія</option>
+        <option value="5">5. Замороження виплат</option>
+        <option value="6">6. Застава продавця</option>
+        <option value="7">7. Види товарів</option>
+        <option value="8">8. Статуси товару</option>
+        <option value="9">9. Замовлення</option>
+        <option value="10">10. Повернення коштів</option>
+        <option value="11">11. Верифікація продавця</option>
+        <option value="12">12. Правила поведінки та скарги</option>
+        <option value="13">13. Підтримка</option>
+        <option value="14">14. Прикінцеві положення</option>
+      </select>
+      <button class="btn btn-outline-primary btn-sm" type="button" data-template="policy">Відповісти з посиланням на розділ</button>
+    </div>
+
+    <div id="suggestionActions" class="mt-3" hidden>
+      <hr class="divider-dashed">
+      <h3 class="h6 mb-2">Статус ідеї</h3>
+      <label class="form-label" for="ideaStatus">Статус</label>
+      <select class="form-select mb-2" id="ideaStatus">
+        <option value="new">Нова</option><option value="considering">Розглядається</option>
+        <option value="accepted">Прийнято</option><option value="rejected">Відхилено</option>
+      </select>
+      <label class="form-label" for="ideaInternalNote">Внутрішня примітка (лише для адмінів)</label>
+      <textarea class="form-control mb-2" id="ideaInternalNote" rows="2"></textarea>
+      <div class="d-flex flex-wrap gap-2">
+        <button class="btn btn-primary btn-sm" type="button" id="ideaSave">Зберегти статус</button>
+        <select class="form-select form-select-sm w-auto" id="ideaTemplate">
+          <option value="thanks">Дякуємо за ідею</option><option value="accepted">Ідею прийнято</option>
+          <option value="declined">Ідею відхилено</option>
+        </select>
+        <button class="btn btn-outline-primary btn-sm" type="button" id="ideaTemplateSend">Відповісти шаблоном</button>
+      </div>
+    </div>
+
+    <div class="mt-3" id="replyBox">
+      <hr class="divider-dashed">
+      <label class="form-label" for="replyText" id="replyLabel">Відповідь людині</label>
+      <div class="form-text mb-2" id="replyDeliveryHint"></div>
+      <textarea class="form-control mb-2" id="replyText" rows="3"></textarea>
+      <label class="form-label" for="replyFile">Вкладення (необов'язково)</label>
+      <input class="form-control mb-2" type="file" id="replyFile">
+      <div class="d-flex flex-wrap gap-2">
+        <button class="btn btn-primary btn-sm" type="button" id="replySend">Надіслати відповідь</button>
+        <button class="btn btn-outline-primary btn-sm" type="button" data-status="open">Відкрити знову</button>
+        <button class="btn btn-outline-primary btn-sm" type="button" data-status="answered">Позначити «Відповіли»</button>
+        <button class="btn btn-outline-primary btn-sm" type="button" data-status="closed">Закрити</button>
+      </div>
+    </div>
+
+    <div class="mt-3" id="recoverBox" hidden>
+      <hr class="divider-dashed">
+      <h3 class="h6 mb-2">Відновити акаунт</h3>
+      <div class="alert-soft is-info small mb-2">
+        Спершу зв'яжіться з людиною за контактами. Система створить тимчасовий пароль — людина змінить його при вході. Це не відповідь у зверненні: її надсилайте через поле «Відповідь людині» вище.
+      </div>
+      <div class="row g-2 align-items-end">
+        <div class="col-md-8">
+          <label class="form-label" for="recoverLogin">Акаунт (нік або email)</label>
+          <input class="form-control" type="text" id="recoverLogin" placeholder="нік або email">
+        </div>
+        <div class="col-md-4">
+          <button class="btn btn-primary w-100" type="button" id="recoverBtn">Відновити</button>
+        </div>
+        <div class="col-12">
+          <label class="form-label" for="recoverVia">Канал зв'язку під час відновлення (необов'язково)</label>
+          <input class="form-control" type="text" id="recoverVia" maxlength="128" placeholder="Наприклад, email або Telegram">
+          <div class="form-text">Зберігається в історії відновлення, щоб бачити, як саме зв'язалися з власником акаунта.</div>
+        </div>
+      </div>
+      <div class="mt-2" id="recoverResult"></div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/static/js/api.js"></script>
+<script src="/static/js/auth.js?v=auth-header-tooltip-v1-20261122"></script>
+<script src="/static/js/password-change.js?v=password-change-20261114"></script>
+<script src="/static/js/notifications.js"></script>
+<script src="/static/js/policy-gate.js?v=policy-after-login-v2-20261122"></script>
+<script>
+  (function () {
+    "use strict";
+    const $ = (id) => document.getElementById(id);
+    const esc = window.MS.escapeHtml;
+
+    const STATUS_BADGES = { open: "is-gold", answered: "is-lime", closed: "is-muted" };
+
+    const state = {
+      status: "all", requestType: "all", page: 1, pages: 1, rights: [],
+      isAdmin1: false, isMain: false,
+    };
+    let current = null; // відкрите звернення
+
+    function setError(message) {
+      $("pageError").textContent = message || "";
+      $("pageError").hidden = !message;
+    }
+    function setSuccess(message) {
+      $("pageSuccess").textContent = message || "";
+      $("pageSuccess").hidden = !message;
+    }
+    function fmtDate(value) {
+      if (!value) return "—";
+      const date = new Date(value);
+      return isNaN(date.getTime()) ? "—" : date.toLocaleString("uk-UA");
+    }
+    function badge(status, label) {
+      return '<span class="badge-soft ' + (STATUS_BADGES[status] || "is-muted") + '">' +
+        esc(label) + "</span>";
+    }
+    function contacts(row) {
+      if (!row.contacts || !row.contacts.length) return "—";
+      return row.contacts.map((contact) => {
+        const value = contact.url
+          ? '<a href="' + esc(contact.url) + '" target="_blank" rel="noopener noreferrer">' +
+            esc(contact.value) + "</a>"
+          : esc(contact.value);
+        return (contact.label ? esc(contact.label) + " " : "") + value;
+      }).join(" · ");
+    }
+
+    function hasRight(right) {
+      return state.rights.indexOf(right) !== -1 || state.isAdmin1 || state.isMain;
+    }
+
+    function isAdmin1() { return state.isAdmin1 || state.isMain; }
+
+    function showTicketError(message) {
+      $("ticketError").textContent = message || "";
+      $("ticketError").hidden = !message;
+    }
+
+    function categoryActionsHtml(rows) {
+      if (!rows || !rows.length) return "";
+      return '<h3 class="h6 mt-3 mb-2">Історія дій адмінів</h3>' +
+        rows.map((row) =>
+          '<div class="order-comment small mb-2"><strong>' + esc(row.action_display || row.action) + "</strong> · " +
+          esc(row.actor) + " · " + esc(fmtDate(row.created_at)) +
+          '<div class="text-muted-soft">' + esc(row.reason || "Без примітки") + "</div></div>"
+        ).join("");
+    }
+
+    /* ---------- Список звернень ---------- */
+
+    function renderRows(rows) {
+      $("ticketsBody").innerHTML = rows.length
+        ? rows.map((row) =>
+            "<tr><td><strong>" + esc(row.subject) + "</strong>" +
+              (row.from_banned ? ' <span class="badge-soft is-blood">забанений</span>' : "") +
+              '<div class="small text-muted-soft">' + esc(row.preview || "") + "</div></td>" +
+            "<td>" + esc(row.request_type_display || "Інше") + "</td>" +
+            "<td>" + esc(row.owner) + (row.guest ? ' <span class="badge-soft is-muted">гість</span>' : "") + "</td>" +
+              '<td class="small">' + contacts(row) + "</td>" +
+              "<td>" + badge(row.status, row.status_display) + "</td>" +
+              '<td class="small text-muted-soft">' + esc(fmtDate(row.created_at)) + "</td>" +
+              '<td><button class="btn btn-primary btn-sm" type="button" data-open="' + row.id +
+                '">Відкрити</button></td></tr>'
+          ).join("")
+        : '<tr><td colspan="7">Звернень немає.</td></tr>';
+    }
+
+    async function load() {
+      setError("");
+      $("ticketsBody").innerHTML = '<tr><td colspan="7">Завантаження…</td></tr>';
+      const params = new URLSearchParams();
+      params.set("status", state.status);
+      if (state.requestType !== "all") params.set("request_type", state.requestType);
+      params.set("page", state.page);
+      try {
+        const data = await window.MS.get("/admin/support?" + params.toString());
+        renderRows(data.results || []);
+        state.page = data.page || state.page;
+        state.pages = data.pages || 1;
+        $("pageInfo").textContent = "Сторінка " + state.page + " з " + state.pages;
+        $("pageJump").value = String(state.page);
+        $("pageJump").max = String(state.pages);
+        $("prevPage").disabled = state.page <= 1;
+        $("nextPage").disabled = state.page >= state.pages;
+      } catch (err) {
+        setError(err.message || "Не вдалося завантажити звернення.");
+        $("ticketsBody").innerHTML = '<tr><td colspan="7">Помилка завантаження.</td></tr>';
+      }
+    }
+
+    /* ---------- Перегляд звернення ---------- */
+
+    function messagesHtml(rows) {
+      if (!rows || !rows.length) return '<p class="text-muted-soft small">Повідомлень немає.</p>';
+      return rows.map((row) =>
+        '<div class="order-comment small mb-2"><strong>' + esc(row.author) + "</strong> · " +
+          esc(fmtDate(row.created_at)) +
+          (row.attachment
+            ? ' · <a href="' + esc(row.attachment) + '" target="_blank" rel="noopener">вкладення</a>'
+            : "") +
+          "<div>" + linkify(row.text) + "</div></div>"
+      ).join("");
+    }
+
+    function linkify(value) {
+      return esc(value || "").replace(
+        /(https?:\/\/[^\s<]+)/g,
+        '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>'
+      );
+    }
+
+    function recoveriesHtml(rows) {
+      if (!rows || !rows.length) return "";
+      return '<h3 class="h6 mb-2">Відновлення акаунтів</h3>' +
+        rows.map((row) =>
+          '<div class="small mb-1">' + esc(row.target_user) + " · " + esc(fmtDate(row.created_at)) +
+            (row.admin ? " · адмін " + esc(row.admin) : "") +
+            (row.contacted_via ? " · канал зв'язку: " + esc(row.contacted_via) : "") + "</div>"
+        ).join("");
+    }
+
+    function renderCategoryActions(data) {
+      const type = data.request_type;
+      $("categoryActions").hidden = type === "appeal";
+      $("ticketCategory").value = type;
+      $("categoryReason").value = "";
+
+      $("recoverBox").hidden = type !== "account";
+      $("unbanActions").hidden = type !== "unban" && type !== "appeal";
+      $("bugActions").hidden = type !== "bug";
+      $("paymentActions").hidden = type !== "payment" || !hasRight("wallet");
+      $("orderActions").hidden = type !== "order" || !hasRight("orders");
+      $("productActions").hidden = type !== "product" || !hasRight("products");
+      $("policyActions").hidden = type !== "policy";
+      $("suggestionActions").hidden = type !== "suggestion";
+
+      if (type === "unban" || type === "appeal") {
+        const shownBan = data.ban || data.appeal_ban;
+        $("banDetails").innerHTML = '<div class="card-body small">' + (shownBan
+          ? "<strong>Причина:</strong> " + esc(shownBan.reason || "Не вказана") +
+            "<br><strong>Початок:</strong> " + esc(fmtDate(shownBan.starts_at)) +
+            "<br><strong>Кінець:</strong> " + esc(shownBan.ends_at ? fmtDate(shownBan.ends_at) : "Безстроково") +
+            "<br><strong>Хто забанив:</strong> " + esc(shownBan.issued_by || "Система") +
+            " (" + esc(shownBan.issued_by_role_display || "Система") + ")"
+          : "Активного бану не знайдено.") + "</div>";
+        const canManage = Boolean(data.ban && data.ban.can_manage) &&
+          (type !== "appeal" || isAdmin1());
+        $("banControls").hidden = !canManage;
+        $("banLift").hidden = !canManage;
+        $("banReduce").hidden = !canManage;
+        $("banReject").hidden = type === "appeal" ? !isAdmin1() : !canManage;
+        $("banReject").textContent = type === "appeal" ? "Відхилити апеляцію" : "Відхилити розбан";
+        $("banReason").value = "";
+        $("banEndDate").value = "";
+      }
+
+      if (type === "bug") {
+        $("bugStatus").value = data.bug_status || "accepted";
+        $("bugInternalNote").value = data.internal_note || "";
+      }
+      if (type === "suggestion") {
+        $("ideaStatus").value = data.idea_status || "new";
+        $("ideaInternalNote").value = data.internal_note || "";
+      }
+      if (type === "payment" && hasRight("wallet")) {
+        $("walletDetails").innerHTML = '<div class="card-body small">Завантаження балансу й останніх операцій…</div>';
+        $("issueCoinsBox").hidden = !state.isMain;
+        $("walletReason").value = "";
+        $("issueAmount").value = "";
+        $("heldOrderId").value = "";
+        loadWallet();
+      }
+      if (type === "order" && hasRight("orders")) {
+        $("orderId").value = data.order_reference || "";
+        $("orderDetails").hidden = true;
+        $("orderDetails").innerHTML = "";
+        $("orderReason").value = "";
+        if (data.order_reference) findOrder();
+      }
+      if (type === "product" && hasRight("products")) {
+        $("productQuery").value = "";
+        $("productResults").innerHTML = "";
+      }
+    }
+
+    function renderDetail(data) {
+      current = data;
+      $("ticketEyebrow").textContent = data.guest ? "Звернення гостя" : "Звернення";
+      $("ticketTitle").textContent = data.subject;
+      $("ticketBody").innerHTML =
+        '<div class="small text-muted-soft mb-2">' + badge(data.status, data.status_display) +
+          " · Створено: " + esc(fmtDate(data.created_at)) +
+          (data.assigned_admin ? " · Відповідальний: " + esc(data.assigned_admin) : "") + "</div>" +
+        '<div class="card-soft mb-2"><div class="card-body"><strong>Тип звернення:</strong> ' +
+          esc(data.request_type_display || "Інше") + "</div></div>" +
+        '<div class="card-soft mb-3"><div class="card-body"><strong>Що людина хоче отримати</strong><p class="mb-0 mt-1">' +
+          esc(data.desired_outcome || "Не вказано") + "</p></div></div>" +
+        '<div class="row g-2 mb-3">' +
+          '<div class="col-md-6"><div class="card-soft h-100"><div class="card-body">' +
+            '<strong class="small text-muted-soft d-block mb-1">Від кого</strong>' +
+            '<span>' + esc(data.owner) + (data.guest ? ' <span class="badge-soft is-muted">гість</span>' : "") + "</span>" +
+          "</div></div></div>" +
+          '<div class="col-md-6"><div class="card-soft h-100"><div class="card-body">' +
+            '<strong class="small text-muted-soft d-block mb-1">Контакти</strong>' +
+            '<span class="small">' + contacts(data) + "</span>" +
+          "</div></div></div>" +
+          (data.target_username
+            ? '<div class="col-12"><div class="card-soft"><div class="card-body">' +
+              '<strong class="small text-muted-soft d-block mb-1">Нік акаунта для звернення</strong>' +
+              "<span>" + esc(data.target_username) + "</span>" +
+            "</div></div></div>"
+            : "") +
+          (data.order_reference
+            ? '<div class="col-12"><div class="card-soft"><div class="card-body">' +
+              '<strong class="small text-muted-soft d-block mb-1">Номер замовлення</strong>' +
+              "<span>" + esc(data.order_reference) + "</span></div></div></div>"
+            : "") +
+        "</div>" +
+        '<h3 class="h6 mb-2">Листування</h3><div>' + messagesHtml(data.messages) + "</div>" +
+        recoveriesHtml(data.recoveries) +
+        (data.internal_note
+          ? '<div class="alert-soft is-info small mt-2"><strong>Внутрішня примітка (лише адмінам)</strong><div>' +
+            esc(data.internal_note) + "</div></div>"
+          : "") +
+        categoryActionsHtml(data.actions);
+      $("replyLabel").textContent = data.guest ? "Відповідь гостю на email" : "Відповідь людині";
+      $("replyDeliveryHint").textContent = data.guest
+        ? "Відповідь буде надіслана на " + (data.contact_email || "email зі звернення") + "."
+        : "Людина отримає сповіщення у своєму акаунті.";
+      $("replyText").value = "";
+      $("replyFile").value = "";
+      $("recoverLogin").value = data.target_username || (data.guest ? "" : (data.owner || ""));
+      $("recoverVia").value = "";
+      $("recoverResult").innerHTML = "";
+      renderCategoryActions(data);
+      $("ticketModal").hidden = false;
+    }
+
+    async function openTicket(id) {
+      $("ticketError").hidden = true;
+      $("ticketModal").hidden = false;
+      const body = $("ticketBody");
+      const cacheKey = window.MSSkeletons.cacheKey("/admin/support/" + id);
+      const cached = window.MSSkeletons.getCachedData(cacheKey);
+      if (cached !== undefined) renderDetail(cached);
+      else body.replaceChildren();
+      const loading = cached === undefined
+        ? window.MSSkeletons.showSkeleton(body, "support", 2)
+        : null;
+      try {
+        const data = await window.MS.get("/admin/support/" + id);
+        window.MSSkeletons.setCachedData(cacheKey, data);
+        if (loading) await loading.finish(() => renderDetail(data));
+        else renderDetail(data);
+      } catch (err) {
+        const message = window.MSSkeletons.friendlyErrorMessage(err, "Не вдалося відкрити звернення.");
+        const showError = () =>
+          window.MSSkeletons.renderRetryError($("ticketError"), message, () => openTicket(id));
+        if (loading) {
+          await loading.finish(() => {
+            body.replaceChildren();
+            showError();
+          });
+        } else {
+          showError();
+        }
+      }
+    }
+
+    /* ---------- Дії ---------- */
+
+    async function sendReply() {
+      const text = $("replyText").value.trim();
+      const file = $("replyFile").files[0];
+      if (!text && !file) {
+        window.MS.toast("Напишіть відповідь.", "danger");
+        return;
+      }
+      const form = new FormData();
+      form.append("text", text);
+      if (file) form.append("attachment", file);
+      $("replySend").disabled = true;
+      try {
+        const data = await window.MS.post("/admin/support/" + current.id, form);
+        renderDetail(data);
+        setSuccess(data.guest
+          ? "Відповідь надіслано на email: " + data.contact_email
+          : "Відповідь надіслано. Людина отримає сповіщення.");
+        await load();
+      } catch (err) {
+        $("ticketError").textContent = err.message || "Не вдалося надіслати відповідь.";
+        $("ticketError").hidden = false;
+      } finally {
+        $("replySend").disabled = false;
+      }
+    }
+
+    async function changeStatus(status) {
+      try {
+        const data = await window.MS.post("/admin/support/" + current.id + "/status", { status: status });
+        renderDetail(data);
+        setSuccess("Статус звернення змінено.");
+        await load();
+      } catch (err) {
+        $("ticketError").textContent = err.message || "Не вдалося змінити статус.";
+        $("ticketError").hidden = false;
+      }
+    }
+
+    async function recover() {
+      const login = $("recoverLogin").value.trim();
+      if (!login) {
+        $("recoverResult").innerHTML = '<div class="alert-soft is-danger">Оберіть акаунт за ніком чи email.</div>';
+        return;
+      }
+      $("recoverBtn").disabled = true;
+      try {
+        const data = await window.MS.post("/admin/support/" + current.id + "/recover-account", {
+          target_login: login,
+          contacted_via: $("recoverVia").value.trim(),
+        });
+        setSuccess("Акаунт відновлено.");
+        await openTicket(current.id);
+        $("recoverResult").innerHTML =
+          '<div class="alert-soft is-success">Тимчасовий пароль для <strong>' +
+            esc(data.recovery.target_user) + "</strong>: <code>" + esc(data.temp_password) + "</code>" +
+            '<div class="small mt-1">Передайте його людині. При вході вона змінить пароль.</div></div>';
+      } catch (err) {
+        $("recoverResult").innerHTML = '<div class="alert-soft is-danger">' +
+          esc(err.message || "Не вдалося відновити акаунт.") + "</div>";
+      } finally {
+        $("recoverBtn").disabled = false;
+      }
+    }
+
+    async function saveCategory() {
+      try {
+        const data = await window.MS.post("/admin/support/" + current.id + "/category", {
+          request_type: $("ticketCategory").value,
+          reason: $("categoryReason").value.trim(),
+        });
+        renderDetail(data);
+        await load();
+      } catch (err) {
+        showTicketError(err.message || "Не вдалося змінити категорію.");
+      }
+    }
+
+    let walletOffset = 0;
+    let walletHasMore = false;
+    let walletLoading = false;
+    let walletOrderFilter = "";
+
+    function walletNode(tag, className, text) {
+      const node = document.createElement(tag);
+      if (className) node.className = className;
+      if (text !== undefined) node.textContent = text;
+      return node;
+    }
+
+    function walletAmount(value) {
+      const match = String(value || "0").match(/^-?(\d+)(?:\.(\d+))?$/);
+      if (!match) return String(value || "0");
+      const integer = match[1].replace(/^0+(?=\d)/, "").replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+      const fraction = (match[2] || "").slice(0, 6).replace(/0+$/, "");
+      return integer + (fraction ? "." + fraction : "");
+    }
+
+    function walletDate(value) {
+      const date = new Date(value);
+      if (!value || Number.isNaN(date.getTime())) return "—";
+      return new Intl.DateTimeFormat("uk-UA", {
+        timeZone: "Europe/Kyiv",
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        hourCycle: "h23",
+      }).format(date);
+    }
+
+    function appendWalletTransactions(rows, reset, hasMore) {
+      const body = $("walletTransactions");
+      if (reset) {
+        body.replaceChildren();
+        walletOffset = 0;
+      }
+      if (reset && !rows.length) {
+        const empty = walletNode("tr", "wallet-empty");
+        const cell = walletNode(
+          "td",
+          "",
+          walletOrderFilter ? "Операцій не знайдено." : "Операцій немає."
+        );
+        cell.colSpan = 5;
+        empty.append(cell);
+        body.append(empty);
+      } else {
+        rows.forEach((row) => {
+          const amount = Number(row.amount_mc);
+          const sign = amount > 0 ? "+" : amount < 0 ? "−" : "";
+          const exact = sign + String(row.amount_mc).replace(/^-/, "") + " МС";
+          const tr = walletNode("tr");
+          const date = walletNode("td", "wallet-date", walletDate(row.created_at));
+          date.dataset.column = "date";
+          const kind = walletNode("td", "wallet-kind", row.kind || "Інша операція");
+          kind.dataset.column = "kind";
+          const order = walletNode("td", "wallet-order", row.order_id ? "№" + row.order_id : "—");
+          order.dataset.column = "order";
+          const details = walletNode("td", "wallet-details", row.note || "—");
+          details.dataset.column = "details";
+          const amountCell = walletNode("td", "wallet-amount");
+          amountCell.dataset.column = "amount";
+          amountCell.classList.add(amount > 0 ? "is-positive" : amount < 0 ? "is-negative" : "is-zero");
+          amountCell.title = exact;
+          amountCell.textContent = sign + walletAmount(row.amount_mc) + "\u00a0МС";
+          tr.append(date, kind, order, details, amountCell);
+          body.append(tr);
+        });
+      }
+      walletOffset += rows.length;
+      walletHasMore = hasMore;
+      const more = $("walletMore");
+      more.hidden = !walletHasMore;
+      more.disabled = walletLoading;
+    }
+
+    async function loadWalletTransactions(reset) {
+      if (walletLoading || (!reset && !walletHasMore)) return;
+      walletLoading = true;
+      const more = $("walletMore");
+      more.disabled = true;
+      more.textContent = "Завантаження…";
+      try {
+        const params = new URLSearchParams({ offset: String(reset ? 0 : walletOffset) });
+        if (walletOrderFilter) params.set("order_id", walletOrderFilter);
+        const data = await window.MS.get(
+          "/admin/support/" + current.id + "/wallet?" + params.toString()
+        );
+        appendWalletTransactions(data.transactions || [], reset, !!data.transactions_has_more);
+      } catch (err) {
+        showTicketError(err.message || "Не вдалося завантажити операції гаманця.");
+      } finally {
+        walletLoading = false;
+        more.hidden = !walletHasMore;
+        more.disabled = false;
+        more.textContent = "Показати ще";
+      }
+    }
+
+    async function loadWallet() {
+      try {
+        walletOffset = 0;
+        walletHasMore = false;
+        walletLoading = false;
+        walletOrderFilter = "";
+        const data = await window.MS.get("/admin/support/" + current.id + "/wallet");
+        const root = $("walletDetails");
+        const content = walletNode("div", "card-body wallet-content");
+        content.append(walletNode("div", "wallet-owner", "Користувач: " + data.username));
+
+        const metrics = walletNode("div", "wallet-metrics");
+        [
+          ["Доступно", data.balance.free],
+          ["Утримано", data.balance.held],
+          ["Заморожено", data.balance.frozen],
+          ["Застава", data.balance.deposit_locked],
+          ["Борг", data.balance.debt],
+        ].forEach(([label, value]) => {
+          const card = walletNode("div", "wallet-metric");
+          card.append(walletNode("span", "wallet-metric-label", label));
+          const metric = walletNode("strong", "wallet-metric-value", walletAmount(value) + " МС");
+          if (label === "Борг" && Number(value) > 0) metric.classList.add("is-debt");
+          card.append(metric);
+          metrics.append(card);
+        });
+        content.append(metrics);
+
+        const held = walletNode("section", "wallet-held");
+        held.append(walletNode("h4", "wallet-section-label", "Утримані за замовленнями"));
+        const heldList = walletNode("ul", "wallet-held-list");
+        const heldOrders = data.held_orders || [];
+        if (heldOrders.length) {
+          heldOrders.forEach((row) => {
+            heldList.append(walletNode(
+              "li",
+              "",
+              "Замовлення №" + row.order_id + " · " + walletAmount(row.amount_mc) + " МС"
+            ));
+          });
+        } else {
+          heldList.append(walletNode("li", "text-muted-soft", "Немає"));
+        }
+        held.append(heldList);
+        content.append(held);
+
+        const history = walletNode("section", "wallet-history");
+        const historyHeader = walletNode("div", "wallet-history-header");
+        historyHeader.append(walletNode("h4", "wallet-section-label", "Останні операції"));
+        const filter = walletNode("form", "wallet-filter");
+        const orderInput = walletNode("input", "form-control form-control-sm");
+        orderInput.id = "walletOrderFilter";
+        orderInput.type = "number";
+        orderInput.min = "1";
+        orderInput.placeholder = "Номер замовлення";
+        orderInput.setAttribute("aria-label", "Фільтр за номером замовлення");
+        const filterButton = walletNode("button", "btn btn-outline-primary btn-sm", "Знайти");
+        filterButton.type = "submit";
+        filter.append(orderInput, filterButton);
+        filter.addEventListener("submit", (event) => {
+          event.preventDefault();
+          walletOrderFilter = orderInput.value.trim();
+          loadWalletTransactions(true);
+        });
+        historyHeader.append(filter);
+        history.append(historyHeader);
+
+        const tableWrap = walletNode("div", "wallet-table-wrap");
+        const table = walletNode("table", "wallet-table");
+        const thead = walletNode("thead");
+        const headerRow = walletNode("tr");
+        ["Дата і час", "Тип операції", "Замовлення", "Деталі", "Сума"].forEach((label) => {
+          headerRow.append(walletNode("th", "", label));
+        });
+        thead.append(headerRow);
+        const tbody = walletNode("tbody");
+        tbody.id = "walletTransactions";
+        table.append(thead, tbody);
+        tableWrap.append(table);
+        history.append(tableWrap);
+
+        const more = walletNode("button", "btn btn-outline-primary btn-sm wallet-more", "Показати ще");
+        more.id = "walletMore";
+        more.type = "button";
+        more.hidden = true;
+        more.addEventListener("click", () => loadWalletTransactions(false));
+        history.append(more);
+        content.append(history);
+        root.replaceChildren(content);
+
+        appendWalletTransactions(data.transactions || [], true, !!data.transactions_has_more);
+      } catch (err) {
+        $("walletDetails").replaceChildren(
+          walletNode("div", "card-body text-danger", err.message || "Не вдалося завантажити гаманець.")
+        );
+      }
+    }
+
+    async function walletRefund() {
+      try {
+        await window.MS.post("/admin/support/" + current.id + "/wallet/refund-held", {
+          order_id: $("heldOrderId").value,
+          reason: $("walletReason").value.trim(),
+        });
+        await loadWallet();
+        await openTicket(current.id);
+        await load();
+      } catch (err) {
+        showTicketError(err.message || "Не вдалося повернути утримані кошти.");
+      }
+    }
+
+    async function issueCoins() {
+      try {
+        await window.MS.post("/admin/support/" + current.id + "/wallet/issue", {
+          amount_mc: $("issueAmount").value,
+          reason: $("walletReason").value.trim(),
+        });
+        await loadWallet();
+        await openTicket(current.id);
+        await load();
+      } catch (err) {
+        showTicketError(err.message || "Не вдалося видати MC.");
+      }
+    }
+
+    async function findOrder() {
+      const orderId = $("orderId").value.trim();
+      if (!orderId) return;
+      try {
+        const data = await window.MS.get(
+          "/admin/support/" + current.id + "/order?order_id=" + encodeURIComponent(orderId)
+        );
+        $("orderDetails").hidden = false;
+        $("orderDetails").innerHTML =
+          '<div class="card-body small"><strong>Замовлення №' + esc(data.id) + "</strong>" +
+          "<br><strong>Статус:</strong> " + esc(data.status) +
+          "<br><strong>Покупець:</strong> " + esc(data.buyer) +
+          "<br><strong>Продавець:</strong> " + esc(data.seller) +
+          "<br><strong>Сума:</strong> " + esc(data.amount_mc) + " MC" +
+          "<br><strong>Утримано:</strong> " + esc(data.held_mc) + " MC</div>";
+        $("orderComplaintLink").href = data.complaints_url;
+        $("orderActions").setAttribute("data-found-order", data.id);
+        $("orderActions").setAttribute("data-held", data.held_mc);
+        $("orderActions").querySelectorAll("[data-order-action]").forEach((button) => {
+          button.disabled = Number(data.held_mc) <= 0;
+        });
+      } catch (err) {
+        $("orderDetails").hidden = false;
+        $("orderDetails").innerHTML =
+          '<div class="card-body text-danger">' + esc(err.message || "Замовлення не знайдено.") + "</div>";
+        $("orderActions").removeAttribute("data-found-order");
+      }
+    }
+
+    async function orderAction(action) {
+      const orderId = $("orderActions").getAttribute("data-found-order");
+      if (!orderId) {
+        showTicketError("Спершу знайдіть замовлення.");
+        return;
+      }
+      try {
+        const endpoint = action === "pay_seller" ? "pay-seller" : "refund-buyer";
+        await window.MS.post("/admin/support/" + current.id + "/order/" + endpoint, {
+          order_id: orderId,
+          reason: $("orderReason").value.trim(),
+        });
+        await openTicket(current.id);
+        await load();
+      } catch (err) {
+        showTicketError(err.message || "Не вдалося виконати дію із замовленням.");
+      }
+    }
+
+    async function findProduct() {
+      const query = $("productQuery").value.trim();
+      try {
+        const data = await window.MS.get(
+          "/admin/support/" + current.id + "/product?q=" + encodeURIComponent(query)
+        );
+        const productRows = (data.products || []).map((row) =>
+          '<div class="card-soft mb-2"><div class="card-body small"><strong>' + esc(row.name) +
+          "</strong> · ID " + esc(row.id) + "<br>Продавець: " + esc(row.seller) +
+          " · Статус: " + esc(row.status) + " · Модерація: " + esc(row.moderation) +
+          " · Скарг: " + esc(row.complaints_count) +
+          '<div class="d-flex flex-wrap gap-2 mt-2"><a class="btn btn-outline-primary btn-sm" href="' +
+          esc(row.seller_profile_url) + '">Товари продавця</a><a class="btn btn-outline-primary btn-sm" href="' +
+          esc(row.complaints_url) + '">Скарги на товар</a>' +
+          (row.status === "У продажу"
+            ? '<button class="btn btn-outline-primary btn-sm" type="button" data-product-action="deactivate" data-product-id="' +
+              esc(row.id) + '">Деактивувати товар</button>'
+            : "") +
+          (row.moderation === "Без обмежень" && row.status !== "У продажу"
+            ? '<button class="btn btn-primary btn-sm" type="button" data-product-action="restore" data-product-id="' +
+              esc(row.id) + '">Повернути у продаж</button>'
+            : "") + "</div></div></div>"
+        ).join("");
+        const sellerRows = (data.sellers || []).map((row) =>
+          '<div class="card-soft mb-2"><div class="card-body small"><strong>Продавець:</strong> ' +
+          esc(row.username) + '<div class="d-flex gap-2 mt-2"><a class="btn btn-outline-primary btn-sm" href="' +
+          esc(row.profile_url) + '">Перейти до профілю продавця</a><a class="btn btn-outline-primary btn-sm" href="' +
+          esc(row.complaints_url) + '">Скарги на продавця</a></div></div></div>'
+        ).join("");
+        $("productResults").innerHTML = productRows + sellerRows ||
+          '<div class="small text-muted-soft">Нічого не знайдено.</div>';
+      } catch (err) {
+        $("productResults").innerHTML = '<div class="alert-soft is-danger">' +
+          esc(err.message || "Не вдалося знайти товар.") + "</div>";
+      }
+    }
+
+    async function productAction(action, productId) {
+      const reason = $("productReason").value.trim();
+      try {
+        await window.MS.post("/admin/support/" + current.id + "/product/" + action, {
+          product_id: productId,
+          reason: reason,
+        });
+        await openTicket(current.id);
+        await findProduct();
+        await load();
+      } catch (err) {
+        showTicketError(err.message || "Не вдалося змінити товар.");
+      }
+    }
+
+    async function banAction(action) {
+      const payload = { reason: $("banReason").value.trim() };
+      if (action === "reduce") payload.ends_at = $("banEndDate").value;
+      try {
+        await window.MS.post("/admin/support/" + current.id + "/ban/" + action, payload);
+        await openTicket(current.id);
+        await load();
+      } catch (err) {
+        showTicketError(err.message || "Не вдалося виконати дію з баном.");
+      }
+    }
+
+    async function updateCategoryStatus(kind) {
+      const isBug = kind === "bug";
+      const endpoint = isBug ? "/bug/status" : "/idea/status";
+      const payload = isBug
+        ? { status: $("bugStatus").value, internal_note: $("bugInternalNote").value }
+        : { status: $("ideaStatus").value, internal_note: $("ideaInternalNote").value };
+      try {
+        const data = await window.MS.post("/admin/support/" + current.id + endpoint, payload);
+        renderDetail(data);
+        await load();
+      } catch (err) {
+        showTicketError(err.message || "Не вдалося оновити статус.");
+      }
+    }
+
+    async function sendTemplate(template, section) {
+      try {
+        const data = await window.MS.post("/admin/support/" + current.id + "/template-reply", {
+          template: template,
+          section: section || "",
+        });
+        renderDetail(data);
+        await load();
+      } catch (err) {
+        showTicketError(err.message || "Не вдалося надіслати шаблонну відповідь.");
+      }
+    }
+
+    /* ---------- Події ---------- */
+
+    document.addEventListener("DOMContentLoaded", () => {
+      $("applyBtn").addEventListener("click", () => {
+        state.status = $("statusFilter").value;
+        state.requestType = $("typeFilter").value;
+        state.page = 1;
+        load();
+      });
+      $("prevPage").addEventListener("click", () => {
+        if (state.page > 1) { state.page -= 1; load(); }
+      });
+      $("nextPage").addEventListener("click", () => {
+        if (state.page < state.pages) { state.page += 1; load(); }
+      });
+      function jumpToPage() {
+        const requested = Number.parseInt($("pageJump").value, 10);
+        if (!Number.isInteger(requested) || requested < 1 || requested > state.pages) {
+          $("pageJump").value = String(state.page);
+          return;
+        }
+        state.page = requested;
+        load();
+      }
+      $("pageJumpBtn").addEventListener("click", jumpToPage);
+      $("pageJump").addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          jumpToPage();
+        }
+      });
+
+      $("ticketsBody").addEventListener("click", (event) => {
+        const btn = event.target.closest("[data-open]");
+        if (btn) openTicket(btn.getAttribute("data-open"));
+      });
+
+      $("ticketClose").addEventListener("click", () => { $("ticketModal").hidden = true; });
+      $("replySend").addEventListener("click", sendReply);
+      $("recoverBtn").addEventListener("click", recover);
+      $("categorySave").addEventListener("click", saveCategory);
+      $("banLift").addEventListener("click", () => banAction("lift"));
+      $("banReduce").addEventListener("click", () => banAction("reduce"));
+      $("banReject").addEventListener("click", () => banAction("reject"));
+      $("bugSave").addEventListener("click", () => updateCategoryStatus("bug"));
+      $("ideaSave").addEventListener("click", () => updateCategoryStatus("idea"));
+      $("bugTemplateSend").addEventListener("click", () => sendTemplate($("bugTemplate").value));
+      $("ideaTemplateSend").addEventListener("click", () => sendTemplate($("ideaTemplate").value));
+      $("policyActions").addEventListener("click", (event) => {
+        if (event.target.closest("[data-template='policy']")) {
+          sendTemplate("policy", $("policySection").value);
+        }
+      });
+      $("walletRefund").addEventListener("click", walletRefund);
+      $("issueCoins").addEventListener("click", issueCoins);
+      $("orderFind").addEventListener("click", findOrder);
+      $("orderId").addEventListener("keydown", (event) => {
+        if (event.key === "Enter") { event.preventDefault(); findOrder(); }
+      });
+      $("orderActions").addEventListener("click", (event) => {
+        const button = event.target.closest("[data-order-action]");
+        if (button) orderAction(button.getAttribute("data-order-action"));
+      });
+      $("productFind").addEventListener("click", findProduct);
+      $("productQuery").addEventListener("keydown", (event) => {
+        if (event.key === "Enter") { event.preventDefault(); findProduct(); }
+      });
+      $("productResults").addEventListener("click", (event) => {
+        const button = event.target.closest("[data-product-action]");
+        if (button) productAction(
+          button.getAttribute("data-product-action"),
+          button.getAttribute("data-product-id")
+        );
+      });
+      $("replyBox").addEventListener("click", (event) => {
+        const btn = event.target.closest("[data-status]");
+        if (btn) changeStatus(btn.getAttribute("data-status"));
+      });
+
+      window.MSAuth.ready().then((user) => {
+        if (!user || !user.authenticated) {
+          window.location.href = "/pages/login.html";
+          return;
+        }
+        state.rights = Array.isArray(user.admin_rights) ? user.admin_rights : [];
+        state.isAdmin1 = Boolean(user.is_admin_1);
+        state.isMain = Boolean(user.is_admin_main);
+        if (state.rights.indexOf("support") === -1 && !user.is_admin_main && !user.is_admin_1) {
+          window.location.href = "/";
+          return;
+        }
+        load();
+      });
+    });
+  })();
+</script>
+<script src="/static/js/motion.js?v=motion-orders-support-v1-20261122"></script>
+<script src="/static/js/particles.js?v=particles-v4-bloom-20261122"></script>
+</body>
+</html>

@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MultiShop — головна</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/floating-icons.css?v=floating-icons-single-hover-v1-20261122">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/base.css?v=particles-v4-bloom-20261122">
+  <style>
+    .card-soft.home-block--accent {
+      background: linear-gradient(135deg, #f3fce0, #fff) padding-box,
+        linear-gradient(120deg, var(--lime), var(--gold)) border-box;
+    }
+    .card-soft.home-block--dark {
+      background: linear-gradient(rgba(16, 24, 32, .78), rgba(16, 24, 32, .78)) padding-box,
+        linear-gradient(120deg, var(--lime), var(--gold)) border-box;
+      color: var(--paper-bright);
+    }
+    main.container .card-soft.home-block--dark h3 { color: var(--paper-bright); }
+    .card-soft.home-block--dark .text-muted-soft { color: #d7dee6 !important; }
+    .card-soft.home-block--dark .eyebrow { color: var(--lime); }
+    .home-block-column,
+    .home-block-card,
+    .home-block-card .card-body,
+    .home-block-controls,
+    .home-block-text {
+      min-width: 0;
+    }
+    .home-block-card { max-width: 100%; }
+    .home-block-text {
+      max-width: 100%;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+    .home-block-controls {
+      max-width: 100%;
+      flex-wrap: wrap;
+    }
+    .home-hero-toolbar {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1rem;
+      min-height: 2.2rem;
+    }
+    @media (max-width: 575.98px) {
+      .home-hero-toolbar { flex-wrap: wrap; min-height: 4.9rem; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-xl navbar-dark mb-4">
+  <div class="container">
+    <a class="navbar-brand me-3 brand-mark" href="/">🛍️ <span>Multi<span class="brand-slash">Shop</span></span></a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false" aria-label="Меню">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="mainNavbar">
+      <ul class="navbar-nav ms-auto align-items-center">
+        <li class="nav-item"><a class="nav-link nav-pill" href="/pages/policy.html">Політика</a></li>
+        <li class="nav-item"><a class="nav-link nav-pill active" href="/" aria-current="page">Головна</a></li>
+        <li class="nav-item"><a class="nav-link nav-pill" href="/pages/catalog.html">Каталог</a></li>
+        <li class="nav-item"><a class="nav-link nav-pill" href="/pages/cart.html">Кошик<span class="nav-counter is-cart" data-cart-count hidden>0</span></a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/favorites.html">Обране<span class="nav-counter" data-counter="favorites" hidden>0</span></a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/orders.html">Замовлення<span class="nav-counter" data-counter="orders" hidden>0</span></a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/complaints.html">Скарги<span class="nav-counter" data-counter="complaints" hidden>0</span></a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/seller.html">Мої товари</a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/support.html">Підтримка</a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/profile.html">Профіль</a></li>
+        <li class="nav-item" data-auth="guest"><a class="nav-link nav-pill" href="/pages/login.html">Вхід</a></li>
+        <li class="nav-item" data-auth="guest"><a class="nav-link nav-pill" href="/pages/register.html">Реєстрація</a></li>
+        <li class="nav-item" data-auth="user" hidden>
+          <span class="nav-user">
+            <img class="avatar" alt="" data-user-avatar hidden>
+            <span class="nav-user-name" data-user-name></span>
+          </span>
+        </li>
+        <li class="nav-item" data-auth="user" hidden>
+          <button class="nav-link nav-pill border-0 bg-transparent" type="button" data-logout>Вийти</button>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<main class="container app-main py-2 py-md-4">
+
+  <section class="hero-panel mb-4">
+    <div class="hero-ambient" aria-hidden="true">
+      <span></span>
+      <span></span>
+    </div>
+    <div class="home-hero-toolbar">
+      <p class="eyebrow mb-2">Маркетплейс на Django · MultiCoins</p>
+      <button class="btn btn-primary btn-sm home-telegram-control" type="button" data-telegram-open
+        data-auth="user" aria-label="Керування Telegram-ботом" hidden>
+        <span class="home-telegram-plane" aria-hidden="true">✈</span>
+        <span class="home-telegram-dot" aria-hidden="true" hidden></span>
+        <span data-telegram-button-label>Підключити Telegram</span>
+      </button>
+    </div>
+    <h1 class="mb-3">MultiShop — платформа, де продають і купують за MultiCoins</h1>
+    <p class="lead mb-4">
+      Фізичні товари, цифрові файли, ключі, послуги й підписки. Розрахунки ведуться
+      у внутрішній валюті MC, кошти покупця утримуються в ескроу до підтвердження
+      замовлення, а виплати продавцю заморожуються на строк скарги.
+    </p>
+    <div class="d-flex flex-wrap gap-2">
+      <a class="btn btn-primary" href="/pages/catalog.html">До каталогу</a>
+      <a class="btn btn-outline-light" href="/pages/register.html" data-auth="guest">Створити акаунт</a>
+      <a class="btn btn-outline-light" href="/pages/login.html" data-auth="guest">Увійти</a>
+      <a class="btn btn-primary" href="/pages/profile.html" data-auth="user" hidden>Мій профіль</a>
+      <a class="btn btn-outline-light" href="/pages/policy.html">Правила платформи</a>
+    </div>
+
+    <div class="stat-strip row g-3">
+      <div class="col-6 col-md-3">
+        <div class="eyebrow mb-1">Валюта</div>
+        <div class="stat-value">MC</div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="eyebrow mb-1">Комісія сайту</div>
+        <div class="stat-value">3%</div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="eyebrow mb-1">Замороження виплат</div>
+        <div class="stat-value">14 днів</div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="eyebrow mb-1">Застава продавця</div>
+        <div class="stat-value">3%</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="alert-soft is-info mb-4" data-policy-warning hidden>
+    Ви увійшли, але ще не прийняли поточну редакцію політики.
+    <a href="/pages/policy.html">Перейти до політики →</a>
+  </div>
+
+  <div class="alert-soft is-danger mb-4" id="homeError" hidden></div>
+
+  <!-- Блоки головної (SiteBlock) підвантажуються з /api/site/blocks -->
+  <section class="section-heading-panel mb-3">
+    <p class="eyebrow mb-1">Головна</p>
+    <h2 class="section-title mb-2">Що таке MultiShop</h2>
+    <p class="text-muted-soft mb-0">Коротко про платформу та ключові функції.</p>
+  </section>
+
+  <div class="flex-wrap gap-2 mb-3" id="homeEditBar" hidden>
+    <button class="btn btn-primary btn-sm" type="button" id="homeEditToggle">✏️ Редагувати головну</button>
+    <button class="btn btn-outline-primary btn-sm" type="button" id="homeAddBlock" hidden>+ Додати блок</button>
+  </div>
+
+  <div class="row g-4" id="homeBlocks"></div>
+
+</main>
+
+<dialog class="checkout-dialog" id="homeBlockDialog">
+  <form id="homeBlockForm">
+    <div class="d-flex justify-content-between gap-3 mb-3">
+      <div><p class="eyebrow mb-1">Блок головної</p><h2 class="h4 mb-0" id="homeBlockDialogTitle">Новий блок</h2></div>
+      <button class="btn-close" type="button" id="homeBlockClose" aria-label="Закрити"></button>
+    </div>
+    <div class="alert-soft is-danger mb-3" id="homeBlockError" hidden></div>
+    <label class="form-label" for="homeBlockTitle">Заголовок</label>
+    <input class="form-control" id="homeBlockTitle" maxlength="200" required>
+    <div class="small text-muted-soft mb-3"><span id="homeBlockTitleCount">0</span> / 200</div>
+    <label class="form-label" for="homeBlockEyebrow">Короткий підпис (необов'язково)</label>
+    <input class="form-control mb-3" id="homeBlockEyebrow" maxlength="80">
+    <label class="form-label" for="homeBlockText">Текст</label>
+    <textarea class="form-control" id="homeBlockText" rows="5" maxlength="2000" required></textarea>
+    <div class="small text-muted-soft mb-3"><span id="homeBlockTextCount">0</span> / 2000</div>
+    <div class="row g-2">
+      <div class="col-sm-6">
+        <label class="form-label" for="homeBlockLayout">Розмір</label>
+        <select class="form-select" id="homeBlockLayout">
+          <option value="compact">Компактний</option>
+          <option value="standard">Стандартний</option>
+          <option value="wide">На всю ширину</option>
+        </select>
+      </div>
+      <div class="col-sm-6">
+        <label class="form-label" for="homeBlockStyle">Стиль</label>
+        <select class="form-select" id="homeBlockStyle">
+          <option value="paper">Світлий</option>
+          <option value="accent">Акцентний</option>
+          <option value="dark">Темний</option>
+        </select>
+      </div>
+    </div>
+    <div class="d-flex justify-content-end gap-2 mt-3">
+      <button class="btn btn-outline-secondary" type="button" id="homeBlockCancel">Скасувати</button>
+      <button class="btn btn-primary" type="submit">Зберегти</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog class="checkout-dialog" id="telegramDialog" aria-labelledby="telegramDialogTitle">
+  <div class="telegram-dialog-content">
+    <div class="d-flex justify-content-between gap-3 mb-3">
+      <div>
+        <p class="eyebrow mb-1">Сповіщення MultiShop</p>
+        <h2 class="h4 mb-0" id="telegramDialogTitle">Telegram-бот</h2>
+      </div>
+      <button class="btn-close" type="button" data-telegram-close aria-label="Закрити"></button>
+    </div>
+    <div class="alert-soft is-danger mb-3" data-telegram-error role="alert" hidden></div>
+    <p class="text-muted-soft" data-telegram-status></p>
+    <div data-telegram-pending hidden>
+      <p class="mb-2">Код одноразовий і діє 10 хвилин. Натисніть код, щоб скопіювати його, або відкрийте бота за посиланням — код передасться автоматично.</p>
+      <button class="btn btn-outline-primary w-100 mb-2" type="button" data-telegram-code></button>
+      <a class="btn btn-primary w-100 mb-2" data-telegram-link>Відкрити Telegram-бота</a>
+      <button class="btn btn-outline-secondary w-100" type="button" data-telegram-check>Перевірити підключення</button>
+    </div>
+    <div class="d-flex justify-content-end gap-2 mt-3">
+      <button class="btn btn-outline-danger" type="button" data-telegram-disconnect hidden>Від'єднати</button>
+      <button class="btn btn-outline-secondary" type="button" data-telegram-close>Закрити</button>
+      <button class="btn btn-primary" type="button" data-telegram-connect hidden>Створити код підключення</button>
+    </div>
+  </div>
+</dialog>
+
+<footer class="footer py-4">
+  <div class="container d-flex flex-column flex-md-row justify-content-between gap-2">
+    <p class="mb-0">MultiShop — навчальний маркетплейс. Розрахунки у MultiCoins (MC).</p>
+    <a href="/pages/policy.html" class="text-decoration-none">Політика платформи →</a>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/static/js/api.js"></script>
+<script src="/static/js/price-format.js?v=price-3dp-20261114"></script>
+<script src="/static/js/auth.js?v=auth-header-tooltip-v1-20261122"></script>
+<script src="/static/js/password-change.js?v=password-change-20261114"></script>
+<script src="/static/js/policy-gate.js?v=policy-after-login-v2-20261122"></script>
+<script src="/static/js/notifications.js"></script>
+<script src="/static/js/telegram.js?v=telegram-header-tooltip-v1-20261122"></script>
+<script>
+  (function () {
+    const box = document.getElementById("homeBlocks");
+    const errorBox = document.getElementById("homeError");
+    const bar = document.getElementById("homeEditBar");
+    const toggleBtn = document.getElementById("homeEditToggle");
+    const toggleIcon = document.createElement("span");
+    const toggleLabel = document.createElement("span");
+    const addBtn = document.getElementById("homeAddBlock");
+    const dialog = document.getElementById("homeBlockDialog");
+    const form = document.getElementById("homeBlockForm");
+    const titleInput = document.getElementById("homeBlockTitle");
+    const textInput = document.getElementById("homeBlockText");
+    const eyebrowInput = document.getElementById("homeBlockEyebrow");
+    const layoutInput = document.getElementById("homeBlockLayout");
+    const styleInput = document.getElementById("homeBlockStyle");
+    const dialogError = document.getElementById("homeBlockError");
+    const esc = window.MS.escapeHtml;
+
+    let blocks = [];
+    let editable = false; // чи має користувач право «home»
+    let editing = false;  // режим редагування увімкнено
+    let editId = null;    // id блоку, що редагуємо (null — додавання)
+    toggleIcon.className = "home-edit-icon";
+    toggleIcon.setAttribute("aria-hidden", "true");
+    toggleLabel.textContent = "Редагувати головну";
+    toggleBtn.replaceChildren(toggleIcon, toggleLabel);
+
+    function renderEditToggle() {
+      toggleIcon.textContent = editing ? "✓" : "✎";
+      toggleIcon.classList.toggle("is-done", editing);
+      toggleLabel.textContent = editing ? "Готово" : "Редагувати головну";
+    }
+
+    renderEditToggle();
+
+    function canEditUser(user) {
+      if (!user || !user.authenticated || user.is_banned) return false;
+      const rights = Array.isArray(user.admin_rights) ? user.admin_rights : [];
+      return rights.indexOf("home") !== -1;
+    }
+
+    function cardHtml(block, index) {
+      const layoutClasses = {
+        compact: "col-md-4 col-lg-3",
+        standard: "col-md-6 col-lg-4",
+        wide: "col-12",
+      };
+      const styleClasses = {
+        paper: "home-block--paper",
+        accent: "home-block--accent",
+        dark: "home-block--dark",
+      };
+      const controls = editing
+        ? '<div class="d-flex flex-wrap gap-2 mt-3 home-block-controls">' +
+            '<button class="btn btn-outline-primary btn-sm" type="button" data-act="edit" data-id="' + esc(block.id) + '">Редагувати</button>' +
+            '<button class="btn btn-outline-danger btn-sm" type="button" data-act="delete" data-id="' + esc(block.id) + '">Видалити</button>' +
+            '<button class="btn btn-outline-secondary btn-sm" type="button" data-act="up" data-id="' + esc(block.id) + '"' +
+              (index === 0 ? " disabled" : "") + ">↑</button>" +
+            '<button class="btn btn-outline-secondary btn-sm" type="button" data-act="down" data-id="' + esc(block.id) + '"' +
+              (index === blocks.length - 1 ? " disabled" : "") + ">↓</button>" +
+          "</div>"
+        : "";
+      return '<div class="' + (layoutClasses[block.layout] || layoutClasses.standard) +
+        ' home-block-column"><div class="card-soft home-block-card ' +
+        (styleClasses[block.style] || styleClasses.paper) + ' h-100"><div class="card-body">' +
+        (block.eyebrow ? '<p class="eyebrow mb-1 home-block-text">' + esc(block.eyebrow) + "</p>" : "") +
+        '<h3 class="h5 home-block-text">' + esc(block.title) + "</h3>" +
+        '<p class="text-muted-soft small mb-0 home-block-text">' + esc(block.text) + "</p>" +
+        controls + "</div></div></div>";
+    }
+
+    function render() {
+      if (!blocks.length) {
+        box.innerHTML = "";
+        if (!editable) {
+          errorBox.textContent = "Блоки головної ще не налаштовані.";
+          errorBox.hidden = false;
+        } else {
+          errorBox.hidden = true;
+        }
+        return;
+      }
+      errorBox.hidden = true;
+      box.innerHTML = blocks.map(cardHtml).join("");
+    }
+
+    async function loadBlocks() {
+      // Публічний список для всіх; адмінський — коли є право «home» (містить id).
+      const path = editable ? "/admin/site/blocks" : "/site/blocks";
+      const cacheKey = window.MSSkeletons.cacheKey(path);
+      const cached = window.MSSkeletons.getCachedData(cacheKey);
+      if (cached !== undefined) {
+        blocks = cached.blocks || [];
+        render();
+      }
+      const loading = cached === undefined
+        ? window.MSSkeletons.showSkeleton(box, "home", 3)
+        : null;
+      try {
+        const data = await window.MS.get(path);
+        blocks = (data && data.blocks) || [];
+        window.MSSkeletons.setCachedData(cacheKey, data);
+        if (loading) {
+          await loading.finish(() => {
+            errorBox.hidden = true;
+            render();
+          });
+        } else {
+          errorBox.hidden = true;
+          render();
+        }
+      } catch (err) {
+        const message = window.MSSkeletons.friendlyErrorMessage(err, "Не вдалося завантажити блоки головної.");
+        const showError = () =>
+          window.MSSkeletons.renderRetryError(errorBox, message, loadBlocks, cached !== undefined);
+        if (loading) {
+          await loading.finish(() => {
+            box.replaceChildren();
+            showError();
+          });
+        } else {
+          showError();
+        }
+      }
+    }
+
+    function updateCounters() {
+      document.getElementById("homeBlockTitleCount").textContent = String(titleInput.value.length);
+      document.getElementById("homeBlockTextCount").textContent = String(textInput.value.length);
+    }
+
+    function openForm(block) {
+      editId = block ? block.id : null;
+      document.getElementById("homeBlockDialogTitle").textContent = block ? "Редагування блоку" : "Новий блок";
+      titleInput.value = block ? block.title : "";
+      textInput.value = block ? block.text : "";
+      eyebrowInput.value = block ? (block.eyebrow || "") : "";
+      layoutInput.value = block ? (block.layout || "standard") : "standard";
+      styleInput.value = block ? (block.style || "paper") : "paper";
+      dialogError.hidden = true;
+      dialogError.textContent = "";
+      updateCounters();
+      dialog.showModal();
+      titleInput.focus();
+    }
+
+    async function deleteBlock(id) {
+      if (!window.confirm("Видалити цей блок головної?")) return;
+      try {
+        await window.MS.del("/admin/site/blocks/" + id);
+        window.MS.toast("Блок видалено.", "success");
+        await loadBlocks();
+      } catch (err) {
+        window.MS.toast(err.message || "Не вдалося видалити блок.", "danger");
+      }
+    }
+
+    async function moveBlock(id, delta) {
+      const index = blocks.findIndex((block) => block.id === id);
+      const target = index + delta;
+      if (index < 0 || target < 0 || target >= blocks.length) return;
+      const ids = blocks.map((block) => block.id);
+      ids.splice(target, 0, ids.splice(index, 1)[0]);
+      try {
+        await window.MS.post("/admin/site/blocks/reorder", { ids: ids });
+        await loadBlocks();
+      } catch (err) {
+        window.MS.toast(err.message || "Не вдалося змінити порядок.", "danger");
+      }
+    }
+
+    box.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-act]");
+      if (!button) return;
+      const id = Number(button.dataset.id);
+      const act = button.dataset.act;
+      if (act === "edit") {
+        const block = blocks.find((item) => item.id === id);
+        if (block) openForm(block);
+      } else if (act === "delete") {
+        deleteBlock(id);
+      } else if (act === "up") {
+        moveBlock(id, -1);
+      } else if (act === "down") {
+        moveBlock(id, 1);
+      }
+    });
+
+    toggleBtn.addEventListener("click", () => {
+      editing = !editing;
+      renderEditToggle();
+      addBtn.hidden = !editing;
+      render();
+    });
+
+    addBtn.addEventListener("click", () => openForm(null));
+    titleInput.addEventListener("input", updateCounters);
+    textInput.addEventListener("input", updateCounters);
+    document.getElementById("homeBlockClose").addEventListener("click", () => dialog.close());
+    document.getElementById("homeBlockCancel").addEventListener("click", () => dialog.close());
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const eyebrow = eyebrowInput.value.trim();
+      const title = titleInput.value.trim();
+      const text = textInput.value.trim();
+      if (!title || !text) {
+        dialogError.textContent = "Заповніть заголовок і текст.";
+        dialogError.hidden = false;
+        return;
+      }
+      try {
+        if (editId) {
+          await window.MS.request("/admin/site/blocks/" + editId, {
+            method: "PATCH",
+            body: {
+              eyebrow: eyebrow,
+              title: title,
+              text: text,
+              layout: layoutInput.value,
+              style: styleInput.value,
+            },
+          });
+          window.MS.toast("Блок оновлено.", "success");
+        } else {
+          await window.MS.post("/admin/site/blocks", {
+            eyebrow: eyebrow,
+            title: title,
+            text: text,
+            layout: layoutInput.value,
+            style: styleInput.value,
+          });
+          window.MS.toast("Блок додано.", "success");
+        }
+        dialog.close();
+        await loadBlocks();
+      } catch (err) {
+        dialogError.textContent = err.message || "Не вдалося зберегти блок.";
+        dialogError.hidden = false;
+      }
+    });
+
+    async function init() {
+      const user = await window.MSAuth.ready();
+      editable = canEditUser(user);
+      if (editable) {
+        bar.classList.add("d-flex");
+        bar.hidden = false;
+        // Плитка «Редагувати головну» веде на /?edit=1 — одразу вмикаємо режим.
+        if (new URLSearchParams(window.location.search).get("edit") === "1") {
+          editing = true;
+          renderEditToggle();
+          addBtn.hidden = false;
+        }
+      }
+      await loadBlocks();
+    }
+
+    document.addEventListener("DOMContentLoaded", init);
+  })();
+</script>
+<script src="/static/js/motion.js?v=skeleton-swr-v5-20261123"></script>
+<script src="/static/js/floating-icons.js?v=floating-icons-single-hover-v1-20261122"></script>
+<script src="/static/js/particles.js?v=particles-v4-bloom-20261122"></script>
+</body>
+</html>

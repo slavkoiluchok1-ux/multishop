@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MultiShop — товар</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/base.css?v=particles-v4-bloom-20261122">
+</head>
+<body>
+
+<nav class="navbar navbar-expand-xl navbar-dark mb-4">
+  <div class="container">
+    <a class="navbar-brand me-3 brand-mark" href="/">🛍️ <span>Multi<span class="brand-slash">Shop</span></span></a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false" aria-label="Меню">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="mainNavbar">
+      <ul class="navbar-nav ms-auto align-items-center">
+        <li class="nav-item"><a class="nav-link nav-pill" href="/pages/policy.html">Політика</a></li>
+        <li class="nav-item"><a class="nav-link nav-pill" href="/">Головна</a></li>
+        <li class="nav-item"><a class="nav-link nav-pill" href="/pages/catalog.html">Каталог</a></li>
+        <li class="nav-item"><a class="nav-link nav-pill" href="/pages/cart.html">Кошик<span class="nav-counter is-cart" data-cart-count hidden>0</span></a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/favorites.html">Обране<span class="nav-counter" data-counter="favorites" hidden>0</span></a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/orders.html">Замовлення<span class="nav-counter" data-counter="orders" hidden>0</span></a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/complaints.html">Скарги<span class="nav-counter" data-counter="complaints" hidden>0</span></a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/seller.html">Мої товари</a></li>
+        <li class="nav-item" data-auth="guest"><a class="nav-link nav-pill" href="/pages/support.html">Підтримка</a></li><li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/support.html">Підтримка</a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/profile.html">Профіль</a></li>
+        <li class="nav-item" data-auth="guest"><a class="nav-link nav-pill" href="/pages/login.html">Вхід</a></li>
+        <li class="nav-item" data-auth="guest"><a class="nav-link nav-pill" href="/pages/register.html">Реєстрація</a></li>
+        <li class="nav-item" data-auth="user" hidden>
+          <span class="nav-user">
+            <img class="avatar" alt="" data-user-avatar hidden>
+            <span class="nav-user-name" data-user-name></span>
+          </span>
+        </li>
+        <li class="nav-item" data-auth="user" hidden>
+          <button class="nav-link nav-pill border-0 bg-transparent" type="button" data-logout>Вийти</button>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<main class="container app-main py-3 py-md-4">
+  <nav class="crumbs mb-3" id="crumbs"></nav>
+  <div class="alert-soft is-danger mb-3" id="productError" hidden></div>
+  <div id="productView" hidden></div>
+  <div id="productLoading" aria-live="polite"></div>
+</main>
+
+<!-- Причина модерації для адміна -->
+<div class="app-modal" id="reasonModal" hidden>
+  <div class="app-modal-box">
+    <button class="app-modal-close" type="button" id="reasonClose" aria-label="Закрити">×</button>
+    <h2 class="h5 mb-2" id="reasonTitle">Причина</h2>
+    <div class="alert-soft is-danger mb-2" id="reasonError" hidden></div>
+    <label class="form-label" for="reasonText">Причина для продавця</label>
+    <textarea class="form-control" id="reasonText" rows="3" maxlength="1000" placeholder="Мінімум 5 символів"></textarea>
+    <div class="d-flex gap-2 mt-3">
+      <button class="btn btn-primary" type="button" id="reasonConfirm">Підтвердити</button>
+      <button class="btn btn-outline-primary" type="button" id="reasonCancel">Скасувати</button>
+    </div>
+  </div>
+</div>
+
+<!-- Вікно з товарами продавця -->
+<div class="app-modal" id="sellerWindow" hidden>
+  <div class="app-modal-box is-lg">
+    <button class="app-modal-close" type="button" id="sellerClose" aria-label="Закрити">×</button>
+    <div class="d-flex align-items-center gap-2 mb-1">
+      <h2 class="h5 mb-0" id="sellerTitle">Товари продавця</h2>
+      <span class="seller-avatar" id="sellerModalAvatar" hidden></span>
+    </div>
+    <p class="text-muted-soft small">Усі товари цього продавця в каталозі.</p>
+    <div class="mb-2">
+      <button class="btn btn-outline-primary btn-sm" type="button" id="sellerComplainBtn">Поскаржитись на продавця</button>
+    </div>
+    <div class="product-grid" id="sellerGrid"></div>
+    <p class="text-muted-soft small mb-0" id="sellerEmpty" hidden>Продавець не має активних товарів.</p>
+  </div>
+</div>
+
+<footer class="footer py-4">
+  <div class="container d-flex flex-column flex-md-row justify-content-between gap-2">
+    <p class="mb-0">MultiShop — навчальний маркетплейс. Розрахунки у MultiCoins (MC).</p>
+    <a href="/pages/policy.html" class="text-decoration-none">Політика платформи →</a>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/static/js/api.js"></script>
+<script src="/static/js/price-format.js?v=price-3dp-20261114"></script>
+<script src="/static/js/auth.js?v=auth-header-tooltip-v1-20261122"></script>
+<script src="/static/js/password-change.js?v=password-change-20261114"></script>
+<script src="/static/js/policy-gate.js?v=policy-after-login-v2-20261122"></script>
+<script src="/static/js/notifications.js"></script>
+<script src="/static/js/complaint-tree.js?v=skeleton-swr-v5-20261123"></script>
+<script src="/static/js/complaint-form.js?v=complaint-form-scope-20261114"></script>
+<script>
+  (function () {
+    "use strict";
+
+    const esc = window.MS.escapeHtml;
+    function sellerAvatarMarkup(seller) {
+      const username = seller && seller.username ? seller.username : "?";
+      const avatar = seller && seller.avatar;
+      return '<span class="seller-avatar" aria-label="Аватар ' + esc(username) + '">' +
+        (avatar
+          ? '<img src="' + esc(avatar) + '" alt="">'
+          : esc(username.charAt(0).toUpperCase())) +
+        "</span>";
+    }
+    const params = new URLSearchParams(window.location.search);
+    const productId = params.get("id");
+    const token = params.get("token") || hiddenTokenFromPath();
+
+    const view = document.getElementById("productView");
+    const loading = document.getElementById("productLoading");
+    const errorBox = document.getElementById("productError");
+    const crumbs = document.getElementById("crumbs");
+    const sellerWindow = document.getElementById("sellerWindow");
+    const reasonModal = document.getElementById("reasonModal");
+    const reasonError = document.getElementById("reasonError");
+
+    let product = null;
+    let renderedProductSnapshot = null;
+    let selected = null;
+    let reasonAction = null;
+    let cartVariants = {}; // id варіантів, які вже в кошику
+
+    function hiddenTokenFromPath() {
+      const match = window.location.pathname.match(/\/catalog\/h\/([^/]+)$/);
+      return match ? match[1] : null;
+    }
+
+    function endpoint() {
+      if (token) return "/products/h/" + encodeURIComponent(token);
+      return "/products/" + encodeURIComponent(productId);
+    }
+
+    function showError(message) {
+      errorBox.textContent = message;
+      errorBox.hidden = !message;
+    }
+
+    function safeWebUrl(value) {
+      try {
+        const url = new URL(value);
+        return url.protocol === "http:" || url.protocol === "https:" ? url.href : "";
+      } catch (_err) {
+        return "";
+      }
+    }
+
+    /* ---------- Breadcrumbs ---------- */
+    function catalogBackUrl() {
+      try {
+        return sessionStorage.getItem("ms_last_catalog_url") || "/pages/catalog.html";
+      } catch (_err) {
+        return "/pages/catalog.html";
+      }
+    }
+
+    function renderCrumbs(data) {
+      crumbs.innerHTML = "";
+      const home = document.createElement("a");
+      home.href = catalogBackUrl();
+      home.textContent = "Каталог";
+      crumbs.appendChild(home);
+      (data.breadcrumbs || []).forEach((crumb) => {
+        const sep = document.createElement("span");
+        sep.className = "crumbs-sep";
+        sep.textContent = "›";
+        crumbs.appendChild(sep);
+        const a = document.createElement("a");
+        a.href = "/pages/catalog.html?category=" + crumb.id;
+        a.textContent = crumb.name;
+        crumbs.appendChild(a);
+      });
+      crumbs.hidden = false;
+    }
+
+    /* ---------- Галерея ---------- */
+    function renderGallery(data) {
+      const images = data.images && data.images.length ? data.images : (data.main_image ? [data.main_image] : []);
+      if (!images.length) return '<div class="gallery-main"></div>';
+      let html = '<img class="gallery-main" id="galleryMain" src="' + images[0] + '" alt="">';
+      if (images.length > 1) {
+        html += '<div class="gallery-thumbs">';
+        images.forEach((src, i) => {
+          html += '<img src="' + src + '" data-src="' + src + '" class="' +
+            (i === 0 ? "is-active" : "") + '" alt="">';
+        });
+        html += "</div>";
+      }
+      return html;
+    }
+
+    function bindGallery() {
+      const main = document.getElementById("galleryMain");
+      if (!main) return;
+      view.querySelectorAll(".gallery-thumbs img").forEach((thumb) => {
+        thumb.addEventListener("click", () => {
+          main.src = thumb.getAttribute("data-src");
+          view.querySelectorAll(".gallery-thumbs img").forEach((t) => t.classList.remove("is-active"));
+          thumb.classList.add("is-active");
+        });
+      });
+    }
+
+    /* ---------- Характеристики ---------- */
+    function renderAttributes(attributes, variants) {
+      // Значення беремо з варіантів цього товару, а не з усіх опцій категорії
+      const byName = {};
+      (variants || []).forEach((variant) => {
+        (variant.attribute_values || []).forEach((av) => {
+          if (!av.value) return;
+          if (!byName[av.attribute]) byName[av.attribute] = [];
+          if (byName[av.attribute].indexOf(av.value) === -1) byName[av.attribute].push(av.value);
+        });
+      });
+      let rows = "";
+      (attributes || []).forEach((attr) => {
+        const values = byName[attr.name] || [];
+        if (!values.length) return; // показуємо лише характеристики зі значеннями
+        rows += '<div class="attr-row"><div class="attr-name is-strong">' + esc(attr.name) +
+          (attr.unit ? ", " + esc(attr.unit) : "") + "</div>" +
+          '<div class="text-muted-soft small">' + esc(values.join(", ")) + "</div></div>";
+      });
+      if (!rows) return ""; // немає характеристик — блок не малюємо
+      return '<div class="attrs-panel" style="background:var(--paper);border-color:var(--line)">' +
+        '<h3 style="color:var(--ink)">Характеристики</h3>' + rows + "</div>";
+    }
+
+    /* ---------- Варіанти ---------- */
+    function stockText(stock) {
+      return stock > 0 ? "У наявності: " + stock + " шт." : "Закінчився";
+    }
+
+    function renderVariants(variants) {
+      if (!variants.length) return '<p class="text-muted-soft small">Варіантів немає.</p>';
+      let html = '<div class="variant-list" id="variantList">';
+      variants.forEach((variant) => {
+        const out = variant.stock <= 0;
+        const attrs = (variant.attribute_values || []).map((a) => a.attribute + ": " + a.value).join(" · ");
+        html += '<button type="button" class="variant-row' + (out ? " is-out" : "") +
+          '" data-variant="' + variant.id + '"' + (out ? " disabled" : "") + ">" +
+          "<span><span class='d-block fw-bold'>" +
+          (variant.license_type ? esc(variant.license_type_display) : "Варіант #" + variant.id) +
+          (variant.sku ? " · " + esc(variant.sku) : "") + "</span>" +
+          (attrs ? '<span class="small text-muted-soft">' + esc(attrs) + "</span>" : "") +
+          "</span>" +
+          '<span class="text-end"><span class="price-tag">' + esc(variant.price_full) + " MC</span>" +
+          '<span class="d-block small text-muted-soft">' + stockText(variant.stock) + "</span></span>" +
+          "</button>";
+      });
+      html += "</div>";
+      return html;
+    }
+
+    /* ---------- Основна розмітка ---------- */
+    function render(data) {
+      const snapshot = JSON.stringify(data);
+      if (snapshot === renderedProductSnapshot) return;
+      const variants = data.variants || [];
+      selected = variants.find((v) => v.stock > 0) || variants[0] || null;
+      // Товар закінчився: статус sold_out або жоден варіант не має залишку.
+      const unavailable = data.status === "sold_out" || !variants.some((v) => v.stock > 0);
+      const portfolioUrl = safeWebUrl(data.portfolio_url);
+      const attrsHtml = renderAttributes(data.attributes, variants);
+
+      view.innerHTML =
+        '<div class="product-hero">' +
+          "<div>" + renderGallery(data) +
+            (productAdmin() ? '<div class="mt-3" id="adminPanel"></div>' : "") + "</div>" +
+          '<div class="card-soft h-100"><div class="card-body">' +
+            '<div class="product-meta mb-2">' +
+              '<span class="badge-soft is-muted">' + esc(data.product_type_display) + "</span>" +
+              (unavailable ? '<span class="badge-soft is-blood">Закінчився</span>' : "") +
+            "</div>" +
+            '<h1 class="h4">' + esc(data.name) + "</h1>" +
+            (data.brand ? '<p class="text-muted-soft small mb-2">Бренд: ' + esc(data.brand) + "</p>" : "") +
+            '<div class="d-flex justify-content-between align-items-center mb-3">' +
+              '<span class="price-tag" id="mainPrice">' + esc(selected ? selected.price_full : "0") + " MC</span>" +
+              '<button class="btn btn-outline-primary btn-sm" type="button" id="favBtn">' +
+                (data.is_favorite ? "♥ В обраному" : "♡ В обране") + "</button>" +
+            "</div>" +
+            '<div class="mb-3">' + renderVariants(variants) + "</div>" +
+            '<div class="d-flex align-items-end gap-2 mb-3">' +
+              (unavailable
+                ? '<div><span class="form-label d-block">Кількість</span>' +
+                  '<span class="text-muted-soft fw-bold">Закінчився</span></div>'
+                : '<div><label class="form-label" for="qty">Кількість</label>' +
+                  '<input class="form-control" type="number" id="qty" min="1" value="1" style="max-width:8rem"></div>' +
+                  '<span class="text-muted-soft small mb-2" id="stockNote">' +
+                    (selected ? stockText(selected.stock) : "") + "</span>") +
+            "</div>" +
+            '<div class="d-flex flex-wrap gap-2">' +
+              '<button class="btn btn-primary" type="button" id="buyBtn"' +
+                (unavailable ? " disabled" : "") + ">Купити</button>" +
+              '<button class="btn btn-outline-primary" type="button" id="addCartBtn"' +
+                (unavailable ? " disabled" : "") + ">Додати в кошик</button>" +
+              '<a class="btn btn-outline-primary btn-sm align-self-center" href="/pages/cart.html" id="goCartBtn" hidden>Перейти в кошик</a>' +
+              '<button class="btn btn-outline-primary" type="button" id="complainBtn">Поскаржитись</button>' +
+            "</div>" +
+            '<hr class="divider-dashed">' +
+            '<p class="small mb-1">Продавець: ' +
+              '<button type="button" class="btn btn-link p-0 align-baseline" id="sellerBtn">' +
+              esc(data.seller.username) + "</button> " + sellerAvatarMarkup(data.seller) + "</p>" +
+            '<p class="text-muted-soft small mb-0">Шлях: ' + esc(data.category.path) + "</p>" +
+          "</div></div>" +
+        "</div>" +
+        (data.description
+          ? '<div class="card-soft mt-4"><div class="card-body"><h2 class="h5">Опис</h2>' +
+            '<p class="text-muted-soft mb-0" style="white-space:pre-wrap">' + esc(data.description) + "</p></div></div>"
+          : "") +
+        (portfolioUrl
+          ? '<div class="card-soft mt-4"><div class="card-body"><h2 class="h5">Портфоліо виконавця</h2>' +
+            '<a href="' + esc(portfolioUrl) + '" target="_blank" rel="noopener noreferrer">' +
+            "Переглянути роботи</a></div></div>"
+          : "") +
+        (attrsHtml
+          ? '<div class="card-soft mt-4"><div class="card-body">' +
+            attrsHtml + "</div></div>"
+          : "") +
+        '<div class="card-soft mt-4"><div class="card-body" id="reviewsMount"></div></div>' +
+        ((data.trial_files || []).length
+          ? '<div class="card-soft mt-4"><div class="card-body"><h2 class="h5">Пробні файли</h2>' +
+            data.trial_files.map((file) =>
+              '<a class="btn btn-outline-primary btn-sm me-2 mb-2" href="' +
+              esc(file.url) + '">' + esc(file.title) + "</a>"
+            ).join("") + "</div></div>"
+          : "");
+
+      view.hidden = false;
+      loading.hidden = true;
+      renderCrumbs(data);
+      bindGallery();
+      bindActions(data);
+      renderAdminPanel(data);
+      renderedProductSnapshot = snapshot;
+      loadReviews(0);
+    }
+
+    function selectVariant(id) {
+      const variant = (product.variants || []).find((v) => String(v.id) === String(id));
+      if (!variant) return;
+      selected = variant;
+      view.querySelectorAll(".variant-row").forEach((row) => {
+        row.classList.toggle("is-selected", row.getAttribute("data-variant") === String(id));
+      });
+      document.getElementById("mainPrice").textContent = variant.price_full + " MC";
+      const note = document.getElementById("stockNote");
+      if (note) note.textContent = stockText(variant.stock);
+      const qty = document.getElementById("qty");
+      if (qty) {
+        qty.value = "1";
+        qty.max = String(Math.max(1, variant.stock));
+      }
+      updateAddBtn();
+    }
+
+    function bindActions(data) {
+      view.querySelectorAll(".variant-row").forEach((row) => {
+        if (row.disabled) return;
+        row.addEventListener("click", () => selectVariant(row.getAttribute("data-variant")));
+      });
+      if (selected) selectVariant(selected.id);
+
+      document.getElementById("favBtn").addEventListener("click", toggleFavorite);
+      document.getElementById("sellerBtn").addEventListener("click", () => openSeller(data.seller));
+      document.getElementById("buyBtn").addEventListener("click", buy);
+      document.getElementById("addCartBtn").addEventListener("click", addToCart);
+      document.getElementById("complainBtn").addEventListener("click", () =>
+        openComplaint("product", data.id, data.seller.id, data.name)
+      );
+      loadCartVariants().then(updateAddBtn);
+    }
+
+    /* Точка входу «Поскаржитись»: відкриває спільну форму скарги без переходу зі сторінки. */
+    function openComplaint(kind, targetId, ownerId, name) {
+      const user = window.MSAuth.state.user;
+      if (!user || !user.authenticated) {
+        window.MS.toast("Увійдіть, щоб подати скаргу.", "danger");
+        return;
+      }
+      if (ownerId && String(ownerId) === String(user.id)) {
+        window.MS.toast("Не можна скаржитись на власний об'єкт.", "danger");
+        return;
+      }
+      if (kind === "comment") {
+        window.MSComplaintForm.open({
+          view: "users_content",
+          target_id: targetId,
+          comment_id: targetId,
+          label: name ? "Відгук: " + name : "Відгук #" + targetId,
+          context_fields: {
+            user_or_content: (name || "Відгук") + " (ID коментаря: " + targetId + ")",
+          },
+        });
+        return;
+      }
+      if (kind === "user") {
+        window.MSComplaintForm.open({
+          view: "users_content",
+          target_id: targetId,
+          label: name ? "Продавець: " + name : "Користувач #" + targetId,
+          context_fields: {
+            user_or_content: (name || "Користувач") + " (ID: " + targetId + ")",
+          },
+        });
+        return;
+      }
+      window.MSComplaintForm.open({
+        view: "products",
+        target_id: targetId,
+        label: name ? "Товар: " + name : "Товар #" + targetId,
+        context_fields: {
+          product: (name || "Товар") + " (ID: " + targetId + ")",
+        },
+      });
+    }
+
+    async function toggleFavorite() {
+      if (!window.MSAuth.isAuthed()) {
+        window.MS.toast("Увійдіть, щоб додати товар в обране.", "danger");
+        return;
+      }
+      try {
+        const res = await window.MS.post("/favorites", { product_id: product.id });
+        const on = !!res.is_favorite;
+        product.is_favorite = on;
+        document.getElementById("favBtn").textContent = on ? "♥ В обраному" : "♡ В обране";
+        window.MS.toast(on ? "Додано в обране." : "Прибрано з обраного.", "success");
+        if (window.MSCounters) window.MSCounters.refresh();
+      } catch (err) {
+        window.MS.toast(err.message || "Не вдалося оновити обране.", "danger");
+      }
+    }
+
+    async function buy() {
+      if (!selected) {
+        window.MS.toast("Немає доступного варіанта.", "danger");
+        return;
+      }
+      const qtyInput = document.getElementById("qty");
+      const quantity = Math.max(1, parseInt((qtyInput && qtyInput.value) || "1", 10));
+      try {
+        await window.MS.post("/cart/items", { variant_id: selected.id, quantity: quantity });
+        window.MS.toast("Товар додано в кошик.", "success");
+        window.location.href = "/pages/cart.html";
+      } catch (err) {
+        window.MS.toast(err.message || "Не вдалося додати в кошик.", "danger");
+      }
+    }
+
+    /* ---------- Кошик: додати без переходу ---------- */
+    async function loadCartVariants() {
+      try {
+        const data = await window.MS.get("/cart");
+        cartVariants = {};
+        (data.items || []).forEach((item) => { cartVariants[String(item.variant_id)] = true; });
+      } catch (_err) {
+        cartVariants = {};
+      }
+    }
+
+    // «Додати в кошик» ↔ «У кошику ✓» (клік по «У кошику ✓» прибирає варіант)
+    function updateAddBtn() {
+      const btn = document.getElementById("addCartBtn");
+      const goCart = document.getElementById("goCartBtn");
+      if (!btn || btn.disabled) {
+        if (goCart) goCart.hidden = true; // закінчений товар — дій немає
+        return;
+      }
+      const inCart = !!selected && !!cartVariants[String(selected.id)];
+      btn.textContent = inCart ? "У кошику ✓" : "Додати в кошик";
+      btn.title = inCart ? "Натисніть, щоб прибрати" : "";
+      if (goCart) goCart.hidden = !inCart;
+    }
+
+    async function addToCart() {
+      if (!selected) {
+        window.MS.toast("Немає доступного варіанта.", "danger");
+        return;
+      }
+      const btn = document.getElementById("addCartBtn");
+      const inCart = !!cartVariants[String(selected.id)];
+      const qtyInput = document.getElementById("qty");
+      const quantity = Math.max(1, parseInt((qtyInput && qtyInput.value) || "1", 10));
+      if (btn) btn.disabled = true;
+      try {
+        if (inCart) {
+          // Прибирання того самого варіанта (як «Прибрати» у cart.js)
+          await window.MS.post("/cart/items", { variant_id: selected.id, quantity: 0 });
+          delete cartVariants[String(selected.id)];
+          window.MS.toast("Прибрано з кошика", "success");
+        } else {
+          await window.MS.post("/cart/items", { variant_id: selected.id, quantity: quantity });
+          cartVariants[String(selected.id)] = true;
+          window.MS.toast("Додано в кошик", "success");
+        }
+        if (window.MSCounters) window.MSCounters.refresh();
+      } catch (err) {
+        window.MS.toast(err.message || "Не вдалося оновити кошик.", "danger");
+      }
+      if (btn) btn.disabled = false;
+      updateAddBtn();
+    }
+
+    /* ---------- Панель адміністратора ---------- */
+    function productAdmin() {
+      const user = window.MSAuth.state.user;
+      if (!user || !user.authenticated) return false;
+      const rights = Array.isArray(user.admin_rights) ? user.admin_rights : [];
+      return rights.indexOf("products") !== -1;
+    }
+
+    function renderAdminPanel(data) {
+      const adminPanel = document.getElementById("adminPanel");
+      if (!adminPanel) return; // не адмін — панелі немає в DOM
+      const statusBadge = data.moderation === "blocked"
+        ? '<span class="badge-soft is-blood">Заблоковано адміністратором</span>'
+        : data.moderation === "deleted"
+          ? '<span class="badge-soft is-blood">Видалено адміністратором</span>'
+          : '<span class="badge-soft is-lime">Без обмежень</span>';
+      const reason = data.moderation_reason
+        ? '<p class="text-muted-soft small mb-2">Причина: ' + esc(data.moderation_reason) + "</p>"
+        : "";
+      let buttons = "";
+      if (data.moderation === "blocked") {
+        buttons = '<button class="btn btn-outline-primary btn-sm" type="button" data-admin="unblock">Розблокувати</button>' +
+          '<button class="btn btn-primary btn-sm" type="button" data-admin="delete">Видалити</button>';
+      } else if (data.moderation === "deleted") {
+        buttons = '<button class="btn btn-outline-primary btn-sm" type="button" data-admin="unblock">Розблокувати</button>';
+      } else {
+        buttons = '<button class="btn btn-outline-primary btn-sm" type="button" data-admin="block">Заблокувати</button>' +
+          '<button class="btn btn-primary btn-sm" type="button" data-admin="delete">Видалити</button>';
+      }
+      // Статус і кнопки — в одному рядку, за потреби переносяться.
+      adminPanel.innerHTML =
+        '<div class="card-soft"><div class="card-body">' +
+          '<h2 class="h5 mb-2">Адмін</h2>' + reason +
+          '<div class="d-flex flex-wrap align-items-center gap-2">' +
+            statusBadge + buttons +
+          "</div>" +
+        "</div></div>";
+      adminPanel.querySelectorAll("[data-admin]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const action = btn.getAttribute("data-admin");
+          if (action === "unblock") unblockProduct();
+          else openReasonModal(action);
+        });
+      });
+    }
+
+    function openReasonModal(action) {
+      reasonAction = action;
+      document.getElementById("reasonTitle").textContent =
+        action === "delete" ? "Видалення товару" : "Блокування товару";
+      document.getElementById("reasonText").value = "";
+      reasonError.hidden = true;
+      reasonModal.hidden = false;
+    }
+
+    function closeReasonModal() {
+      reasonModal.hidden = true;
+      reasonAction = null;
+    }
+
+    async function submitReason() {
+      const reason = document.getElementById("reasonText").value.trim();
+      if (reason.length < 5) {
+        reasonError.textContent = "Причина обов'язкова (мінімум 5 символів).";
+        reasonError.hidden = false;
+        return;
+      }
+      const action = reasonAction;
+      try {
+        await window.MS.post("/admin/products/" + product.id + "/" + action, { reason: reason });
+        closeReasonModal();
+        window.MS.toast(action === "delete" ? "Товар видалено." : "Товар заблоковано.", "success");
+        const fresh = await window.MS.get(endpoint());
+        product = fresh;
+        render(fresh);
+      } catch (err) {
+        reasonError.textContent = err.message || "Не вдалося виконати дію.";
+        reasonError.hidden = false;
+      }
+    }
+
+    async function unblockProduct() {
+      try {
+        await window.MS.post("/admin/products/" + product.id + "/unblock", {});
+        window.MS.toast("Товар розблоковано.", "success");
+        const fresh = await window.MS.get(endpoint());
+        product = fresh;
+        render(fresh);
+      } catch (err) {
+        window.MS.toast(err.message || "Не вдалося розблокувати товар.", "danger");
+      }
+    }
+
+    document.getElementById("reasonConfirm").addEventListener("click", submitReason);
+    document.getElementById("reasonCancel").addEventListener("click", closeReasonModal);
+    document.getElementById("reasonClose").addEventListener("click", closeReasonModal);
+    reasonModal.addEventListener("click", (event) => {
+      if (event.target === reasonModal) closeReasonModal();
+    });
+
+    /* ---------- Відгуки ---------- */
+    const reviewsState = { loaded: [], count: 0, canReview: false, orderId: null };
+
+    function reviewsUrl(offset) {
+      const query = new URLSearchParams();
+      if (token) query.set("token", token);
+      if (offset) query.set("offset", String(offset));
+      const qs = query.toString();
+      return "/products/" + product.id + "/reviews" + (qs ? "?" + qs : "");
+    }
+
+    function reviewMedia(media) {
+      return (media || []).map((item) =>
+        item.kind === "video"
+          ? '<video class="review-media" src="' + esc(item.url) + '" controls preload="metadata"></video>'
+          : '<img class="review-media review-thumb" src="' + esc(item.url) +
+            '" alt="" data-review-image="' + esc(item.url) + '">'
+      ).join("");
+    }
+
+    function reviewForm() {
+      if (!reviewsState.canReview) return "";
+      return '<form class="review-form" id="reviewForm">' +
+        '<label class="form-label" for="reviewText">Залишити відгук</label>' +
+        '<textarea class="form-control" id="reviewText" rows="3" maxlength="2000" ' +
+          'placeholder="Опишіть ваш досвід" required></textarea>' +
+        '<label class="form-label mt-2" for="reviewMedia">Фото або відео (до 5 файлів)</label>' +
+        '<input class="form-control" type="file" id="reviewMedia" multiple accept="image/*,video/*">' +
+        '<button class="btn btn-primary mt-2" type="submit" id="reviewSubmit">Надіслати відгук</button>' +
+        "</form>";
+    }
+
+    function paintReviews() {
+      const mount = document.getElementById("reviewsMount");
+      if (!mount) return;
+      let html = '<h2 class="h5">Відгуки (' + reviewsState.count + ")</h2>" + reviewForm();
+      if (!reviewsState.loaded.length) {
+        html += '<p class="text-muted-soft small mb-0">Відгуків ще немає.</p>';
+      } else {
+        html += '<div class="review-list">' + reviewsState.loaded.map((review) =>
+          '<article class="review-item"><div class="review-head">' +
+          '<span class="review-author">' + esc(review.author) + "</span>" +
+          '<span class="text-muted-soft small">' + esc(review.created_at) + "</span></div>" +
+          '<p class="review-text">' + esc(review.text) + "</p>" +
+          (review.media && review.media.length
+            ? '<div class="review-media-grid">' + reviewMedia(review.media) + "</div>"
+            : "") +
+          '<button class="btn btn-link btn-sm p-0 mt-1" type="button" ' +
+          'data-complain-review="' + esc(review.id) + '" data-review-author="' +
+          esc(review.author) + '">Поскаржитись</button>' +
+          "</article>"
+        ).join("") + "</div>";
+      }
+      if (reviewsState.loaded.length < reviewsState.count) {
+        html += '<button class="btn btn-outline-primary btn-sm mt-3" type="button" ' +
+          'id="reviewsMore">Показати ще</button>';
+      }
+      mount.innerHTML = html;
+      bindReviews();
+    }
+
+    function bindReviews() {
+      const more = document.getElementById("reviewsMore");
+      if (more) more.addEventListener("click", () => {
+        more.disabled = true;
+        loadReviews(reviewsState.loaded.length);
+      });
+      const form = document.getElementById("reviewForm");
+      if (form) form.addEventListener("submit", submitReview);
+      document.querySelectorAll("[data-review-image]").forEach((thumb) => {
+        thumb.addEventListener("click", () => openLightbox(thumb.getAttribute("data-review-image")));
+      });
+      document.querySelectorAll("[data-complain-review]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const user = window.MSAuth.state.user;
+          if (!user || !user.authenticated) {
+            window.MS.toast("Увійдіть, щоб подати скаргу.", "danger");
+            return;
+          }
+          if (user.username === btn.getAttribute("data-review-author")) {
+            window.MS.toast("Не можна скаржитись на власний відгук.", "danger");
+            return;
+          }
+          openComplaint("comment", btn.getAttribute("data-complain-review"), null,
+            btn.getAttribute("data-review-author"));
+        });
+      });
+    }
+
+    async function loadReviews(offset) {
+      const mount = document.getElementById("reviewsMount");
+      if (!mount) return;
+      const cacheKey = window.MSSkeletons.cacheKey(
+        "/products/" + product.id + "/reviews?offset=" + String(offset)
+      );
+      const cached = window.MSSkeletons.getCachedData(cacheKey);
+      if (cached !== undefined && offset === 0) {
+        reviewsState.count = cached.count || 0;
+        reviewsState.canReview = !!cached.can_review;
+        reviewsState.orderId = cached.order_id || null;
+        if (!offset) reviewsState.loaded = [];
+        reviewsState.loaded = reviewsState.loaded.concat(cached.reviews || []);
+        paintReviews();
+      }
+      try {
+        const data = await window.MS.get(reviewsUrl(offset));
+        window.MSSkeletons.setCachedData(cacheKey, data);
+        reviewsState.count = data.count || 0;
+        reviewsState.canReview = !!data.can_review;
+        reviewsState.orderId = data.order_id || null;
+        if (!offset) reviewsState.loaded = [];
+        reviewsState.loaded = reviewsState.loaded.concat(data.reviews || []);
+        paintReviews();
+      } catch (err) {
+        const message = window.MSSkeletons.friendlyErrorMessage(err, "Не вдалося завантажити відгуки.");
+        window.MSSkeletons.renderRetryError(
+          mount,
+          message,
+          () => loadReviews(offset),
+          cached !== undefined || !!offset
+        );
+      }
+    }
+
+    async function submitReview(event) {
+      event.preventDefault();
+      const text = document.getElementById("reviewText").value.trim();
+      if (!text) {
+        window.MS.toast("Напишіть текст відгуку.", "danger");
+        return;
+      }
+      const files = document.getElementById("reviewMedia").files;
+      if (files.length > 5) {
+        window.MS.toast("До 5 файлів.", "danger");
+        return;
+      }
+      const form = new FormData();
+      form.append("order_id", reviewsState.orderId);
+      form.append("text", text);
+      for (let i = 0; i < files.length; i += 1) form.append("media", files[i]);
+      const button = document.getElementById("reviewSubmit");
+      button.disabled = true;
+      try {
+        await window.MS.post("/products/" + product.id + "/reviews", form);
+        window.MS.toast("Відгук додано.", "success");
+        await loadReviews(0);
+      } catch (err) {
+        window.MS.toast(err.message || "Не вдалося надіслати відгук.", "danger");
+        button.disabled = false;
+      }
+    }
+
+    function openLightbox(url) {
+      const overlay = document.createElement("div");
+      overlay.className = "review-lightbox";
+      const img = document.createElement("img");
+      img.src = url;
+      img.alt = "";
+      overlay.appendChild(img);
+      overlay.addEventListener("click", () => overlay.remove());
+      document.body.appendChild(overlay);
+    }
+
+    /* ---------- Товари продавця ---------- */
+    async function openSeller(seller) {
+      const username = seller.username;
+      document.getElementById("sellerTitle").textContent = "Товари продавця " + username;
+      const avatar = document.getElementById("sellerModalAvatar");
+      avatar.innerHTML = seller.avatar
+        ? '<img src="' + esc(seller.avatar) + '" alt="">'
+        : esc(username.charAt(0).toUpperCase());
+      avatar.hidden = false;
+      const user = window.MSAuth.state.user;
+      const isSelf = user && user.authenticated && String(user.id) === String(seller.id);
+      const complainBtn = document.getElementById("sellerComplainBtn");
+      complainBtn.hidden = isSelf;
+      complainBtn.onclick = () => openComplaint("user", seller.id, seller.id, username);
+      const grid = document.getElementById("sellerGrid");
+      const requestUrl = "/products?seller=" + encodeURIComponent(username);
+      const cacheKey = window.MSSkeletons.cacheKey(requestUrl);
+      const cached = window.MSSkeletons.getCachedData(cacheKey);
+      document.getElementById("sellerEmpty").hidden = true;
+      const renderSellerProducts = (data) => {
+        grid.replaceChildren();
+        const results = data.results || [];
+        results.forEach((item) => {
+          const card = document.createElement("article");
+          const soldOut = !item.in_stock;
+          card.className = "product-card" + (soldOut ? " is-soldout" : "");
+          card.innerHTML =
+            '<div class="product-thumb-wrap">' +
+              (item.image ? '<img class="product-thumb" src="' + item.image + '" alt="">' : '<div class="product-thumb"></div>') +
+              '<span class="product-price">' + esc(item.price_card) + " MC</span>" +
+            "</div>" +
+            '<div class="product-body"><div class="product-name">' + esc(item.name) + "</div>" +
+            '<div class="product-meta">' +
+              (soldOut ? '<span class="badge-soft is-blood">Закінчився</span>' : "") +
+            "</div>" +
+            '<div class="product-foot"><span class="small text-muted-soft">' + esc(item.product_type_display) + "</span>" +
+            '<a class="btn btn-sm ' + (soldOut ? "btn-neutral" : "btn-primary") +
+              '" href="/pages/product.html?id=' + item.id + '">Переглянути</a>' +
+            "</div></div>";
+          grid.appendChild(card);
+        });
+        document.getElementById("sellerEmpty").hidden = results.length > 0;
+      };
+      if (cached !== undefined) renderSellerProducts(cached);
+      else grid.replaceChildren();
+      const skeleton = cached === undefined
+        ? window.MSSkeletons.showSkeleton(grid, "product", 3)
+        : null;
+      sellerWindow.hidden = false;
+      try {
+        const data = await window.MS.get(requestUrl);
+        window.MSSkeletons.setCachedData(cacheKey, data);
+        if (skeleton) await skeleton.finish(() => renderSellerProducts(data));
+        else renderSellerProducts(data);
+      } catch (err) {
+        const message = window.MSSkeletons.friendlyErrorMessage(err, "Не вдалося завантажити товари продавця.");
+        if (skeleton) {
+          await skeleton.finish(() =>
+            window.MSSkeletons.renderRetryError(grid, message, () => openSeller(seller))
+          );
+        } else {
+          window.MSSkeletons.renderRetryError(grid, message, () => openSeller(seller), true);
+        }
+      }
+    }
+
+    document.getElementById("sellerClose").addEventListener("click", () => { sellerWindow.hidden = true; });
+    sellerWindow.addEventListener("click", (event) => {
+      if (event.target === sellerWindow) sellerWindow.hidden = true;
+    });
+
+    /* ---------- Завантаження ---------- */
+    async function load() {
+      if (!token && !productId) {
+        showError("Товар не вказано.");
+        loading.hidden = true;
+        return;
+      }
+      const cacheKey = window.MSSkeletons.cacheKey(endpoint());
+      const cached = window.MSSkeletons.getCachedData(cacheKey);
+      if (cached !== undefined) {
+        product = cached;
+        render(cached);
+      }
+      const skeleton = cached === undefined
+        ? window.MSSkeletons.showSkeleton(loading, "product-detail", 1)
+        : null;
+      try {
+        const data = await window.MS.get(endpoint());
+        product = data;
+        window.MSSkeletons.setCachedData(cacheKey, data);
+        if (skeleton) await skeleton.finish(() => render(data));
+        else render(data);
+      } catch (err) {
+        const message = window.MSSkeletons.friendlyErrorMessage(err, "Товар не знайдено.");
+        if (skeleton) {
+          await skeleton.finish(() => {
+            loading.hidden = true;
+            window.MSSkeletons.renderRetryError(errorBox, message, load);
+          });
+        } else {
+          window.MSSkeletons.renderRetryError(errorBox, message, load, true);
+        }
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      window.MSAuth.ready().then(load);
+    });
+  })();
+</script>
+<script src="/static/js/motion.js?v=skeleton-swr-v5-20261123"></script>
+<script src="/static/js/particles.js?v=particles-v4-bloom-20261122"></script>
+</body>
+</html>

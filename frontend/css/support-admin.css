@@ -1,0 +1,155 @@
+.wallet-panel {
+  overflow: hidden;
+  min-width: 0;
+  background: var(--paper-bright);
+  color: var(--ink);
+}
+
+.wallet-content { display: grid; gap: 1rem; }
+.wallet-owner { font-weight: 700; }
+.wallet-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+.wallet-metric {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 0;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface, #fff);
+}
+.wallet-metric-label,
+.wallet-section-label {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+.wallet-metric-value {
+  overflow-wrap: anywhere;
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+}
+.wallet-metric-value.is-debt { color: var(--blood); }
+.wallet-held-list { margin: 0.35rem 0 0; padding-left: 1.15rem; }
+.wallet-held-list li + li { margin-top: 0.15rem; }
+.wallet-history { min-width: 0; }
+.wallet-history-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.55rem;
+}
+.wallet-filter { display: flex; width: min(100%, 20rem); gap: 0.4rem; }
+.wallet-table-wrap { max-width: 100%; min-width: 0; }
+.wallet-table {
+  width: 100%;
+  max-width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  font-size: 0.84rem;
+}
+.wallet-table th {
+  padding: 0.55rem 0.6rem;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-align: left;
+  text-transform: uppercase;
+}
+.wallet-table td {
+  padding: 0.6rem;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+.wallet-table tbody tr:nth-child(even) { background: rgba(16, 24, 32, 0.035); }
+.wallet-table tbody tr:hover { background: rgba(49, 93, 245, 0.07); }
+.wallet-table th:nth-child(1) { width: 17%; }
+.wallet-table th:nth-child(2) { width: 21%; }
+.wallet-table th:nth-child(3) { width: 9%; }
+.wallet-table th:nth-child(4) { width: 30%; }
+.wallet-table th:nth-child(5) { width: 23%; }
+.wallet-date,
+.wallet-order { white-space: nowrap; }
+.wallet-details { overflow-wrap: anywhere; color: var(--muted); font-size: 0.78rem; }
+.wallet-amount {
+  white-space: nowrap;
+  text-align: right !important;
+  font-size: 0.88rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+.wallet-amount.is-positive { color: #267342; }
+.wallet-amount.is-negative { color: var(--blood); }
+.wallet-amount.is-zero { color: var(--muted); }
+.wallet-empty { color: var(--muted); text-align: center; }
+.wallet-more { display: block; margin: 0.75rem auto 0; }
+.admin-page-jump { width: 5.25rem; }
+
+@media (max-width: 900px) {
+  .wallet-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 700px) {
+  .wallet-history-header { align-items: flex-start; flex-direction: column; }
+  .wallet-filter { width: 100%; }
+  .wallet-table-wrap { overflow: visible; }
+  .wallet-table,
+  .wallet-table tbody { display: block; width: 100%; }
+  .wallet-table thead { display: none; }
+  .wallet-table tbody tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 46%);
+    grid-template-areas:
+      "date amount"
+      "kind kind"
+      "order order"
+      "details details";
+    gap: 0.2rem 0.6rem;
+    margin-bottom: 0.6rem;
+    padding: 0.65rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    box-sizing: border-box;
+  }
+  .wallet-table tbody tr:nth-child(even) { background: rgba(16, 24, 32, 0.035); }
+  .wallet-table td {
+    min-width: 0;
+    padding: 0;
+    border: 0;
+  }
+  .wallet-table td[data-column="date"] { grid-area: date; }
+  .wallet-table td[data-column="kind"] { grid-area: kind; font-weight: 700; }
+  .wallet-table td[data-column="order"] { grid-area: order; color: var(--muted); font-size: 0.78rem; }
+  .wallet-table td[data-column="details"] { grid-area: details; }
+  .wallet-table td[data-column="amount"] {
+    grid-area: amount;
+    min-width: 0;
+    font-size: clamp(0.6rem, 3vw, 0.78rem);
+  }
+  .wallet-table td.wallet-empty { grid-column: 1 / -1; }
+}
+
+@media (max-width: 420px) {
+  .wallet-metrics { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 360px) {
+  .wallet-table tbody tr {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "date"
+      "amount"
+      "kind"
+      "order"
+      "details";
+  }
+}

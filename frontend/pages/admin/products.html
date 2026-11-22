@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MultiShop — товари (адмін)</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/base.css?v=particles-v4-bloom-20261122">
+  <style>
+    .product-actions {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: .45rem;
+      width: calc(100% - .25rem);
+      min-width: 0;
+      margin-left: -.25rem;
+    }
+    .product-actions .btn {
+      min-height: 2.75rem;
+      width: 100%;
+      min-width: 0;
+      padding-inline: .35rem;
+      white-space: normal;
+    }
+    .product-actions .product-action-wide { grid-column: 1 / -1; }
+    #productsBody td:last-child { min-width: 16rem; }
+    .page-jump { width: 5.25rem; }
+  </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-xl navbar-dark mb-4">
+  <div class="container">
+    <a class="navbar-brand me-3 brand-mark" href="/">🛍️ <span>Multi<span class="brand-slash">Shop</span></span></a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false" aria-label="Меню">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="mainNavbar">
+      <ul class="navbar-nav ms-auto align-items-center">
+        <li class="nav-item"><a class="nav-link nav-pill" href="/pages/policy.html">Політика</a></li>
+        <li class="nav-item"><a class="nav-link nav-pill" href="/">Головна</a></li>
+        <li class="nav-item"><a class="nav-link nav-pill" href="/pages/catalog.html">Каталог</a></li>
+        <li class="nav-item"><a class="nav-link nav-pill" href="/pages/cart.html">Кошик<span class="nav-counter is-cart" data-cart-count hidden>0</span></a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/favorites.html">Обране<span class="nav-counter" data-counter="favorites" hidden>0</span></a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/orders.html">Замовлення<span class="nav-counter" data-counter="orders" hidden>0</span></a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/complaints.html">Скарги<span class="nav-counter" data-counter="complaints" hidden>0</span></a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/seller.html">Мої товари</a></li>
+        <li class="nav-item" data-auth="guest"><a class="nav-link nav-pill" href="/pages/support.html">Підтримка</a></li><li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/support.html">Підтримка</a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/profile.html">Профіль</a></li>
+        <li class="nav-item" data-auth="guest"><a class="nav-link nav-pill" href="/pages/login.html">Вхід</a></li>
+        <li class="nav-item" data-auth="guest"><a class="nav-link nav-pill" href="/pages/register.html">Реєстрація</a></li>
+        <li class="nav-item" data-auth="user" hidden>
+          <span class="nav-user">
+            <img class="avatar" alt="" data-user-avatar hidden>
+            <span class="nav-user-name" data-user-name></span>
+          </span>
+        </li>
+        <li class="nav-item" data-auth="user" hidden>
+          <button class="nav-link nav-pill border-0 bg-transparent" type="button" data-logout>Вийти</button>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<main class="container app-main py-3 py-md-4">
+  <div class="section-heading-panel mb-3">
+    <p class="eyebrow mb-1">Адміністрування</p>
+    <h1 class="section-title mb-2">Товари</h1>
+    <p class="text-muted-soft mb-0">Блокування та видалення товарів. Заблокований чи видалений товар зникає з каталогу для покупців.</p>
+  </div>
+
+  <div class="alert-soft is-danger mb-3" id="productError" hidden></div>
+  <div class="alert-soft is-success mb-3" id="productSuccess" hidden></div>
+
+  <div class="card-soft mb-3">
+    <div class="card-body">
+      <div class="row g-3 align-items-end">
+        <div class="col-md-6">
+          <label class="form-label" for="search">Пошук</label>
+          <input class="form-control" type="text" id="search" placeholder="Назва, ID товару або нік продавця">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label" for="statusFilter">Статус</label>
+          <select class="form-select" id="statusFilter">
+            <option value="all">Усі</option>
+            <option value="ok">Активні</option>
+            <option value="blocked">Заблоковані</option>
+            <option value="deleted">Видалені</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <button class="btn btn-primary w-100" type="button" id="searchBtn">Знайти</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card-soft">
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th><th>Назва</th><th>Продавець</th><th>Статус продажу</th>
+              <th>Модерація</th><th>Причина</th><th>Дата</th><th>Дії</th>
+            </tr>
+          </thead>
+          <tbody id="productsBody">
+            <tr><td colspan="8">Завантаження…</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="d-flex justify-content-between align-items-center mt-3" id="pager" hidden>
+        <button class="btn btn-outline-primary btn-sm" type="button" id="prevBtn">← Назад</button>
+        <div class="d-flex flex-wrap align-items-center justify-content-center gap-2">
+          <span class="text-muted-soft small" id="pageInfo"></span>
+          <label class="small text-muted-soft" for="pageJump">Сторінка</label>
+          <input class="form-control form-control-sm page-jump" type="number" id="pageJump" min="1" value="1">
+          <button class="btn btn-outline-primary btn-sm" type="button" id="pageJumpBtn">Перейти</button>
+        </div>
+        <button class="btn btn-outline-primary btn-sm" type="button" id="nextBtn">Далі →</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- Модальне вікно причини -->
+<div class="app-modal" id="reasonModal" hidden>
+  <div class="app-modal-box">
+    <button class="app-modal-close" type="button" id="reasonClose" aria-label="Закрити">×</button>
+    <h2 class="h5 mb-2" id="reasonTitle">Причина</h2>
+    <p class="small text-secondary" id="reasonHelp" hidden></p>
+    <div class="alert-soft is-danger mb-2" id="reasonError" hidden></div>
+    <label class="form-label" for="reasonText">Причина для продавця</label>
+    <textarea class="form-control" id="reasonText" rows="3" maxlength="1000" placeholder="Мінімум 5 символів"></textarea>
+    <div class="d-flex gap-2 mt-3">
+      <button class="btn btn-primary" type="button" id="reasonConfirm">Підтвердити</button>
+      <button class="btn btn-outline-primary" type="button" id="reasonCancel">Скасувати</button>
+    </div>
+  </div>
+</div>
+
+<footer class="footer py-4">
+  <div class="container d-flex flex-column flex-md-row justify-content-between gap-2">
+    <p class="mb-0">MultiShop — навчальний маркетплейс. Розрахунки у MultiCoins (MC).</p>
+    <a href="/pages/policy.html" class="text-decoration-none">Політика платформи →</a>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/static/js/api.js"></script>
+<script src="/static/js/price-format.js?v=price-3dp-20261114"></script>
+<script src="/static/js/auth.js?v=auth-header-tooltip-v1-20261122"></script>
+<script src="/static/js/password-change.js?v=password-change-20261114"></script>
+<script src="/static/js/notifications.js"></script>
+<script src="/static/js/policy-gate.js?v=policy-after-login-v2-20261122"></script>
+<script>
+  (function () {
+    const errorBox = document.getElementById("productError");
+    const successBox = document.getElementById("productSuccess");
+    const productsBody = document.getElementById("productsBody");
+    const pager = document.getElementById("pager");
+    const pageInfo = document.getElementById("pageInfo");
+    const prevBtn = document.getElementById("prevBtn");
+    const nextBtn = document.getElementById("nextBtn");
+    const pageJump = document.getElementById("pageJump");
+    const modal = document.getElementById("reasonModal");
+    const esc = window.MS.escapeHtml;
+
+    let state = { q: "", status: "all", page: 1, pages: 1, canRestore: false };
+    state.q = new URLSearchParams(location.search).get("q") || "";
+    document.getElementById("search").value = state.q;
+    let modalAction = { id: null, action: null, sellerId: null };
+
+    function setError(message) {
+      errorBox.textContent = message || "";
+      errorBox.hidden = !message;
+    }
+    function setSuccess(message) {
+      successBox.textContent = message || "";
+      successBox.hidden = !message;
+    }
+    function fmtDate(value) {
+      if (!value) return "—";
+      return new Date(value).toLocaleString("uk-UA");
+    }
+
+    function moderationBadge(item) {
+      if (item.moderation === "blocked") {
+        return '<span class="badge-soft is-blood">Заблоковано</span>';
+      }
+      if (item.moderation === "deleted") {
+        return '<span class="badge-soft is-blood">Видалено</span>';
+      }
+      return '<span class="badge-soft is-lime">Без обмежень</span>';
+    }
+
+    function actionsCell(item) {
+      const link = '<a class="btn btn-outline-primary btn-sm" href="/pages/product.html?id=' +
+        item.id + '">Відкрити</a>';
+      const deleteAll = '<button class="btn btn-outline-danger btn-sm product-action-wide" type="button" data-delete-seller="' +
+        esc(item.seller_id) + '" data-seller-name="' + esc(item.seller) +
+        '">Видалити всі товари продавця</button>';
+      if (item.moderation === "ok") {
+        return '<div class="product-actions">' + link +
+          '<button class="btn btn-outline-primary btn-sm" type="button" data-block="' + item.id +
+            '">Заблокувати</button>' +
+          '<button class="btn btn-outline-danger btn-sm product-action-wide" type="button" data-delete="' + item.id +
+            '">Видалити</button>' + deleteAll + "</div>";
+      }
+      if (item.moderation === "blocked") {
+        return '<div class="product-actions">' + link +
+          '<button class="btn btn-outline-primary btn-sm" type="button" data-unblock="' + item.id +
+            '">Розблокувати</button>' +
+          '<button class="btn btn-outline-danger btn-sm product-action-wide" type="button" data-delete="' + item.id +
+            '">Видалити</button>' + deleteAll + "</div>";
+      }
+      // deleted
+      const restore = state.canRestore
+        ? '<button class="btn btn-outline-primary btn-sm" type="button" data-unblock="' + item.id +
+          '">Розблокувати</button>'
+        : "";
+      return '<div class="product-actions">' + link + restore + "</div>";
+    }
+
+    function renderRows(results) {
+      if (!results.length) {
+        productsBody.innerHTML = '<tr><td colspan="8">Товарів не знайдено.</td></tr>';
+        return;
+      }
+      productsBody.innerHTML = results.map((item) =>
+        "<tr><td>" + esc(item.id) + "</td><td>" + esc(item.name) +
+        "</td><td>" + esc(item.seller) + "</td><td>" + esc(item.status_display) +
+        "</td><td>" + moderationBadge(item) +
+        '</td><td class="text-muted-soft small">' + esc(item.moderation_reason || "—") +
+        "</td><td>" + esc(fmtDate(item.moderated_at || item.created_at)) +
+        "</td><td>" + actionsCell(item) + "</td></tr>"
+      ).join("");
+    }
+
+    async function load() {
+      setError("");
+      try {
+        const params = new URLSearchParams();
+        if (state.q) params.set("q", state.q);
+        if (state.status !== "all") params.set("status", state.status);
+        if (state.page > 1) params.set("page", String(state.page));
+        const query = params.toString();
+        const data = await window.MS.get("/admin/products" + (query ? "?" + query : ""));
+        state.pages = data.pages || 1;
+        state.page = data.page || 1;
+        state.canRestore = !!data.can_restore;
+        renderRows(data.results || []);
+        pager.hidden = state.pages <= 1;
+        pageInfo.textContent = "Сторінка " + state.page + " з " + state.pages +
+          " · усього " + (data.count || 0);
+        pageJump.value = String(state.page);
+        pageJump.max = String(state.pages);
+        prevBtn.disabled = state.page <= 1;
+        nextBtn.disabled = state.page >= state.pages;
+      } catch (err) {
+        setError(err.message || "Не вдалося завантажити товари.");
+        productsBody.innerHTML = '<tr><td colspan="8">Помилка завантаження.</td></tr>';
+      }
+    }
+
+    function openReasonModal(id, action, sellerId, sellerName) {
+      modalAction = { id: id, action: action, sellerId: sellerId };
+      const bulkDelete = action === "delete-all";
+      document.getElementById("reasonTitle").textContent = bulkDelete
+        ? "Видалення всіх товарів продавця"
+        : action === "delete" ? "Видалення товару" : "Блокування товару";
+      const reasonHelp = document.getElementById("reasonHelp");
+      reasonHelp.textContent = bulkDelete
+        ? "Буде видалено всі ще не видалені товари продавця «" + sellerName +
+          "», зокрема поза поточним пошуком і сторінкою. Це м’яке видалення."
+        : "";
+      reasonHelp.hidden = !bulkDelete;
+      document.getElementById("reasonText").value = "";
+      document.getElementById("reasonError").hidden = true;
+      modal.hidden = false;
+    }
+    function closeReasonModal() {
+      modal.hidden = true;
+      modalAction = { id: null, action: null, sellerId: null };
+    }
+
+    async function submitReason() {
+      const reason = document.getElementById("reasonText").value.trim();
+      const reasonError = document.getElementById("reasonError");
+      if (reason.length < 5) {
+        reasonError.textContent = "Причина обов'язкова (мінімум 5 символів).";
+        reasonError.hidden = false;
+        return;
+      }
+      reasonError.hidden = true;
+      setError("");
+      const action = modalAction.action;
+      try {
+        let result;
+        if (action === "delete-all") {
+          result = await window.MS.post(
+            "/admin/products/sellers/" + modalAction.sellerId + "/delete-all",
+            { reason: reason }
+          );
+        } else {
+          const url = "/admin/products/" + modalAction.id + "/" + action;
+          result = await window.MS.post(url, { reason: reason });
+        }
+        closeReasonModal();
+        const message = action === "delete-all"
+          ? "Видалено товарів продавця «" + result.seller + "»: " + result.deleted_count + "."
+          : action === "delete" ? "Товар видалено." : "Товар заблоковано.";
+        setSuccess(message);
+        window.MS.toast(message, "success");
+        await load();
+      } catch (err) {
+        reasonError.textContent = err.message || "Не вдалося виконати дію.";
+        reasonError.hidden = false;
+      }
+    }
+
+    async function unblock(id) {
+      setError("");
+      setSuccess("");
+      try {
+        await window.MS.post("/admin/products/" + id + "/unblock", {});
+        setSuccess("Товар розблоковано.");
+        window.MS.toast("Товар розблоковано.", "success");
+        await load();
+      } catch (err) {
+        setError(err.message || "Не вдалося розблокувати товар.");
+      }
+    }
+
+    function runSearch() {
+      state.q = document.getElementById("search").value.trim();
+      state.status = document.getElementById("statusFilter").value;
+      state.page = 1;
+      load();
+    }
+
+    document.getElementById("searchBtn").addEventListener("click", runSearch);
+    document.getElementById("search").addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        runSearch();
+      }
+    });
+    document.getElementById("statusFilter").addEventListener("change", runSearch);
+    prevBtn.addEventListener("click", () => {
+      if (state.page > 1) { state.page -= 1; load(); }
+    });
+    nextBtn.addEventListener("click", () => {
+      if (state.page < state.pages) { state.page += 1; load(); }
+    });
+    function jumpToPage() {
+      const requested = Number.parseInt(pageJump.value, 10);
+      if (!Number.isInteger(requested) || requested < 1 || requested > state.pages) {
+        pageJump.value = String(state.page);
+        return;
+      }
+      state.page = requested;
+      load();
+    }
+    document.getElementById("pageJumpBtn").addEventListener("click", jumpToPage);
+    pageJump.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        jumpToPage();
+      }
+    });
+    document.getElementById("reasonConfirm").addEventListener("click", submitReason);
+    document.getElementById("reasonCancel").addEventListener("click", closeReasonModal);
+    document.getElementById("reasonClose").addEventListener("click", closeReasonModal);
+    modal.addEventListener("click", (event) => {
+      if (event.target === modal) closeReasonModal();
+    });
+
+    productsBody.addEventListener("click", (event) => {
+      const deleteSellerBtn = event.target.closest("[data-delete-seller]");
+      if (deleteSellerBtn) {
+        openReasonModal(
+          null,
+          "delete-all",
+          deleteSellerBtn.getAttribute("data-delete-seller"),
+          deleteSellerBtn.getAttribute("data-seller-name")
+        );
+        return;
+      }
+      const blockBtn = event.target.closest("[data-block]");
+      if (blockBtn) {
+        openReasonModal(blockBtn.getAttribute("data-block"), "block");
+        return;
+      }
+      const deleteBtn = event.target.closest("[data-delete]");
+      if (deleteBtn) {
+        openReasonModal(deleteBtn.getAttribute("data-delete"), "delete");
+        return;
+      }
+      const unblockBtn = event.target.closest("[data-unblock]");
+      if (unblockBtn) {
+        unblock(unblockBtn.getAttribute("data-unblock"));
+      }
+    });
+
+    document.addEventListener("DOMContentLoaded", () => {
+      window.MSAuth.ready().then((user) => {
+        if (!user || !user.authenticated) {
+          window.location.href = "/pages/login.html";
+          return;
+        }
+        const rights = Array.isArray(user.admin_rights) ? user.admin_rights : [];
+        if (rights.indexOf("products") === -1) {
+          window.location.href = "/";
+          return;
+        }
+        load();
+      });
+    });
+  })();
+</script>
+<script src="/static/js/motion.js?v=skeleton-swr-v5-20261123"></script>
+<script src="/static/js/particles.js?v=particles-v4-bloom-20261122"></script>
+</body>
+</html>

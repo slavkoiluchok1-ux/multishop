@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MultiShop — вхід</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/base.css?v=particles-v4-bloom-20261122">
+</head>
+<body>
+
+<nav class="navbar navbar-expand-xl navbar-dark mb-4">
+  <div class="container">
+    <a class="navbar-brand me-3 brand-mark" href="/">🛍️ <span>Multi<span class="brand-slash">Shop</span></span></a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false" aria-label="Меню">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="mainNavbar">
+      <ul class="navbar-nav ms-auto align-items-center">
+        <li class="nav-item"><a class="nav-link nav-pill" href="/pages/policy.html">Політика</a></li>
+        <li class="nav-item"><a class="nav-link nav-pill" href="/">Головна</a></li>
+        <li class="nav-item"><a class="nav-link nav-pill" href="/pages/catalog.html">Каталог</a></li>
+        <li class="nav-item"><a class="nav-link nav-pill" href="/pages/cart.html">Кошик<span class="nav-counter is-cart" data-cart-count hidden>0</span></a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/favorites.html">Обране<span class="nav-counter" data-counter="favorites" hidden>0</span></a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/orders.html">Замовлення<span class="nav-counter" data-counter="orders" hidden>0</span></a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/complaints.html">Скарги<span class="nav-counter" data-counter="complaints" hidden>0</span></a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/seller.html">Мої товари</a></li>
+        <li class="nav-item" data-auth="guest"><a class="nav-link nav-pill" href="/pages/support.html">Підтримка</a></li><li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/support.html">Підтримка</a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/profile.html">Профіль</a></li>
+        <li class="nav-item" data-auth="guest"><a class="nav-link nav-pill active" href="/pages/login.html" aria-current="page">Вхід</a></li>
+        <li class="nav-item" data-auth="guest"><a class="nav-link nav-pill" href="/pages/register.html">Реєстрація</a></li>
+        <li class="nav-item" data-auth="user" hidden>
+          <span class="nav-user">
+            <img class="avatar" alt="" data-user-avatar hidden>
+            <span class="nav-user-name" data-user-name></span>
+          </span>
+        </li>
+        <li class="nav-item" data-auth="user" hidden>
+          <button class="nav-link nav-pill border-0 bg-transparent" type="button" data-logout>Вийти</button>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<main class="container app-main py-3 py-md-4">
+  <div class="auth-wrap">
+    <div class="section-heading-panel mb-3">
+      <p class="eyebrow mb-1">Вхід до акаунта</p>
+      <h1 class="section-title mb-2">З поверненням!</h1>
+      <p class="text-muted-soft mb-0">Увійдіть за ніком або email, щоб керувати профілем і гаманцем.</p>
+    </div>
+
+    <div class="card-soft auth-card auth-motion-card">
+      <div class="card-body">
+        <div class="alert-soft is-danger mb-3" id="loginError" hidden></div>
+
+        <form id="loginForm" novalidate>
+          <div class="mb-3 auth-field auth-motion-item">
+            <input class="form-control" type="text" id="login" name="login" placeholder=" " autocomplete="username" required>
+            <label class="form-label" for="login">Нік або email</label>
+            <div class="form-error" data-error-for="login"></div>
+          </div>
+
+          <div class="mb-3 auth-field auth-motion-item">
+            <input class="form-control" type="password" id="password" name="password" placeholder=" " autocomplete="current-password" required>
+            <label class="form-label" for="password">Пароль</label>
+            <div class="form-error" data-error-for="password"></div>
+          </div>
+
+          <button class="btn btn-primary w-100 auth-motion-item" type="submit" id="loginSubmit">Увійти</button>
+        </form>
+
+        <hr class="divider-dashed">
+        <p class="small text-muted-soft mb-0">
+          Немає акаунта? <a href="/pages/register.html">Зареєструватися</a>
+        </p>
+        <p class="small text-muted-soft mb-0 mt-2">
+          Забули пароль? <button class="text-decoration-none fw-semibold border-0 bg-transparent p-0" type="button" id="accountRecoveryOpen">Відновити акаунт через Telegram</button>
+        </p>
+      </div>
+    </div>
+  </div>
+</main>
+
+<dialog class="auth-recovery-dialog" id="accountRecoveryDialog" aria-labelledby="accountRecoveryTitle">
+  <button class="auth-recovery-close" type="button" data-recovery-close aria-label="Закрити">×</button>
+  <p class="eyebrow mb-1">ВІДНОВЛЕННЯ АКАУНТА</p>
+  <h2 class="h4 mb-3" id="accountRecoveryTitle">Вхід через Telegram</h2>
+  <div class="alert-soft is-danger mb-3" id="recoveryError" role="alert" hidden></div>
+  <div id="recoveryRequestStep">
+    <div class="auth-field auth-motion-item mb-3">
+      <input class="form-control" type="text" id="recoveryUsername" placeholder=" " autocomplete="username">
+      <label class="form-label" for="recoveryUsername">Нік акаунта</label>
+    </div>
+    <button class="btn btn-primary w-100 auth-motion-item" type="button" id="recoverySend">Надіслати код у Telegram</button>
+  </div>
+  <form id="recoveryVerifyStep" hidden>
+    <p class="text-muted-soft small mb-2">Якщо акаунт існує та має підключений Telegram, код надіслано. Він діє 5 хвилин.</p>
+    <div class="auth-field auth-motion-item mb-3">
+      <input class="form-control" type="text" id="recoveryCode" placeholder=" " inputmode="numeric" autocomplete="one-time-code" maxlength="6">
+      <label class="form-label" for="recoveryCode">Код із Telegram</label>
+    </div>
+    <button class="btn btn-primary w-100 auth-motion-item" type="submit" id="recoveryVerify">Увійти за кодом</button>
+    <button class="btn btn-outline-secondary w-100 mt-2 auth-motion-item" type="button" id="recoveryBack">Назад</button>
+  </form>
+</dialog>
+
+<div class="auth-success-overlay" id="authSuccessOverlay" hidden>
+  <div class="auth-confetti" id="authSuccessConfetti" aria-hidden="true"></div>
+  <div class="auth-success-card" role="status" aria-live="polite">
+    <div class="auth-success-icon" aria-hidden="true">
+      <svg viewBox="0 0 32 32" focusable="false"><path d="m6 16 7 7L26 9"></path></svg>
+    </div>
+    <p class="eyebrow mb-1">З поверненням</p>
+    <h2 class="h4 mb-2">Вхід успішний</h2>
+    <p class="text-muted-soft mb-0">Ваш MultiShop готовий до роботи.</p>
+  </div>
+</div>
+
+<footer class="footer py-4">
+  <div class="container d-flex flex-column flex-md-row justify-content-between gap-2">
+    <p class="mb-0">MultiShop — навчальний маркетплейс. Розрахунки у MultiCoins (MC).</p>
+    <a href="/pages/policy.html" class="text-decoration-none">Політика платформи →</a>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/static/js/api.js"></script>
+<script src="/static/js/price-format.js?v=price-3dp-20261114"></script>
+<script src="/static/js/auth.js?v=auth-header-tooltip-v1-20261122"></script>
+<script src="/static/js/password-change.js?v=password-change-v2-20261114"></script>
+<script src="/static/js/policy-gate.js?v=policy-after-login-v2-20261122"></script>
+<script src="/static/js/notifications.js"></script>
+<script src="/static/js/auth-motion.js?v=auth-motion-20261121"></script>
+<script>
+  (function () {
+    const form = document.getElementById("loginForm");
+    const errorBox = document.getElementById("loginError");
+    const submit = document.getElementById("loginSubmit");
+    const successOverlay = document.getElementById("authSuccessOverlay");
+    const motion = window.MSAuthMotion;
+    const authCard = document.querySelector(".auth-card");
+    motion.prepare(authCard);
+
+    async function syncAuthUi() {
+      const user = await window.MSAuth.refresh({ strict: true });
+      if (window.MSCounters) await window.MSCounters.refresh();
+      if (!user || !user.authenticated) {
+        throw new Error("Не вдалося підтвердити вхід. Спробуйте ще раз.");
+      }
+      return user;
+    }
+
+    function fallbackAfterLogin(user) {
+      if (window.MSAuth && typeof window.MSAuth.postLoginFallback === "function") {
+        return window.MSAuth.postLoginFallback(user);
+      }
+      return user && user.policy_accepted === true ? "/" : "/pages/policy.html?required=1";
+    }
+
+    async function navigateAfterLogin(user) {
+      let target;
+      const gate = window.MSPolicyGate;
+      if (gate && typeof gate.afterLogin === "function") {
+        try {
+          target = await gate.afterLogin(user);
+        } catch (error) {
+          console.error("Не вдалося перевірити політику після входу.", error);
+          target = fallbackAfterLogin(user);
+        }
+      } else {
+        console.error("Скрипт політики недоступний; використано безпечний маршрут входу.");
+        target = fallbackAfterLogin(user);
+      }
+      if (typeof target !== "string" || !target.startsWith("/") || target.startsWith("//")) {
+        target = fallbackAfterLogin(user);
+      }
+      if (window.MSMotion) window.MSMotion.navigate(target);
+      else window.location.assign(target);
+    }
+
+    function apiErrorMessage(error, fallback) {
+      if (window.MS && error instanceof window.MS.ApiError) return error.message || fallback;
+      console.error("Неочікувана помилка форми входу.", error);
+      return "Щось пішло не так, спробуйте пізніше.";
+    }
+
+    const recoveryDialog = document.getElementById("accountRecoveryDialog");
+    const recoveryOpen = document.getElementById("accountRecoveryOpen");
+    const recoveryClose = recoveryDialog.querySelector("[data-recovery-close]");
+    const recoveryError = document.getElementById("recoveryError");
+    const recoveryRequestStep = document.getElementById("recoveryRequestStep");
+    const recoveryVerifyStep = document.getElementById("recoveryVerifyStep");
+    const recoveryUsername = document.getElementById("recoveryUsername");
+    const recoverySend = document.getElementById("recoverySend");
+    const recoveryCode = document.getElementById("recoveryCode");
+    let recoveryUser = "";
+
+    function showRecoveryError(message) {
+      recoveryError.textContent = message || "";
+      recoveryError.hidden = !message;
+      if (message) motion.shake(recoveryDialog, [recoveryUsername, recoveryCode]);
+    }
+
+    recoveryOpen.addEventListener("click", () => {
+      motion.clearInvalid(recoveryDialog);
+      showRecoveryError("");
+      recoveryRequestStep.hidden = false;
+      recoveryVerifyStep.hidden = true;
+      recoveryUsername.value = "";
+      recoveryCode.value = "";
+      motion.prepare(recoveryDialog);
+      recoveryDialog.showModal();
+      recoveryUsername.focus();
+    });
+    recoveryClose.addEventListener("click", () => recoveryDialog.close());
+    recoveryDialog.addEventListener("click", (event) => {
+      if (event.target === recoveryDialog) recoveryDialog.close();
+    });
+    recoveryDialog.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        recoveryDialog.close();
+      }
+    });
+
+    recoverySend.addEventListener("click", async () => {
+      recoveryUser = recoveryUsername.value.trim();
+      if (!recoveryUser) {
+        showRecoveryError("Введіть нік акаунта.");
+        motion.markInvalid(recoveryUsername);
+        return;
+      }
+      motion.loading(recoverySend, true);
+      showRecoveryError("");
+      try {
+        await window.MS.post("/telegram/recovery/request", { username: recoveryUser });
+        recoveryRequestStep.hidden = true;
+        recoveryVerifyStep.hidden = false;
+        motion.prepare(recoveryVerifyStep);
+        recoveryCode.focus();
+      } catch (error) {
+        showRecoveryError(apiErrorMessage(error, "Не вдалося надіслати запит. Спробуйте пізніше."));
+        motion.markInvalid(recoveryUsername);
+      } finally {
+        motion.loading(recoverySend, false);
+      }
+    });
+
+    document.getElementById("recoveryBack").addEventListener("click", () => {
+      showRecoveryError("");
+      motion.clearInvalid(recoveryDialog);
+      recoveryRequestStep.hidden = false;
+      recoveryVerifyStep.hidden = true;
+      motion.prepare(recoveryRequestStep);
+      recoveryUsername.focus();
+    });
+
+    recoveryVerifyStep.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const code = recoveryCode.value.trim();
+      if (!/^\d{6}$/.test(code)) {
+        showRecoveryError("Введіть шестизначний код.");
+        motion.markInvalid(recoveryCode);
+        return;
+      }
+      const verifyButton = document.getElementById("recoveryVerify");
+      motion.loading(verifyButton, true);
+      showRecoveryError("");
+      try {
+        const user = await window.MS.post("/telegram/recovery/verify", {
+          username: recoveryUser,
+          code,
+        });
+        window.MSAuth.setUser(user);
+        window.localStorage.setItem("ms_welcome_seen", "1");
+        window.localStorage.setItem("ms_merge_cart", "1");
+        const currentUser = await syncAuthUi();
+        recoveryDialog.close();
+        await motion.showSuccess(successOverlay);
+        await navigateAfterLogin(currentUser);
+      } catch (error) {
+        showRecoveryError(apiErrorMessage(error, "Не вдалося перевірити код. Спробуйте пізніше."));
+        motion.markInvalid(recoveryCode);
+      } finally {
+        motion.loading(verifyButton, false);
+      }
+    });
+
+    function showError(message) {
+      errorBox.textContent = message;
+      errorBox.hidden = !message;
+    }
+
+    form.querySelectorAll("input").forEach((input) => {
+      input.addEventListener("input", () => motion.clearInvalid(authCard));
+    });
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      motion.clearInvalid(authCard);
+      showError("");
+      document.querySelectorAll("[data-error-for]").forEach((el) => { el.textContent = ""; });
+
+      const payload = {
+        login: form.login.value.trim(),
+        password: form.password.value,
+      };
+      if (!payload.login || !payload.password) {
+        showError("Заповніть нік/email і пароль.");
+        motion.shake(authCard, [
+          payload.login ? null : form.login,
+          payload.password ? null : form.password,
+        ]);
+        return;
+      }
+
+      motion.loading(submit, true);
+      try {
+        const user = await window.MS.post("/auth/login", payload);
+        window.MSAuth.setUser(user);
+        /* Гостьовий кошик зіллється з акаунтом після прийняття політики */
+        window.localStorage.setItem("ms_merge_cart", "1");
+        const currentUser = await syncAuthUi();
+        /* Якщо підтримка видала тимчасовий пароль — змушуємо змінити його зараз.
+           Старий пароль не запитуємо: користувач вже увійшов саме з тимчасовим. */
+        if (currentUser.must_change_password && window.MSPasswordChange) {
+          await motion.showSuccess(successOverlay);
+          window.MSPasswordChange.open({
+            forced: true,
+            onSuccess: async () => {
+              const refreshedUser = await syncAuthUi();
+              await navigateAfterLogin(refreshedUser);
+            },
+          });
+          return;
+        }
+        window.localStorage.setItem("ms_welcome_seen", "1");
+        await motion.showSuccess(successOverlay);
+        await navigateAfterLogin(currentUser);
+      } catch (err) {
+        showError(apiErrorMessage(err, "Не вдалося увійти."));
+        motion.shake(authCard, [form.login, form.password]);
+      } finally {
+        motion.loading(submit, false);
+      }
+    });
+  })();
+</script>
+<script src="/static/js/motion.js?v=skeleton-swr-v5-20261123"></script>
+<script src="/static/js/particles.js?v=particles-v4-bloom-20261122"></script>
+</body>
+</html>

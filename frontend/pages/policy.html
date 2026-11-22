@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MultiShop — політика платформи</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/base.css?v=particles-v4-bloom-20261122">
+</head>
+<body>
+
+<nav class="navbar navbar-expand-xl navbar-dark mb-4">
+  <div class="container">
+    <a class="navbar-brand me-3 brand-mark" href="/">🛍️ <span>Multi<span class="brand-slash">Shop</span></span></a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false" aria-label="Меню">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="mainNavbar">
+      <ul class="navbar-nav ms-auto align-items-center">
+        <li class="nav-item"><a class="nav-link nav-pill active" href="/pages/policy.html" aria-current="page">Політика</a></li>
+        <li class="nav-item"><a class="nav-link nav-pill" href="/">Головна</a></li>
+        <li class="nav-item"><a class="nav-link nav-pill" href="/pages/catalog.html">Каталог</a></li>
+        <li class="nav-item"><a class="nav-link nav-pill" href="/pages/cart.html">Кошик<span class="nav-counter is-cart" data-cart-count hidden>0</span></a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/favorites.html">Обране<span class="nav-counter" data-counter="favorites" hidden>0</span></a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/orders.html">Замовлення<span class="nav-counter" data-counter="orders" hidden>0</span></a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/complaints.html">Скарги<span class="nav-counter" data-counter="complaints" hidden>0</span></a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/seller.html">Мої товари</a></li>
+        <li class="nav-item" data-auth="guest"><a class="nav-link nav-pill" href="/pages/support.html">Підтримка</a></li><li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/support.html">Підтримка</a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/profile.html">Профіль</a></li>
+        <li class="nav-item" data-auth="guest"><a class="nav-link nav-pill" href="/pages/login.html">Вхід</a></li>
+        <li class="nav-item" data-auth="guest"><a class="nav-link nav-pill" href="/pages/register.html">Реєстрація</a></li>
+        <li class="nav-item" data-auth="user" hidden>
+          <span class="nav-user">
+            <img class="avatar" alt="" data-user-avatar hidden>
+            <span class="nav-user-name" data-user-name></span>
+          </span>
+        </li>
+        <li class="nav-item" data-auth="user" hidden>
+          <button class="nav-link nav-pill border-0 bg-transparent" type="button" data-logout>Вийти</button>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<div class="policy-progress-track" id="policyProgress" role="progressbar"
+     aria-label="Прогрес читання політики" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+  <div class="policy-progress-bar" id="policyProgressBar"></div>
+</div>
+
+<main class="container app-main py-3 py-md-4">
+  <div class="section-heading-panel mb-3">
+    <p class="eyebrow mb-1">Правила користування</p>
+    <h1 class="section-title mb-2">Політика платформи MultiShop</h1>
+    <p class="text-muted-soft mb-0" id="policyMeta">Завантаження тексту…</p>
+  </div>
+
+  <div class="alert-soft mb-3" id="policyStatus" hidden></div>
+
+  <div class="card-soft mb-3">
+    <div class="card-body">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+        <span class="policy-read-progress" id="policyReadProgress" aria-live="polite">Прочитано 0%</span>
+        <span class="small text-muted-soft">Прокрутіть текст до кінця, щоб прийняти редакцію.</span>
+      </div>
+      <div class="policy-text" id="policyText"></div>
+    </div>
+  </div>
+
+  <div class="d-flex flex-wrap gap-2 align-items-center">
+    <button class="btn btn-primary policy-accept-button is-locked" id="acceptBtn" hidden disabled
+            title="Прокрутіть до кінця"
+            aria-describedby="policyHint scrollHint" aria-live="polite">
+      <span class="policy-lock-icon" aria-hidden="true">🔒</span>
+      <span id="policyAcceptLabel">Прийняти політику</span>
+      <svg class="policy-success-icon" id="policyAcceptCheck" viewBox="0 0 24 24" aria-hidden="true" hidden>
+        <path d="m4 12 5 5L20 6"></path>
+      </svg>
+    </button>
+    <a class="btn btn-outline-primary" href="/" id="policyHome">На головну</a>
+    <span class="text-muted-soft small" id="policyHint"></span>
+  </div>
+  <p class="text-muted-soft small mt-2 mb-0" id="scrollHint" hidden>
+    Кнопка «Прийняти» стане активною після прокрутки тексту до кінця.
+  </p>
+</main>
+
+<footer class="footer py-4">
+  <div class="container d-flex flex-column flex-md-row justify-content-between gap-2">
+    <p class="mb-0">MultiShop — навчальний маркетплейс. Розрахунки у MultiCoins (MC).</p>
+    <a href="/pages/policy.html" class="text-decoration-none">Політика платформи →</a>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/static/js/api.js"></script>
+<script src="/static/js/price-format.js?v=price-3dp-20261114"></script>
+<script src="/static/js/auth.js?v=auth-header-tooltip-v1-20261122"></script>
+<script src="/static/js/password-change.js?v=password-change-20261114"></script>
+<script src="/static/js/notifications.js"></script>
+<script src="/static/js/policy-gate.js?v=policy-after-login-v2-20261122"></script>
+<script>
+  (function () {
+    const textEl = document.getElementById("policyText");
+    const metaEl = document.getElementById("policyMeta");
+    const statusEl = document.getElementById("policyStatus");
+    const acceptBtn = document.getElementById("acceptBtn");
+    const acceptLabel = document.getElementById("policyAcceptLabel");
+    const acceptCheck = document.getElementById("policyAcceptCheck");
+    const lockIcon = document.querySelector(".policy-lock-icon");
+    const hintEl = document.getElementById("policyHint");
+    const scrollHint = document.getElementById("scrollHint");
+    const progressTrack = document.getElementById("policyProgress");
+    const progressBar = document.getElementById("policyProgressBar");
+    const readProgress = document.getElementById("policyReadProgress");
+    let reachedEnd = false;
+    let policyData = null;
+    let renderedPolicySnapshot = null;
+
+    function atBottom(el) {
+      return el.scrollTop + el.clientHeight >= el.scrollHeight - 8;
+    }
+
+    function unlockAccept() {
+      if (acceptBtn.hidden) return;
+      reachedEnd = true;
+      acceptBtn.disabled = false;
+      acceptBtn.classList.remove("is-locked");
+      acceptBtn.classList.add("is-unlocked");
+      lockIcon.textContent = "🔓";
+      acceptBtn.removeAttribute("title");
+      scrollHint.hidden = true;
+    }
+
+    function updateProgress() {
+      const range = textEl.scrollHeight - textEl.clientHeight;
+      const ratio = range <= 0 ? 1 : Math.max(0, Math.min(1, textEl.scrollTop / range));
+      const percent = Math.round(ratio * 100);
+      progressBar.style.setProperty("--policy-progress", String(ratio));
+      progressTrack.setAttribute("aria-valuenow", String(percent));
+      readProgress.textContent = "Прочитано " + percent + "%";
+      if (percent >= 100 || atBottom(textEl)) unlockAccept();
+    }
+
+    function status(message, type) {
+      statusEl.textContent = message;
+      statusEl.className = "alert-soft mb-3" + (type ? " is-" + type : "");
+      statusEl.hidden = !message;
+    }
+
+    function formatDate(value) {
+      if (!value) return "";
+      try {
+        return new Date(value).toLocaleString("uk-UA");
+      } catch (e) {
+        return value;
+      }
+    }
+
+    function renderPolicyText(text) {
+      textEl.replaceChildren();
+      const lines = String(text || "").split("\n");
+      lines.forEach((line, index) => {
+        const heading = line.match(/^\s*(\d{1,2})\.\s+\S/);
+        if (heading) {
+          const anchor = document.createElement("span");
+          anchor.id = "policy-section-" + heading[1];
+          anchor.textContent = line;
+          textEl.append(anchor);
+        } else {
+          textEl.append(document.createTextNode(line));
+        }
+        if (index < lines.length - 1) textEl.append(document.createTextNode("\n"));
+      });
+    }
+
+    function renderPolicy(policy) {
+      const snapshot = JSON.stringify(policy);
+      if (snapshot === renderedPolicySnapshot) return;
+      renderedPolicySnapshot = snapshot;
+      if (!policy.number) {
+        metaEl.textContent = "Політику ще не опубліковано.";
+        textEl.textContent = "Адміністратор платформи має опублікувати текст політики.";
+        return;
+      }
+
+      metaEl.textContent = "Редакція №" + policy.number + " · опубліковано " + formatDate(policy.published_at);
+      renderPolicyText(policy.text || "");
+      const sectionHash = location.hash.match(/^#policy-section-(\d{1,2})$/);
+      if (sectionHash) {
+        document.getElementById("policy-section-" + sectionHash[1])?.scrollIntoView({ block: "start" });
+      }
+
+      const user = window.MSAuth.state.user;
+      const authed = !!(user && user.authenticated);
+
+      if (!authed) {
+        status("Щоб прийняти політику, увійдіть або зареєструйтесь.", "info");
+        acceptBtn.hidden = true;
+        hintEl.innerHTML = '<a href="/pages/login.html">Увійти</a> · <a href="/pages/register.html">Реєстрація</a>';
+        return;
+      }
+
+      const accepted = policy.accepted === true;
+      if (accepted) {
+        const when = policy.accepted_at ? " · " + formatDate(policy.accepted_at) : "";
+        status("Прийнято" + when, "success");
+        statusEl.classList.add("policy-stamp");
+        acceptBtn.hidden = true;
+        scrollHint.hidden = true;
+        hintEl.textContent = "";
+        progressBar.style.setProperty("--policy-progress", "1");
+        progressTrack.setAttribute("aria-valuenow", "100");
+        readProgress.textContent = "Прочитано 100%";
+      } else {
+        status("Для доступу до функцій платформи прийміть поточну редакцію політики.", "danger");
+        acceptBtn.hidden = false;
+        acceptBtn.disabled = true;
+        acceptBtn.classList.add("is-locked");
+        scrollHint.hidden = false;
+        hintEl.textContent = "Прийняття фіксується з датою та версією.";
+        reachedEnd = false;
+        updateProgress();
+      }
+    }
+
+    async function load() {
+      const cacheKey = window.MSSkeletons.cacheKey("/policy");
+      const cached = window.MSSkeletons.getCachedData(cacheKey);
+      if (cached !== undefined) {
+        policyData = cached;
+        renderPolicy(cached);
+      }
+      const loading = cached === undefined
+        ? window.MSSkeletons.showSkeleton(textEl, "policy", 1)
+        : null;
+      try {
+        const policy = await window.MS.get("/policy");
+        policyData = policy;
+        window.MSSkeletons.setCachedData(cacheKey, policy);
+        if (loading) await loading.finish(() => renderPolicy(policy));
+        else renderPolicy(policy);
+      } catch (err) {
+        metaEl.textContent = "Не вдалося завантажити політику.";
+        const message = window.MSSkeletons.friendlyErrorMessage(err, "Не вдалося завантажити політику.");
+        if (loading) {
+          await loading.finish(() =>
+            window.MSSkeletons.renderRetryError(textEl, message, load)
+          );
+        } else {
+          window.MSSkeletons.renderRetryError(textEl, message, load, true);
+        }
+      }
+    }
+
+    function showCoinBurst() {
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+      for (let index = 0; index < 8; index += 1) {
+        const angle = (Math.PI * 2 * index) / 8;
+        const coin = document.createElement("span");
+        coin.className = "policy-coin-burst";
+        coin.textContent = "MC";
+        coin.setAttribute("aria-hidden", "true");
+        coin.style.setProperty("--coin-x", Math.cos(angle) * 62 + "px");
+        coin.style.setProperty("--coin-y", Math.sin(angle) * 54 + "px");
+        coin.style.setProperty("--coin-delay", index * 24 + "ms");
+        acceptBtn.appendChild(coin);
+        window.setTimeout(() => coin.remove(), 900);
+      }
+    }
+
+    acceptBtn.addEventListener("click", async () => {
+      if (!reachedEnd) return;
+      acceptBtn.disabled = true;
+      acceptBtn.classList.remove("is-shaking");
+      acceptBtn.classList.add("is-loading");
+      acceptBtn.setAttribute("aria-busy", "true");
+      acceptLabel.textContent = "Приймаємо…";
+      try {
+        const result = await window.MSPolicyGate.accept();
+        if (policyData) {
+          policyData = Object.assign({}, policyData, {
+            accepted: true,
+            accepted_at: result.acceptedAt,
+          });
+          window.MSSkeletons.setCachedData(
+            window.MSSkeletons.cacheKey("/policy"),
+            policyData
+          );
+        }
+        const stamp = document.createElement("span");
+        stamp.className = "policy-stamp";
+        stamp.textContent = "Прийнято · " + formatDate(result.acceptedAt);
+        const statusCheck = acceptCheck.cloneNode(true);
+        statusCheck.hidden = false;
+        statusEl.replaceChildren(statusCheck, document.createTextNode(" "), stamp);
+        statusEl.className = "alert-soft mb-3 is-success";
+        statusEl.setAttribute("role", "status");
+        statusEl.setAttribute("aria-live", "polite");
+        statusEl.hidden = false;
+        acceptBtn.classList.remove("is-loading");
+        acceptBtn.classList.add("is-unlocked");
+        acceptBtn.removeAttribute("aria-busy");
+        acceptLabel.textContent = "Прийнято";
+        acceptCheck.hidden = false;
+        showCoinBurst();
+        window.setTimeout(() => {
+          if (window.MSMotion) window.MSMotion.navigate(result.target);
+          else window.location.assign(result.target);
+        }, 1100);
+      } catch (err) {
+        status(
+          err && err.status >= 400 && err.status < 500
+            ? err.message
+            : "Щось пішло не так, спробуйте пізніше.",
+          "danger"
+        );
+        acceptBtn.classList.remove("is-loading");
+        acceptBtn.classList.add("is-shaking");
+        acceptBtn.removeAttribute("aria-busy");
+        acceptBtn.disabled = !reachedEnd;
+        acceptLabel.textContent = "Прийняти політику";
+        window.setTimeout(() => acceptBtn.classList.remove("is-shaking"), 360);
+      }
+    });
+
+    textEl.addEventListener("scroll", updateProgress, { passive: true });
+    document.addEventListener("DOMContentLoaded", () => {
+      if (new URLSearchParams(window.location.search).get("required") === "1") {
+        window.MS.toast("Прийміть політику, щоб продовжити.", "info");
+      }
+      window.MSAuth.ready().then(load);
+    });
+  })();
+</script>
+<script src="/static/js/motion.js?v=skeleton-swr-v5-20261123"></script>
+<script src="/static/js/particles.js?v=particles-v4-bloom-20261122"></script>
+</body>
+</html>

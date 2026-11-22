@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MultiShop — скарги (адмін)</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/base.css?v=particles-v4-bloom-20261122">
+  <style>.admin-page-jump { width: 5.25rem; }</style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-xl navbar-dark mb-4">
+  <div class="container">
+    <a class="navbar-brand me-3 brand-mark" href="/">🛍️ <span>Multi<span class="brand-slash">Shop</span></span></a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false" aria-label="Меню">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="mainNavbar">
+      <ul class="navbar-nav ms-auto align-items-center">
+        <li class="nav-item"><a class="nav-link nav-pill" href="/pages/policy.html">Політика</a></li>
+        <li class="nav-item"><a class="nav-link nav-pill" href="/">Головна</a></li>
+        <li class="nav-item"><a class="nav-link nav-pill" href="/pages/catalog.html">Каталог</a></li>
+        <li class="nav-item"><a class="nav-link nav-pill" href="/pages/cart.html">Кошик<span class="nav-counter is-cart" data-cart-count hidden>0</span></a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/favorites.html">Обране<span class="nav-counter" data-counter="favorites" hidden>0</span></a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/orders.html">Замовлення<span class="nav-counter" data-counter="orders" hidden>0</span></a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/complaints.html">Скарги<span class="nav-counter" data-counter="complaints" hidden>0</span></a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/seller.html">Мої товари</a></li>
+        <li class="nav-item" data-auth="guest"><a class="nav-link nav-pill" href="/pages/support.html">Підтримка</a></li><li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/support.html">Підтримка</a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/profile.html">Профіль</a></li>
+        <li class="nav-item" data-auth="guest"><a class="nav-link nav-pill" href="/pages/login.html">Вхід</a></li>
+        <li class="nav-item" data-auth="guest"><a class="nav-link nav-pill" href="/pages/register.html">Реєстрація</a></li>
+        <li class="nav-item" data-auth="user" hidden>
+          <span class="nav-user">
+            <img class="avatar" alt="" data-user-avatar hidden>
+            <span class="nav-user-name" data-user-name></span>
+          </span>
+        </li>
+        <li class="nav-item" data-auth="user" hidden>
+          <button class="nav-link nav-pill border-0 bg-transparent" type="button" data-logout>Вийти</button>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<main class="container app-main py-3 py-md-4">
+  <div class="section-heading-panel mb-3">
+    <p class="eyebrow mb-1">Адміністрування</p>
+    <h1 class="section-title mb-2">Скарги</h1>
+    <p class="text-muted-soft mb-0">Список цілей із найбільшою кількістю скарг. Ви бачите лише ті типи, що відповідають вашим правам.</p>
+  </div>
+
+  <div class="alert-soft is-danger mb-3" id="pageError" hidden></div>
+  <div class="alert-soft is-success mb-3" id="pageSuccess" hidden></div>
+
+  <div class="card-soft mb-3">
+    <div class="card-body">
+      <div class="row g-3 align-items-end">
+        <div class="col-md-3">
+          <label class="form-label" for="viewFilter">Фільтр</label>
+          <select class="form-select" id="viewFilter">
+            <option value="products">Товари</option>
+            <option value="sellers">Продавці</option>
+            <option value="orders">Замовлення</option>
+            <option value="all">Усе</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label" for="statusFilter">Статус</label>
+          <select class="form-select" id="statusFilter">
+            <option value="all">Усі</option>
+            <option value="new">Нові</option>
+            <option value="in_review">Розглядаються</option>
+            <option value="upheld">Підтверджені</option>
+            <option value="rejected">Відхилені</option>
+            <option value="false">Хибні</option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label" for="searchInput">Пошук</label>
+          <input class="form-control" type="text" id="searchInput" placeholder="Назва товару, нік або номер замовлення">
+        </div>
+        <div class="col-md-2">
+          <button class="btn btn-primary w-100" type="button" id="applyBtn">Застосувати</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card-soft">
+    <div class="card-body">
+      <h2 class="h5 mb-3">Цілі зі скаргами</h2>
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr><th>Ціль</th><th>Кому належить</th><th>Скарг</th><th>Відкритих</th><th>Дії</th></tr>
+          </thead>
+          <tbody id="groupsBody">
+            <tr><td colspan="5">Завантаження…</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3">
+        <button class="btn btn-outline-primary btn-sm" type="button" id="prevPage">← Назад</button>
+        <div class="d-flex flex-wrap align-items-center justify-content-center gap-2">
+          <span class="small text-muted-soft" id="pageInfo"></span>
+          <label class="small text-muted-soft" for="pageJump">Сторінка</label>
+          <input class="form-control form-control-sm admin-page-jump" type="number" id="pageJump" min="1" value="1">
+          <button class="btn btn-outline-primary btn-sm" type="button" id="pageJumpBtn">Перейти</button>
+        </div>
+        <button class="btn btn-outline-primary btn-sm" type="button" id="nextPage">Далі →</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="footer py-4">
+  <div class="container d-flex flex-column flex-md-row justify-content-between gap-2">
+    <p class="mb-0">MultiShop — навчальний маркетплейс. Розрахунки у MultiCoins (MC).</p>
+    <a href="/pages/policy.html" class="text-decoration-none">Політика платформи →</a>
+  </div>
+</footer>
+
+<!-- Вікно зі скаргами обраної цілі -->
+<div class="app-modal" id="groupModal" hidden>
+  <div class="app-modal-box is-lg">
+    <button class="app-modal-close" type="button" id="groupClose" aria-label="Закрити">×</button>
+    <p class="eyebrow mb-1">Скарги</p>
+    <h2 class="h5 mb-3" id="groupTitle">Ціль</h2>
+    <div id="groupBody"></div>
+  </div>
+</div>
+
+<!-- Вікно перегляду скарги -->
+<div class="app-modal" id="complaintModal" hidden>
+  <div class="app-modal-box is-xl">
+    <button class="app-modal-close" type="button" id="complaintClose" aria-label="Закрити">×</button>
+    <p class="eyebrow mb-1" id="complaintType"></p>
+    <h2 class="h5 mb-2" id="complaintStatus"></h2>
+    <div class="alert-soft is-danger mb-2" id="complaintError" hidden></div>
+    <div id="complaintBody" class="modal-scroll"></div>
+    <div id="complaintActions" class="mt-3"></div>
+  </div>
+</div>
+
+<!-- Профіль користувача -->
+<div class="app-modal" id="profileModal" hidden>
+  <div class="app-modal-box is-lg">
+    <button class="app-modal-close" type="button" id="profileClose" aria-label="Закрити">×</button>
+    <h2 class="h5 mb-3" id="profileTitle">Профіль користувача</h2>
+    <div class="alert-soft is-danger mb-2" id="profileError" hidden></div>
+    <div id="profileBody" class="modal-scroll"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/static/js/api.js"></script>
+<script src="/static/js/price-format.js?v=price-3dp-20261114"></script>
+<script src="/static/js/auth.js?v=auth-header-tooltip-v1-20261122"></script>
+<script src="/static/js/password-change.js?v=password-change-20261114"></script>
+<script src="/static/js/notifications.js"></script>
+<script src="/static/js/policy-gate.js?v=policy-after-login-v2-20261122"></script>
+<script>
+  (function () {
+    "use strict";
+    const $ = (id) => document.getElementById(id);
+    const esc = window.MS.escapeHtml;
+    const fmtMC = window.MSPrice.formatMCShort;
+
+    /* Наслідки, які можна вибрати кількома одночасно */
+    const CONSEQUENCES = [
+      ["warning", "Попередження"],
+      ["request_fix", "Попросити виправити"],
+      ["refund", "Повернути кошти"],
+      ["pay_seller", "Виплатити продавцю"],
+      ["cancel_order", "Скасувати замовлення"],
+      ["hide_product", "Приховати товар"],
+      ["delete_product", "Видалити товар"],
+      ["delete_comment", "Видалити коментар"],
+      ["ban", "Бан"],
+      ["restrict_complaints", "Обмежити скарги"],
+      ["revoke_rights", "Зняти права"],
+      ["none", "Без наслідків"],
+    ];
+
+    const BAN_DURATIONS = [
+      ["1d", "1 день"], ["3d", "3 дні"], ["7d", "7 днів"], ["30d", "30 днів"],
+      ["1m", "1 місяць"], ["2m", "2 місяці"], ["4m", "4 місяці"], ["6m", "6 місяців"],
+      ["12m", "12 місяців"], ["1y", "1 рік"], ["forever", "Назавжди"], ["custom", "Своя дата"],
+    ];
+
+    const STATUS_BADGES = {
+      new: "is-warning", in_review: "is-warning",
+      upheld: "is-blood", false: "is-blood",
+      rejected: "is-muted",
+    };
+
+    const state = { view: "products", status: "all", q: "", page: 1, pages: 1, rights: [] };
+    state.q = new URLSearchParams(location.search).get("q") || "";
+    $("searchInput").value = state.q;
+    let groups = [];
+    let group = null;
+    let currentId = null;
+
+    function setError(message) {
+      $("pageError").textContent = message || "";
+      $("pageError").hidden = !message;
+    }
+    function setSuccess(message) {
+      $("pageSuccess").textContent = message || "";
+      $("pageSuccess").hidden = !message;
+    }
+    function fmtDate(value) {
+      if (!value) return "—";
+      const date = new Date(value);
+      return isNaN(date.getTime()) ? "—" : date.toLocaleString("uk-UA");
+    }
+    function hasRight(right) {
+      return state.rights.indexOf(right) !== -1;
+    }
+    function statusBadge(status, label) {
+      return '<span class="badge-soft ' + (STATUS_BADGES[status] || "is-muted") + '">' +
+        esc(label) + "</span>";
+    }
+
+    /* ---------- Список цілей ---------- */
+
+    function renderGroups(rows) {
+      const visible = rows.filter((row) => !row.is_banned);
+      groups = visible;
+      $("groupsBody").innerHTML = visible.length
+        ? visible.map((row, index) => {
+            const profile = row.user_id
+              ? '<button class="btn btn-outline-primary btn-sm" type="button" data-profile="' +
+                row.user_id + '">Профіль</button>'
+              : '<span class="small text-muted-soft">—</span>';
+            return "<tr><td><strong>" + esc(row.title) + "</strong></td><td>" +
+              esc(row.subtitle || "—") + "</td><td>" + esc(row.count) + "</td><td>" +
+              esc(row.open) + '</td><td><div class="d-flex flex-wrap gap-2">' +
+              '<button class="btn btn-primary btn-sm" type="button" data-group="' + index +
+              '">Скарги (' + esc(row.count) + ")</button>" + profile + "</div></td></tr>";
+          }).join("")
+        : '<tr><td colspan="5">Активних цілей зі скаргами немає.</td></tr>';
+    }
+
+    async function load() {
+      setError("");
+      $("groupsBody").innerHTML = '<tr><td colspan="5">Завантаження…</td></tr>';
+      const params = new URLSearchParams();
+      params.set("view", state.view);
+      params.set("status", state.status);
+      params.set("page", state.page);
+      if (state.q) params.set("q", state.q);
+      try {
+        const data = await window.MS.get("/admin/complaints?" + params.toString());
+        renderGroups(data.results || []);
+        state.page = data.page || state.page;
+        state.pages = data.pages || 1;
+        $("pageInfo").textContent = "Сторінка " + state.page + " з " + state.pages;
+        $("pageJump").value = String(state.page);
+        $("pageJump").max = String(state.pages);
+        $("prevPage").disabled = state.page <= 1;
+        $("nextPage").disabled = state.page >= state.pages;
+      } catch (err) {
+        setError(err.message || "Не вдалося завантажити скарги.");
+        $("groupsBody").innerHTML = '<tr><td colspan="5">Помилка завантаження.</td></tr>';
+      }
+    }
+
+    /* ---------- Вікно цілі ---------- */
+
+    function openGroup(index) {
+      group = groups[index];
+      if (!group) return;
+      $("groupTitle").textContent = group.title;
+      $("groupBody").innerHTML = group.complaints.length
+        ? group.complaints.map((row) =>
+            '<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 ' +
+            'border-bottom py-2"><div><p class="eyebrow mb-1">' + esc(row.type_path) + "</p>" +
+            '<div class="small">' + esc(row.preview) + "</div></div>" +
+            '<div class="d-flex align-items-center gap-2">' +
+            statusBadge(row.status, row.status_display) +
+            '<button class="btn btn-outline-primary btn-sm" type="button" data-open="' +
+            row.id + '">Переглянути</button></div></div>'
+          ).join("")
+        : '<p class="text-muted-soft mb-0">Скарг немає.</p>';
+      $("groupModal").hidden = false;
+    }
+
+    /* ---------- Вікно скарги ---------- */
+
+    function fieldsHtml(fields) {
+      const keys = Object.keys(fields || {});
+      if (!keys.length) return "";
+      return '<h3 class="h6 mb-2">Поля форми</h3><div class="small mb-3">' +
+        keys.map((key) => "<div><strong>" + esc(key) + ":</strong> " + esc(fields[key]) + "</div>").join("") +
+        "</div>";
+    }
+
+    function evidenceHtml(rows) {
+      if (!rows || !rows.length) return "";
+      return '<h3 class="h6 mb-2">Докази</h3><div class="d-flex flex-wrap gap-2 mb-3">' +
+        rows.map((row) => '<a class="btn btn-outline-primary btn-sm" href="' + esc(row.url) +
+          '" target="_blank" rel="noopener">' + esc(row.name) + "</a>").join("") + "</div>";
+    }
+
+    function commentsHtml(rows) {
+      if (!rows || !rows.length) return '<p class="text-muted-soft small">Коментарів немає.</p>';
+      return rows.map((row) =>
+        '<div class="order-comment small mb-2"><strong>' + esc(row.author) + "</strong> · " +
+        esc(fmtDate(row.created_at)) + "<div>" + esc(row.text) + "</div></div>"
+      ).join("");
+    }
+
+    function consequenceListHtml() {
+      return '<h3 class="h6 mb-2">Наслідки</h3><div id="consequenceList" class="d-flex flex-wrap gap-3 mb-3">' +
+        CONSEQUENCES.map(([code, label]) =>
+          '<label class="form-check"><input class="form-check-input" type="checkbox" data-consequence="' +
+          esc(code) + '"> <span class="form-check-label">' + esc(label) + "</span></label>"
+        ).join("") + "</div>";
+    }
+
+    function banControlsHtml() {
+      return '<div class="row g-2 mb-3"><div class="col-md-5">' +
+        '<label class="form-label" for="banDuration">Тривалість бану</label><select class="form-select" id="banDuration">' +
+        BAN_DURATIONS.map(([code, label]) => '<option value="' + esc(code) + '">' + esc(label) + "</option>").join("") +
+        "</select></div>" +
+        '<div class="col-md-7"><label class="form-label" for="banReason">Причина бану (необов\'язково)</label>' +
+        '<input class="form-control" type="text" id="banReason"></div></div>';
+    }
+
+    function renderComplaint(data) {
+      $("complaintType").textContent = data.type_path;
+      $("complaintStatus").innerHTML = statusBadge(data.status, data.status_display);
+      const open = data.status === "new" || data.status === "in_review";
+      $("complaintBody").innerHTML =
+        '<div class="small text-muted-soft mb-2">Скаржник: ' + esc(data.author) +
+        (data.target_user ? " · Відповідач: " + esc(data.target_user) : "") +
+        " · Створено: " + esc(fmtDate(data.created_at)) + "</div>" +
+        "<p>" + esc(data.text) + "</p>" +
+        fieldsHtml(data.fields) +
+        evidenceHtml(data.evidence) +
+        '<div id="verificationMount" class="mb-3"></div>' +
+        (data.resolved_at ? '<div class="alert-soft mb-3"><strong>Рішення:</strong> ' +
+          esc(data.resolution || "—") + "</div>" : "") +
+        '<h3 class="h6 mb-2">Коментарі</h3><div>' + commentsHtml(data.comments) + "</div>" +
+        (open
+          ? '<label class="form-label mt-2" for="adminComment">Коментар адміна</label>' +
+            '<textarea class="form-control mb-2" id="adminComment" rows="2"></textarea>' +
+            '<button class="btn btn-outline-primary btn-sm" type="button" id="commentSend">Надіслати коментар</button>'
+          : "");
+
+      if (open) {
+        $("complaintActions").innerHTML =
+          (data.can_take
+            ? '<button class="btn btn-outline-primary" type="button" data-action="take">Взяти</button> '
+            : "") +
+          '<button class="btn btn-primary" type="button" data-action="pay_seller">Виплатити продавцю</button> ' +
+          '<button class="btn btn-primary" type="button" data-action="refund">Повернути кошти</button>' +
+          '<hr class="divider-dashed">' +
+          consequenceListHtml() +
+          banControlsHtml() +
+          '<label class="form-label" for="refundAmount">Сума повернення, MC (порожньо — повністю)</label>' +
+          '<input class="form-control mb-3" type="text" id="refundAmount">' +
+          '<label class="form-label" for="resolutionInput">Рішення</label>' +
+          '<textarea class="form-control mb-3" id="resolutionInput" rows="2"></textarea>' +
+          '<div class="d-flex flex-wrap gap-2">' +
+          '<button class="btn btn-primary" type="button" data-action="upheld">Підтвердити</button>' +
+          '<button class="btn btn-outline-primary" type="button" data-action="rejected">Відхилити</button>' +
+          '<button class="btn btn-outline-primary" type="button" data-action="false">Хибна</button></div>';
+      } else {
+        $("complaintActions").innerHTML =
+          '<button class="btn btn-outline-primary" type="button" data-action="close">Закрити</button>';
+      }
+      loadVerification(data.target_user_id, "verificationMount", data.target_user);
+    }
+
+    async function openComplaint(id) {
+      currentId = id;
+      $("complaintError").hidden = true;
+      $("complaintModal").hidden = false;
+      $("complaintActions").innerHTML = "";
+      const body = $("complaintBody");
+      const cacheKey = window.MSSkeletons.cacheKey("/admin/complaints/" + id);
+      const cached = window.MSSkeletons.getCachedData(cacheKey);
+      if (cached !== undefined) renderComplaint(cached);
+      else body.replaceChildren();
+      const loading = cached === undefined
+        ? window.MSSkeletons.showSkeleton(body, "complaint", 2)
+        : null;
+      try {
+        const data = await window.MS.get("/admin/complaints/" + id);
+        window.MSSkeletons.setCachedData(cacheKey, data);
+        if (loading) await loading.finish(() => renderComplaint(data));
+        else renderComplaint(data);
+      } catch (err) {
+        const message = window.MSSkeletons.friendlyErrorMessage(err, "Не вдалося відкрити скаргу.");
+        const showError = () =>
+          window.MSSkeletons.renderRetryError($("complaintError"), message, () => openComplaint(id));
+        if (loading) {
+          await loading.finish(() => {
+            body.replaceChildren();
+            showError();
+          });
+        } else {
+          showError();
+        }
+      }
+    }
+
+    /* ---------- Верифікація й бан ---------- */
+
+    async function loadVerification(userId, mountId, username) {
+      const mount = $(mountId);
+      if (!mount || !userId) return;
+      mount.innerHTML = '<h3 class="h6 mb-2">Верифікація продавця</h3>' +
+        '<div class="small text-muted-soft">Завантаження…</div>';
+      let info = null;
+      try {
+        info = await window.MS.get("/admin/verifications/" + userId);
+      } catch (err) {
+        mount.innerHTML = '<h3 class="h6 mb-2">Верифікація продавця</h3>' +
+          '<div class="small text-muted-soft">' + esc(err.message || "Недоступно.") + "</div>";
+        return;
+      }
+      const photo = info.has_photo
+        ? '<img src="' + esc(info.photo_url) + '" alt="Фото верифікації" ' +
+          'style="max-width:12rem;border-radius:0.75rem">'
+        : '<div class="small text-muted-soft">Фото не додано.</div>';
+      const banBtn = hasRight("bans")
+        ? '<button class="btn btn-outline-primary btn-sm" type="button" data-ban-user="' +
+          userId + '" data-ban-login="' + esc(username || "") + '">Бан</button>'
+        : "";
+      mount.innerHTML = '<h3 class="h6 mb-2">Верифікація продавця</h3>' +
+        '<div class="small mb-2">Вік: ' + esc(info.age) + " · Додано: " + esc(fmtDate(info.created_at)) +
+        "</div><div class=\"d-flex flex-wrap gap-3 align-items-start\">" + photo + banBtn + "</div>";
+    }
+
+    async function banUser(login) {
+      if (!login) {
+        window.MS.toast("Немає ніка для бану.", "danger");
+        return;
+      }
+      const duration = $("banDuration") ? $("banDuration").value : "1d";
+      const reason = $("banReason") ? $("banReason").value.trim() : "";
+      const payload = { login: login, duration: duration, reason: reason };
+      if (duration === "custom" && $("banEndsAt")) payload.ends_at = $("banEndsAt").value;
+      try {
+        await window.MS.post("/admin/bans", payload);
+        window.MS.toast("Користувача забанено.", "success");
+      } catch (err) {
+        window.MS.toast(err.message || "Не вдалося забанити.", "danger");
+      }
+    }
+
+    /* ---------- Дії зі скаргою ---------- */
+
+    async function take() {
+      try {
+        await window.MS.post("/admin/complaints/" + currentId + "/take", {});
+        window.MS.toast("Скаргу взято в роботу.", "success");
+        await openComplaint(currentId);
+        await load();
+      } catch (err) {
+        $("complaintError").textContent = err.message || "Не вдалося взяти скаргу.";
+        $("complaintError").hidden = false;
+      }
+    }
+
+    async function sendComment() {
+      const text = $("adminComment") ? $("adminComment").value.trim() : "";
+      if (!text) {
+        window.MS.toast("Напишіть коментар.", "danger");
+        return;
+      }
+      try {
+        await window.MS.post("/admin/complaints/" + currentId + "/comments", { text: text });
+        await openComplaint(currentId);
+      } catch (err) {
+        $("complaintError").textContent = err.message || "Не вдалося надіслати коментар.";
+        $("complaintError").hidden = false;
+      }
+    }
+
+    function checkConsequence(code) {
+      const box = document.querySelector('#consequenceList [data-consequence="' + code + '"]');
+      if (box) box.checked = true;
+    }
+
+    async function resolve(status) {
+      const consequences = [];
+      document.querySelectorAll("#consequenceList [data-consequence]:checked").forEach((el) => {
+        consequences.push(el.getAttribute("data-consequence"));
+      });
+      const payload = {
+        status: status,
+        consequences: status === "upheld" ? consequences : [],
+        resolution: $("resolutionInput") ? $("resolutionInput").value.trim() : "",
+      };
+      const amount = $("refundAmount") ? $("refundAmount").value.trim() : "";
+      if (amount) payload.refund_amount_mc = amount;
+      if (status === "upheld" && consequences.indexOf("ban") !== -1 && $("banDuration")) {
+        payload.ban_duration = $("banDuration").value;
+        if ($("banDuration").value === "custom" && $("banEndsAt")) {
+          payload.ban_ends_at = $("banEndsAt").value;
+        }
+      }
+      try {
+        await window.MS.post("/admin/complaints/" + currentId + "/resolve", payload);
+        window.MS.toast("Рішення збережено.", "success");
+        await openComplaint(currentId);
+        await load();
+      } catch (err) {
+        $("complaintError").textContent = err.message || "Не вдалося вирішити скаргу.";
+        $("complaintError").hidden = false;
+      }
+    }
+
+    /* ---------- Профіль ---------- */
+
+    function contactRows(contacts) {
+      const labels = {
+        phone: "Телефон", telegram: "Telegram", instagram: "Instagram",
+        viber: "Viber", facebook: "Facebook", whatsapp: "WhatsApp",
+      };
+      const rows = Object.keys(labels)
+        .filter((key) => contacts && contacts[key])
+        .map((key) => "<div><strong>" + esc(labels[key]) + ":</strong> " + esc(contacts[key]) + "</div>");
+      return rows.length ? rows.join("") : '<span class="text-muted-soft">Контакти не вказано</span>';
+    }
+
+    function renderProfile(data) {
+      const balance = data.balance || {};
+      const products = data.products || [];
+      const bans = data.bans || [];
+      $("profileTitle").textContent = "Профіль: " + data.username;
+      $("profileBody").innerHTML =
+        '<div class="row g-3"><div class="col-md-6">' +
+        "<div><strong>Нік:</strong> " + esc(data.username) + "</div>" +
+        "<div><strong>Email:</strong> " + esc(data.email || "—") + "</div>" +
+        "<div><strong>Рівень:</strong> " + esc(data.role_display) + "</div>" +
+        "<div><strong>Забанений:</strong> " + (data.is_banned ? "так" : "ні") + "</div>" +
+        "<div><strong>Реєстрація:</strong> " + esc(fmtDate(data.created_at)) + "</div>" +
+        '</div><div class="col-md-6">' + contactRows(data.contacts) + "</div></div>" +
+        '<hr class="divider-dashed">' +
+        '<div id="profileVerification" class="mb-2"></div>' +
+        '<div id="profileBanMount" class="mb-2"></div>' +
+        '<hr class="divider-dashed">' +
+        '<h3 class="h6 mb-2">Гаманець</h3>' +
+        '<div class="d-flex flex-wrap gap-3">' +
+        "<span>Вільно: " + esc(fmtMC(balance.free_balance_mc)) + " MC</span>" +
+        "<span>Утримано: " + esc(fmtMC(balance.held_mc)) + " MC</span>" +
+        "<span>Заморожено: " + esc(fmtMC(balance.frozen_mc)) + " MC</span>" +
+        "<span>Застава: " + esc(fmtMC(balance.deposit_locked_mc)) + " MC</span>" +
+        "<span>Борг: " + esc(fmtMC(balance.debt_mc)) + " MC</span></div>" +
+        '<hr class="divider-dashed">' +
+        '<h3 class="h6 mb-2">Товари (' + products.length + ")</h3>" +
+        (products.length
+          ? '<div class="table-responsive"><table class="data-table"><thead><tr><th>Назва</th><th>Статус</th></tr></thead><tbody>' +
+            products.map((p) => "<tr><td>" + esc(p.name) + "</td><td>" + esc(p.status) + "</td></tr>").join("") +
+            "</tbody></table></div>"
+          : '<p class="text-muted-soft mb-0">Товарів немає.</p>') +
+        '<hr class="divider-dashed">' +
+        '<h3 class="h6 mb-2">Історія банів (' + bans.length + ")</h3>" +
+        (bans.length
+          ? bans.map((ban) =>
+              "<div>" + esc(ban.reason || "без причини") + " — " +
+              (ban.forever ? "назавжди" : esc(fmtDate(ban.ends_at))) +
+              (ban.is_active ? " (активний)" : "") + "</div>").join("")
+          : '<p class="text-muted-soft mb-0">Банів немає.</p>');
+      $("profileBody").querySelector("#profileBanMount").innerHTML = data.is_banned
+        ? '<div class="small text-muted-soft">Користувач уже забанений.</div>'
+        : banControlsHtml() +
+          '<button class="btn btn-primary btn-sm" type="button" data-ban-user="' + data.id +
+          '" data-ban-login="' + esc(data.username) + '">Бан</button>';
+      loadVerification(data.id, "profileVerification", data.username);
+      $("profileModal").hidden = false;
+    }
+
+    async function openProfile(userId) {
+      $("profileError").hidden = true;
+      $("profileModal").hidden = false;
+      const body = $("profileBody");
+      const cacheKey = window.MSSkeletons.cacheKey("/admin/users/" + userId);
+      const cached = window.MSSkeletons.getCachedData(cacheKey);
+      if (cached !== undefined) renderProfile(cached);
+      else body.replaceChildren();
+      const loading = cached === undefined
+        ? window.MSSkeletons.showSkeleton(body, "profile", 3)
+        : null;
+      try {
+        const data = await window.MS.get("/admin/users/" + userId);
+        window.MSSkeletons.setCachedData(cacheKey, data);
+        if (loading) await loading.finish(() => renderProfile(data));
+        else renderProfile(data);
+      } catch (err) {
+        const message = window.MSSkeletons.friendlyErrorMessage(err, "Не вдалося завантажити профіль.");
+        const showError = () =>
+          window.MSSkeletons.renderRetryError($("profileError"), message, () => openProfile(userId));
+        if (loading) {
+          await loading.finish(() => {
+            body.replaceChildren();
+            showError();
+          });
+        } else {
+          showError();
+        }
+      }
+    }
+
+    /* ---------- Події ---------- */
+
+    document.addEventListener("DOMContentLoaded", () => {
+      $("applyBtn").addEventListener("click", () => {
+        state.view = $("viewFilter").value;
+        state.status = $("statusFilter").value;
+        state.q = $("searchInput").value.trim();
+        state.page = 1;
+        load();
+      });
+      $("prevPage").addEventListener("click", () => {
+        if (state.page > 1) { state.page -= 1; load(); }
+      });
+      $("nextPage").addEventListener("click", () => {
+        if (state.page < state.pages) { state.page += 1; load(); }
+      });
+      function jumpToPage() {
+        const requested = Number.parseInt($("pageJump").value, 10);
+        if (!Number.isInteger(requested) || requested < 1 || requested > state.pages) {
+          $("pageJump").value = String(state.page);
+          return;
+        }
+        state.page = requested;
+        load();
+      }
+      $("pageJumpBtn").addEventListener("click", jumpToPage);
+      $("pageJump").addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          jumpToPage();
+        }
+      });
+
+      $("groupsBody").addEventListener("click", (event) => {
+        const groupBtn = event.target.closest("[data-group]");
+        if (groupBtn) { openGroup(Number(groupBtn.getAttribute("data-group"))); return; }
+        const profileBtn = event.target.closest("[data-profile]");
+        if (profileBtn) openProfile(profileBtn.getAttribute("data-profile"));
+      });
+
+      $("groupClose").addEventListener("click", () => { $("groupModal").hidden = true; });
+      $("groupBody").addEventListener("click", (event) => {
+        const btn = event.target.closest("[data-open]");
+        if (btn) openComplaint(btn.getAttribute("data-open"));
+      });
+
+      $("complaintClose").addEventListener("click", () => { $("complaintModal").hidden = true; });
+      $("complaintActions").addEventListener("click", (event) => {
+        const btn = event.target.closest("[data-action]");
+        if (!btn) return;
+        const action = btn.getAttribute("data-action");
+        if (action === "take") take();
+        else if (action === "pay_seller") { checkConsequence("pay_seller"); resolve("upheld"); }
+        else if (action === "refund") { checkConsequence("refund"); resolve("upheld"); }
+        else if (action === "close") $("complaintModal").hidden = true;
+        else resolve(action);
+      });
+      $("complaintBody").addEventListener("click", (event) => {
+        if (event.target.closest("#commentSend")) { sendComment(); return; }
+        const banBtn = event.target.closest("[data-ban-user]");
+        if (banBtn) banUser(banBtn.getAttribute("data-ban-login"));
+      });
+
+      $("profileClose").addEventListener("click", () => { $("profileModal").hidden = true; });
+      $("profileBody").addEventListener("click", (event) => {
+        const banBtn = event.target.closest("[data-ban-user]");
+        if (banBtn) banUser(banBtn.getAttribute("data-ban-login"));
+      });
+
+      window.MSAuth.ready().then((user) => {
+        if (!user || !user.authenticated) {
+          window.location.href = "/pages/login.html";
+          return;
+        }
+        state.rights = Array.isArray(user.admin_rights) ? user.admin_rights : [];
+        if (!["complaints", "products", "bans"].some(hasRight)) {
+          window.location.href = "/";
+          return;
+        }
+        load();
+      });
+    });
+  })();
+</script>
+<script src="/static/js/motion.js?v=skeleton-swr-v5-20261123"></script>
+<script src="/static/js/particles.js?v=particles-v4-bloom-20261122"></script>
+</body>
+</html>

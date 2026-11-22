@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MultiShop — реєстрація</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/base.css?v=particles-v4-bloom-20261122">
+</head>
+<body>
+
+<nav class="navbar navbar-expand-xl navbar-dark mb-4">
+  <div class="container">
+    <a class="navbar-brand me-3 brand-mark" href="/">🛍️ <span>Multi<span class="brand-slash">Shop</span></span></a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false" aria-label="Меню">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="mainNavbar">
+      <ul class="navbar-nav ms-auto align-items-center">
+        <li class="nav-item"><a class="nav-link nav-pill" href="/pages/policy.html">Політика</a></li>
+        <li class="nav-item"><a class="nav-link nav-pill" href="/">Головна</a></li>
+        <li class="nav-item"><a class="nav-link nav-pill" href="/pages/catalog.html">Каталог</a></li>
+        <li class="nav-item"><a class="nav-link nav-pill" href="/pages/cart.html">Кошик<span class="nav-counter is-cart" data-cart-count hidden>0</span></a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/favorites.html">Обране<span class="nav-counter" data-counter="favorites" hidden>0</span></a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/orders.html">Замовлення<span class="nav-counter" data-counter="orders" hidden>0</span></a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/complaints.html">Скарги<span class="nav-counter" data-counter="complaints" hidden>0</span></a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/seller.html">Мої товари</a></li>
+        <li class="nav-item" data-auth="guest"><a class="nav-link nav-pill" href="/pages/support.html">Підтримка</a></li><li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/support.html">Підтримка</a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/profile.html">Профіль</a></li>
+        <li class="nav-item" data-auth="guest"><a class="nav-link nav-pill" href="/pages/login.html">Вхід</a></li>
+        <li class="nav-item" data-auth="guest"><a class="nav-link nav-pill active" href="/pages/register.html" aria-current="page">Реєстрація</a></li>
+        <li class="nav-item" data-auth="user" hidden>
+          <span class="nav-user">
+            <img class="avatar" alt="" data-user-avatar hidden>
+            <span class="nav-user-name" data-user-name></span>
+          </span>
+        </li>
+        <li class="nav-item" data-auth="user" hidden>
+          <button class="nav-link nav-pill border-0 bg-transparent" type="button" data-logout>Вийти</button>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<main class="container app-main py-3 py-md-4">
+  <div class="auth-wrap">
+    <div class="section-heading-panel mb-3">
+      <p class="eyebrow mb-1">Новий акаунт</p>
+      <h1 class="section-title mb-2">Приєднатися до MultiShop</h1>
+      <p class="text-muted-soft mb-0">Після реєстрації потрібно буде прийняти політику платформи.</p>
+    </div>
+
+    <div class="card-soft auth-card auth-motion-card">
+      <div class="card-body">
+        <div class="alert-soft is-danger mb-3" id="registerError" hidden></div>
+
+        <form id="registerForm" novalidate>
+          <div class="mb-3 auth-field auth-motion-item">
+            <input class="form-control" type="text" id="username" name="username" placeholder=" " autocomplete="username" required>
+            <label class="form-label" for="username">Нік</label>
+            <div class="form-error" data-error-for="username"></div>
+          </div>
+
+          <div class="mb-3 auth-field auth-motion-item">
+            <input class="form-control" type="email" id="email" name="email" placeholder=" " autocomplete="email" required>
+            <label class="form-label" for="email">Email</label>
+            <div class="form-error" data-error-for="email"></div>
+          </div>
+
+          <div class="mb-3 auth-field auth-motion-item">
+            <input class="form-control" type="password" id="password" name="password" placeholder=" " autocomplete="new-password" required>
+            <label class="form-label" for="password">Пароль</label>
+            <div class="field-hint">Мінімум 8 символів, не надто простий і не лише цифри.</div>
+            <div class="form-error" data-error-for="password"></div>
+          </div>
+
+          <div class="mb-3 auth-field auth-motion-item">
+            <input class="form-control" type="password" id="password2" name="password2" placeholder=" " autocomplete="new-password" required>
+            <label class="form-label" for="password2">Повторіть пароль</label>
+            <div class="form-error" data-error-for="password2"></div>
+          </div>
+
+          <button class="btn btn-primary w-100 auth-motion-item" type="submit" id="registerSubmit">Зареєструватися</button>
+        </form>
+
+        <hr class="divider-dashed">
+        <p class="small text-muted-soft mb-0">
+          Уже маєте акаунт? <a href="/pages/login.html">Увійти</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div class="auth-success-overlay" id="authSuccessOverlay" hidden>
+  <div class="auth-confetti" id="authSuccessConfetti" aria-hidden="true"></div>
+  <div class="auth-success-card" role="status" aria-live="polite">
+    <div class="auth-success-icon" aria-hidden="true">
+      <svg viewBox="0 0 32 32" focusable="false"><path d="m6 16 7 7L26 9"></path></svg>
+    </div>
+    <p class="eyebrow mb-1">MultiShop</p>
+    <h2 class="h4 mb-2">Акаунт створено</h2>
+    <p class="text-muted-soft mb-0">Ласкаво просимо до маркетплейсу!</p>
+  </div>
+</div>
+
+<footer class="footer py-4">
+  <div class="container d-flex flex-column flex-md-row justify-content-between gap-2">
+    <p class="mb-0">MultiShop — навчальний маркетплейс. Розрахунки у MultiCoins (MC).</p>
+    <a href="/pages/policy.html" class="text-decoration-none">Політика платформи →</a>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/static/js/api.js"></script>
+<script src="/static/js/price-format.js?v=price-3dp-20261114"></script>
+<script src="/static/js/auth.js?v=auth-header-tooltip-v1-20261122"></script>
+<script src="/static/js/password-change.js?v=password-change-20261114"></script>
+<script src="/static/js/policy-gate.js?v=policy-after-login-v2-20261122"></script>
+<script src="/static/js/notifications.js"></script>
+<script src="/static/js/auth-motion.js?v=auth-motion-20261121"></script>
+<script>
+  (function () {
+    const form = document.getElementById("registerForm");
+    const errorBox = document.getElementById("registerError");
+    const submit = document.getElementById("registerSubmit");
+    const successOverlay = document.getElementById("authSuccessOverlay");
+    const motion = window.MSAuthMotion;
+    const authCard = document.querySelector(".auth-card");
+    motion.prepare(authCard);
+
+    function fallbackAfterLogin(user) {
+      if (window.MSAuth && typeof window.MSAuth.postLoginFallback === "function") {
+        return window.MSAuth.postLoginFallback(user);
+      }
+      return user && user.policy_accepted === true ? "/" : "/pages/policy.html?required=1";
+    }
+
+    async function navigateAfterLogin(user) {
+      let target;
+      const gate = window.MSPolicyGate;
+      if (gate && typeof gate.afterLogin === "function") {
+        try {
+          target = await gate.afterLogin(user);
+        } catch (error) {
+          console.error("Не вдалося перевірити політику після реєстрації.", error);
+          target = fallbackAfterLogin(user);
+        }
+      } else {
+        console.error("Скрипт політики недоступний; використано безпечний маршрут реєстрації.");
+        target = fallbackAfterLogin(user);
+      }
+      if (typeof target !== "string" || !target.startsWith("/") || target.startsWith("//")) {
+        target = fallbackAfterLogin(user);
+      }
+      if (window.MSMotion) window.MSMotion.navigate(target);
+      else window.location.assign(target);
+    }
+
+    function clearErrors() {
+      motion.clearInvalid(authCard);
+      errorBox.hidden = true;
+      errorBox.textContent = "";
+      document.querySelectorAll("[data-error-for]").forEach((el) => { el.textContent = ""; });
+    }
+
+    function showFieldErrors(payload) {
+      if (!payload || typeof payload !== "object") return false;
+      // Бекенд обгортає помилки полів у { error, fields: { field: [...] } }.
+      // Дістаємо саме fields, інакше показуємо payload як є.
+      const fields = payload.fields && typeof payload.fields === "object" ? payload.fields : payload;
+      let shown = false;
+      Object.keys(fields).forEach((key) => {
+        const target = document.querySelector('[data-error-for="' + key + '"]');
+        const value = fields[key];
+        const text = Array.isArray(value) ? value.join(" ") : String(value);
+        if (target) {
+          target.textContent = text;
+          motion.markInvalid(document.getElementById(key));
+          shown = true;
+        } else {
+          errorBox.textContent = text;
+          errorBox.hidden = false;
+          shown = true;
+        }
+      });
+      return shown;
+    }
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      clearErrors();
+
+      const payload = {
+        username: form.username.value.trim(),
+        email: form.email.value.trim(),
+        password: form.password.value,
+        password2: form.password2.value,
+      };
+      if (!payload.username || !payload.email || !payload.password || !payload.password2) {
+        errorBox.textContent = "Заповніть усі поля.";
+        errorBox.hidden = false;
+        motion.shake(authCard, [
+          payload.username ? null : form.username,
+          payload.email ? null : form.email,
+          payload.password ? null : form.password,
+          payload.password2 ? null : form.password2,
+        ]);
+        return;
+      }
+
+      motion.loading(submit, true);
+      try {
+        const user = await window.MS.post("/auth/register", payload);
+        window.MSAuth.setUser(user);
+        /* Гостьовий кошик зіллється з акаунтом після прийняття політики */
+        window.localStorage.setItem("ms_merge_cart", "1");
+        window.localStorage.setItem("ms_welcome_seen", "1");
+        const currentUser = await window.MSAuth.refresh({ strict: true });
+        if (window.MSCounters) await window.MSCounters.refresh();
+        if (!currentUser || !currentUser.authenticated) {
+          throw new Error("Не вдалося підтвердити реєстрацію. Спробуйте ще раз.");
+        }
+        await motion.showSuccess(successOverlay);
+        await navigateAfterLogin(currentUser);
+      } catch (err) {
+        const isApiError = window.MS && err instanceof window.MS.ApiError;
+        if (!isApiError) console.error("Неочікувана помилка форми реєстрації.", err);
+        const handled = isApiError && showFieldErrors(err.payload);
+        if (!handled) {
+          errorBox.textContent = isApiError
+            ? err.message || "Не вдалося зареєструватися."
+            : "Щось пішло не так, спробуйте пізніше.";
+          errorBox.hidden = false;
+        }
+        motion.shake(authCard);
+      } finally {
+        motion.loading(submit, false);
+      }
+    });
+  })();
+</script>
+<script src="/static/js/motion.js?v=skeleton-swr-v5-20261123"></script>
+<script src="/static/js/particles.js?v=particles-v4-bloom-20261122"></script>
+</body>
+</html>

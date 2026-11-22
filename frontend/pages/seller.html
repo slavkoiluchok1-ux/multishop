@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MultiShop — товари продавця</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/base.css?v=particles-v4-bloom-20261122">
+  <link rel="stylesheet" href="/static/css/seller.css?v=seller-stable-init-v1-20261122">
+</head>
+<body>
+<nav class="navbar navbar-expand-xl navbar-dark mb-4">
+  <div class="container">
+    <a class="navbar-brand me-3 brand-mark" href="/">🛍️ <span>Multi<span class="brand-slash">Shop</span></span></a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false" aria-label="Меню">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="mainNavbar">
+      <ul class="navbar-nav ms-auto align-items-center">
+        <li class="nav-item"><a class="nav-link nav-pill" href="/pages/policy.html">Політика</a></li>
+        <li class="nav-item"><a class="nav-link nav-pill" href="/">Головна</a></li>
+        <li class="nav-item"><a class="nav-link nav-pill" href="/pages/catalog.html">Каталог</a></li>
+        <li class="nav-item"><a class="nav-link nav-pill" href="/pages/cart.html">Кошик<span class="nav-counter is-cart" data-cart-count hidden>0</span></a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/favorites.html">Обране<span class="nav-counter" data-counter="favorites" hidden>0</span></a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/orders.html">Замовлення<span class="nav-counter" data-counter="orders" hidden>0</span></a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/complaints.html">Скарги<span class="nav-counter" data-counter="complaints" hidden>0</span></a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill active" href="/pages/seller.html" aria-current="page">Мої товари</a></li>
+        <li class="nav-item" data-auth="guest"><a class="nav-link nav-pill" href="/pages/support.html">Підтримка</a></li><li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/support.html">Підтримка</a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/profile.html">Профіль</a></li>
+        <li class="nav-item" data-auth="guest"><a class="nav-link nav-pill" href="/pages/login.html">Вхід</a></li>
+        <li class="nav-item" data-auth="guest"><a class="nav-link nav-pill" href="/pages/register.html">Реєстрація</a></li>
+        <li class="nav-item" data-auth="user" hidden>
+          <span class="nav-user"><img class="avatar" alt="" data-user-avatar hidden><span class="nav-user-name" data-user-name></span></span>
+        </li>
+        <li class="nav-item" data-auth="user" hidden>
+          <button class="nav-link nav-pill border-0 bg-transparent" type="button" data-logout>Вийти</button>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+<main class="container app-main py-3 py-md-4">
+  <div class="section-heading-panel mb-4">
+    <p class="eyebrow mb-1">Кабінет продавця</p>
+    <h1 class="section-title mb-2">Мої товари</h1>
+    <p class="text-muted-soft mb-0">Для продажу потрібна одноразова верифікація та застава 3% від залишку активних і прихованих товарів.</p>
+  </div>
+  <div class="alert-soft is-danger mb-3" id="sellerError" hidden></div>
+  <div class="alert-soft is-success mb-3" id="sellerSuccess" hidden></div>
+
+  <section class="card-soft mb-4" id="verificationPanel">
+    <div class="card-body">
+      <h2 class="h4">Верифікація продавця</h2>
+      <div id="verificationStatus" class="verification-status" aria-live="polite">
+        <div class="verification-neutral verification-skeleton" aria-label="Завантаження статусу верифікації"></div>
+      </div>
+      <div id="verificationInstructions" hidden>
+        <p class="text-muted-soft mb-3">Завантажте фото з документом. Верифікація доступна повнолітнім користувачам і після подачі не редагується.</p>
+      </div>
+      <form id="verificationForm" class="row g-3" enctype="multipart/form-data" hidden>
+        <div class="col-md-4">
+          <label class="form-label" for="sellerAge">Вік</label>
+          <input class="form-control" id="sellerAge" type="number" min="18" max="120" required>
+        </div>
+        <div class="col-md-8">
+          <label class="form-label" for="sellerPhoto">Фото з документом</label>
+          <input class="form-control" id="sellerPhoto" type="file" accept="image/jpeg,image/png,image/webp,image/gif" required>
+        </div>
+        <div class="col-12">
+          <div class="verification-ban-warning">Неспівпадіння віку чи даних документа з фотопосилкою призводить до бану продавця.</div>
+        </div>
+        <div class="col-12"><button class="btn btn-primary" type="submit" id="verifyButton">Подати на верифікацію</button></div>
+      </form>
+    </div>
+  </section>
+
+  <section class="card-soft seller-panel mb-4" id="productFormPanel" hidden>
+    <div class="card-body">
+      <div class="seller-form-heading">
+        <div>
+          <p class="eyebrow mb-1">Нове оголошення</p>
+          <h2 class="h3 mb-1">Додати товар</h2>
+          <p class="text-muted-soft mb-0">Заповніть основну інформацію та додайте принаймні один варіант.</p>
+        </div>
+        <button class="btn btn-outline-primary btn-sm" id="cancelProductButton" type="button">Скасувати</button>
+      </div>
+      <form id="productForm" class="seller-form">
+        <section class="seller-form-section">
+          <h3>Основна інформація</h3>
+          <div class="row g-3">
+            <div class="col-lg-7">
+              <label class="form-label" for="productName">Назва товару</label>
+              <input class="form-control" id="productName" maxlength="200" placeholder="Наприклад, смартфон у хорошому стані" required>
+            </div>
+            <div class="col-lg-5">
+              <label class="form-label" for="categoryPicker">Категорія</label>
+              <button class="form-control seller-category-trigger" id="categoryPicker" type="button" aria-haspopup="dialog" aria-controls="sellerCategoryDialog">
+                <span id="selectedCategoryLabel">Оберіть категорію в каталозі</span><span aria-hidden="true">⌄</span>
+              </button>
+              <input id="productCategory" type="hidden">
+              <div class="field-hint" id="selectedCategoryPath">Доступні лише кінцеві категорії.</div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Тип товару</label>
+              <p class="form-control-plaintext seller-type-display" id="productType">Оберіть категорію</p>
+              <div class="field-hint">Визначається автоматично за обраною категорією.</div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label" for="productBrand">Бренд</label>
+              <input class="form-control" id="productBrand" maxlength="120" placeholder="За наявності">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label" for="productStatus">Видимість</label>
+              <select class="form-select" id="productStatus"><option value="active">Активний</option><option value="hidden">Прихований за посиланням</option><option value="inactive">Зупинений</option></select>
+            </div>
+            <div class="col-12">
+              <label class="form-label" for="productDescription">Опис</label>
+              <textarea class="form-control" id="productDescription" rows="4" placeholder="Опишіть стан, комплектацію та важливі деталі"></textarea>
+            </div>
+            <div class="col-12" id="portfolioField" hidden>
+              <label class="form-label" for="productPortfolioUrl">Посилання на портфоліо</label>
+              <input class="form-control" id="productPortfolioUrl" type="url" maxlength="500" placeholder="https://example.com/my-work">
+              <div class="field-hint">Додайте сторінку з роботами, щоб покупець міг їх переглянути.</div>
+            </div>
+            <div class="col-md-7">
+              <label class="form-label" for="productImage">Головне фото</label>
+              <input class="form-control" id="productImage" type="file" accept="image/jpeg,image/png,image/webp,image/gif">
+              <div class="field-hint">JPG, PNG, WebP або GIF, до 100 МБ. Фото буде показано в каталозі.</div>
+            </div>
+            <div class="col-md-5 d-flex align-items-end">
+              <img id="productImagePreview" class="seller-image-preview" alt="Попередній перегляд фото" hidden>
+            </div>
+          </div>
+        </section>
+
+        <section class="seller-form-section">
+          <div class="seller-section-heading">
+            <div>
+              <h3>Варіанти та ціна</h3>
+              <p class="text-muted-soft mb-0">Наприклад, різні розміри, кольори або комплектації.</p>
+            </div>
+            <button class="btn btn-outline-primary btn-sm" id="addVariantButton" type="button">Додати варіант</button>
+          </div>
+          <div id="productVariants" class="seller-variants"></div>
+        </section>
+
+        <section class="seller-form-section" id="digitalFilesSection" hidden>
+          <h3>Файли товару</h3>
+          <p class="text-muted-soft mb-2">Файли додаються окремо до кожного варіанта — заповніть поля «Файл для покупця» та «Пробний файл» у варіантах вище. Публікація можлива лише після завантаження файлу для покупця.</p>
+          <div class="field-hint">Дозволені розширення: pdf, txt, zip, 7z, rar, epub, mp3, wav, ogg, json, fbx, obj, gltf, glb, psd, ttf, otf, unitypackage, а також зображення й відео. До 100 МБ.</div>
+        </section>
+
+        <div class="seller-submit-row">
+          <p class="field-hint mb-0">Для активного оголошення потрібен залишок більше нуля та достатній баланс застави.</p>
+          <button class="btn btn-primary" id="createProductButton" type="submit">Створити товар</button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <section id="productListPanel" hidden>
+    <div class="seller-list-heading">
+      <div><p class="eyebrow mb-1">Керування продажами</p><h2 class="h3 mb-0">Ваші оголошення</h2></div>
+      <div class="seller-list-controls">
+        <select class="form-select" id="sellerStatusFilter" aria-label="Статус">
+          <option value="all">Усі</option>
+          <option value="active">Активні</option>
+          <option value="inactive">Неактивні</option>
+        </select>
+        <div class="input-group seller-search-control">
+          <input class="form-control" type="search" id="sellerSearch" placeholder="Пошук за назвою" aria-label="Пошук за назвою">
+          <button class="btn btn-outline-primary seller-search-button" type="button" id="sellerSearchBtn" title="Знайти" aria-label="Знайти">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="M15.2 15.2 21 21"></path></svg>
+          </button>
+        </div>
+        <button class="btn btn-primary" type="button" id="addProductButton">➕ Додати товар</button>
+      </div>
+    </div>
+    <div id="sellerProducts" class="seller-product-list"></div>
+    <p class="text-muted-soft" id="sellerProductsEmpty" hidden>Товарів ще немає.</p>
+  </section>
+  <div class="seller-tree-modal" id="sellerCategoryDialog" role="dialog" aria-modal="true" aria-labelledby="sellerTreeTitle" hidden>
+    <div class="seller-tree-dialog">
+      <div class="seller-tree-header">
+        <div><p class="eyebrow mb-1">Каталог</p><h2 class="h4 mb-0" id="sellerTreeTitle">Оберіть категорію</h2></div>
+        <button class="seller-tree-close" id="sellerTreeClose" type="button" aria-label="Закрити">×</button>
+      </div>
+      <div class="view-tabs seller-tree-views" id="sellerTreeViews"></div>
+      <nav class="crumbs seller-tree-breadcrumbs" id="sellerTreeBreadcrumbs" aria-label="Шлях категорії"></nav>
+      <p class="field-hint mb-2" id="sellerTreeHint">Перейдіть до кінцевої категорії товару.</p>
+      <div class="tile-grid seller-tree-tiles" id="sellerTreeTiles"></div>
+      <div class="seller-tree-footer">
+        <span id="sellerTreeSelection" class="field-hint">Оберіть кінцеву категорію.</span>
+        <button class="btn btn-primary" id="sellerTreeChoose" type="button" disabled>Вибрати категорію</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="footer py-4">
+  <div class="container d-flex flex-column flex-md-row justify-content-between gap-2">
+    <p class="mb-0">MultiShop — навчальний маркетплейс. Розрахунки у MultiCoins (MC).</p>
+    <a href="/pages/policy.html" class="text-decoration-none">Політика платформи →</a>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/static/js/api.js"></script>
+<script src="/static/js/price-format.js?v=price-3dp-20261114"></script>
+<script src="/static/js/auth.js?v=auth-header-tooltip-v1-20261122"></script>
+<script src="/static/js/password-change.js?v=password-change-20261114"></script>
+<script src="/static/js/policy-gate.js?v=policy-after-login-v2-20261122"></script>
+<script src="/static/js/notifications.js"></script>
+<script src="/static/js/seller.js?v=seller-stable-init-v1-20261122"></script>
+<script src="/static/js/motion.js?v=skeleton-swr-v5-20261123"></script>
+<script src="/static/js/particles.js?v=particles-v4-bloom-20261122"></script>
+</body>
+</html>

@@ -1,0 +1,333 @@
+"""Тести API блоків головної сторінки (право «home»)."""
+import io
+import os
+import secrets
+from unittest.mock import patch
+
+from django.core.cache import cache
+from django.core.management import call_command
+from django.core.management.base import CommandError
+from django.test import RequestFactory, TestCase, override_settings
+from rest_framework.test import APIClient, APIRequestFactory
+
+from apps.accounts.models import AdminLog, AdminRight, Ban, CustomUser
+
+from .exceptions import GENERIC_SERVER_ERROR, api_exception_handler
+from .models import SiteBlock
+from .views import page
+
+
+class FrontendDebugFlagTests(TestCase):
+    @override_settings(DEBUG=True)
+    def test_frontend_page_exposes_debug_flag_only_in_debug_mode(self):
+        request = RequestFactory().get("/pages/catalog.html")
+        response = page(request, "catalog.html")
+
+        self.assertContains(response, "<script>window.MS_DEBUG = true;</script>", html=False)
+
+    @override_settings(DEBUG=False)
+    def test_frontend_page_does_not_expose_debug_flag_outside_debug_mode(self):
+        request = RequestFactory().get("/pages/catalog.html")
+        response = page(request, "catalog.html")
+        try:
+            content = b"".join(response.streaming_content)
+        finally:
+            response.close()
+
+        self.assertNotIn(b"window.MS_DEBUG = true", content)
+
+
+def make_user(username: str, role: str | None = None) -> CustomUser:
+    """Користувач із заданою роллю (за замовчуванням — звичайний)."""
+    user = CustomUser.objects.create_user(
+        username=username, email=f"{username}@example.com", password="test-password"
+    )
+    if role:
+        user.role = role
+        user.save(update_fields=["role"])
+    return user
+
+
+class SiteBlocksAdminApiTests(TestCase):
+    """Доступ, CRUD, порядок, журнал і валідація блоків головної."""
+
+    def setUp(self):
+        self.main = CustomUser.objects.create_superuser(
+            username="main", email="main@example.com", password="test-password"
+        )
+        self.admin1 = make_user("a1", CustomUser.ROLE_ADMIN_1)
+        self.admin2 = make_user("a2", CustomUser.ROLE_ADMIN_2)  # без права home
+        self.admin2_home = make_user("a2h", CustomUser.ROLE_ADMIN_2)
+        AdminRight.objects.create(user=self.admin2_home, right="home")
+        self.user = make_user("user")
+
+        self.block_a = SiteBlock.objects.create(key="a", title="Блок A", text="Текст A", order=0)
+        self.block_b = SiteBlock.objects.create(key="b", title="Блок B", text="Текст B", order=1)
+
+    def client_for(self, user: CustomUser | None) -> APIClient:
+        """Сесійний клієнт (працює middleware бану) або гість."""
+        client = APIClient()
+        if user is not None:
+            client.force_login(user)
+        return client
+
+    def test_admin2_without_home_right_gets_403_everywhere(self):
+        client = self.client_for(self.admin2)
+
+        self.assertEqual(client.get("/api/admin/site/blocks").status_code, 403)
+        self.assertEqual(
+            client.post(
+                "/api/admin/site/blocks", {"title": "x", "text": "y"}, format="json"
+            ).status_code,
+            403,
+        )
+        self.assertEqual(
+            client.patch(
+                f"/api/admin/site/blocks/{self.block_a.pk}", {"title": "z"}, format="json"
+            ).status_code,
+            403,
+        )
+        self.assertEqual(
+            client.delete(f"/api/admin/site/blocks/{self.block_a.pk}").status_code, 403
+        )
+        self.assertEqual(
+            client.post(
+                "/api/admin/site/blocks/reorder",
+                {"ids": [self.block_b.pk, self.block_a.pk]},
+                format="json",
+            ).status_code,
+            403,
+        )
+        self.assertFalse(AdminLog.objects.exists())
+
+    def test_admin2_with_home_right_can_manage_blocks(self):
+        client = self.client_for(self.admin2_home)
+
+        created = client.post(
+            "/api/admin/site/blocks",
+            {
+                "eyebrow": "  Новини  ",
+                "title": "  Новий блок  ",
+                "text": "  Опис  ",
+                "layout": "wide",
+                "style": "accent",
+            },
+            format="json",
+        )
+        self.assertEqual(created.status_code, 201, created.data)
+        block = created.json()["block"]
+        self.assertEqual(block["title"], "Новий блок")
+        self.assertEqual(block["text"], "Опис")
+        self.assertEqual(block["eyebrow"], "Новини")
+        self.assertEqual(block["layout"], "wide")
+        self.assertEqual(block["style"], "accent")
+        self.assertEqual(block["order"], 2)
+        self.assertTrue(block["key"])
+        block_id = block["id"]
+
+        updated = client.patch(
+            f"/api/admin/site/blocks/{block_id}", {"title": "Змінено"}, format="json"
+        )
+        self.assertEqual(updated.status_code, 200)
+        self.assertEqual(updated.json()["block"]["title"], "Змінено")
+        self.assertEqual(updated.json()["block"]["text"], "Опис")
+
+        order = [self.block_b.pk, self.block_a.pk, block_id]
+        reordered = client.post("/api/admin/site/blocks/reorder", {"ids": order}, format="json")
+        self.assertEqual(reordered.status_code, 200)
+        self.assertEqual([item["id"] for item in reordered.json()["blocks"]], order)
+
+        deleted = client.delete(f"/api/admin/site/blocks/{block_id}")
+        self.assertEqual(deleted.status_code, 200)
+        self.assertFalse(SiteBlock.objects.filter(pk=block_id).exists())
+
+    def test_admin1_and_main_can_manage_blocks(self):
+        for actor in (self.admin1, self.main):
+            with self.subTest(role=actor.role):
+                client = self.client_for(actor)
+                self.assertEqual(client.get("/api/admin/site/blocks").status_code, 200)
+                created = client.post(
+                    "/api/admin/site/blocks", {"title": "T", "text": "X"}, format="json"
+                )
+                self.assertEqual(created.status_code, 201)
+
+    def test_regular_user_and_guest_are_rejected(self):
+        self.assertEqual(self.client_for(self.user).get("/api/admin/site/blocks").status_code, 403)
+
+        guest = self.client_for(None)
+        self.assertIn(guest.get("/api/admin/site/blocks").status_code, (401, 403))
+        self.assertIn(
+            guest.post(
+                "/api/admin/site/blocks", {"title": "T", "text": "X"}, format="json"
+            ).status_code,
+            (401, 403),
+        )
+
+    def test_banned_admin_is_blocked_by_ban_gate(self):
+        Ban.objects.create(user=self.admin2_home, issued_by=self.main, source="admin", ends_at=None)
+
+        response = self.client_for(self.admin2_home).get("/api/admin/site/blocks")
+
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.json()["error"], "banned")
+
+    def test_actions_are_written_to_admin_log(self):
+        client = self.client_for(self.admin2_home)
+
+        created = client.post(
+            "/api/admin/site/blocks", {"title": "Журнал", "text": "Текст"}, format="json"
+        )
+        block_id = created.json()["block"]["id"]
+        client.patch(f"/api/admin/site/blocks/{block_id}", {"text": "Оновлено"}, format="json")
+        client.post(
+            "/api/admin/site/blocks/reorder",
+            {"ids": [block_id, self.block_a.pk, self.block_b.pk]},
+            format="json",
+        )
+        client.delete(f"/api/admin/site/blocks/{block_id}")
+
+        actions = list(
+            AdminLog.objects.filter(actor=self.admin2_home).values_list("action", flat=True)
+        )
+        self.assertIn('Створив блок головної "Журнал"', actions)
+        self.assertIn('Змінив блок головної "Журнал"', actions)
+        self.assertIn("Змінив порядок блоків головної", actions)
+        self.assertIn('Видалив блок головної "Журнал"', actions)
+
+    def test_public_blocks_follow_new_order(self):
+        client = self.client_for(self.admin2_home)
+        client.get("/api/site/blocks")
+        order = [self.block_b.pk, self.block_a.pk]
+        self.assertEqual(
+            client.post("/api/admin/site/blocks/reorder", {"ids": order}, format="json").status_code,
+            200,
+        )
+
+        public = self.client_for(None).get("/api/site/blocks").json()["blocks"]
+        self.assertEqual([item["key"] for item in public], ["b", "a"])
+        # Публічний формат без id і незмінний
+        self.assertEqual(
+            set(public[0]),
+            {"key", "eyebrow", "title", "text", "layout", "style", "order"},
+        )
+
+    def test_health_is_accessible_to_banned_user_without_accepting_policy(self):
+        guest_response = self.client_for(None).get("/health/")
+        self.assertEqual(guest_response.status_code, 200)
+        self.assertEqual(guest_response.json(), {"status": "ok"})
+
+        self.user.must_change_password = True
+        self.user.save(update_fields=["must_change_password"])
+        Ban.objects.create(user=self.user, issued_by=self.main, ends_at=None)
+
+        response = self.client_for(self.user).get("/health/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {"status": "ok"})
+
+    def test_create_main_admin_command_is_idempotent(self):
+        password = secrets.token_urlsafe(32)
+        variables = {
+            "MAIN_ADMIN_NICK": "deploy-main",
+            "MAIN_ADMIN_EMAIL": "deploy-main@example.com",
+            "MAIN_ADMIN_PASSWORD": password,
+        }
+        with patch.dict(os.environ, variables):
+            call_command("create_main_admin", stdout=io.StringIO())
+            call_command("create_main_admin", stdout=io.StringIO())
+
+        created = CustomUser.objects.get(username="deploy-main")
+        self.assertEqual(created.role, CustomUser.ROLE_ADMIN_MAIN)
+        self.assertTrue(created.is_superuser)
+        self.assertTrue(created.check_password(password))
+
+    def test_create_main_admin_command_requires_all_environment_values(self):
+        with patch.dict(
+            os.environ,
+            {
+                "MAIN_ADMIN_NICK": "",
+                "MAIN_ADMIN_EMAIL": "",
+                "MAIN_ADMIN_PASSWORD": "",
+            },
+        ):
+            with self.assertRaises(CommandError):
+                call_command("create_main_admin")
+
+    def test_length_and_required_validation(self):
+        client = self.client_for(self.admin2_home)
+
+        self.assertEqual(
+            client.post(
+                "/api/admin/site/blocks", {"title": "a" * 201, "text": "x"}, format="json"
+            ).status_code,
+            400,
+        )
+        self.assertEqual(
+            client.post(
+                "/api/admin/site/blocks", {"title": "t", "text": "x" * 2001}, format="json"
+            ).status_code,
+            400,
+        )
+        self.assertEqual(
+            client.post(
+                "/api/admin/site/blocks", {"title": "   ", "text": "x"}, format="json"
+            ).status_code,
+            400,
+        )
+        self.assertEqual(
+            client.post("/api/admin/site/blocks", {"title": "t"}, format="json").status_code, 400
+        )
+
+    def test_reorder_requires_all_blocks(self):
+        client = self.client_for(self.admin2_home)
+
+        partial = client.post(
+            "/api/admin/site/blocks/reorder", {"ids": [self.block_a.pk]}, format="json"
+        )
+        self.assertEqual(partial.status_code, 400)
+
+
+class RateLimitTests(TestCase):
+    def test_login_rate_limit_returns_localized_429(self):
+        cache.clear()
+        client = APIClient()
+
+        for _ in range(5):
+            response = client.post(
+                "/api/auth/login",
+                {"login": "missing-user", "password": "invalid"},
+                format="json",
+            )
+            self.assertEqual(response.status_code, 400)
+
+        limited = client.post(
+            "/api/auth/login",
+            {"login": "missing-user", "password": "invalid"},
+            format="json",
+        )
+
+        self.assertEqual(limited.status_code, 429)
+        self.assertEqual(limited.json()["error"], "Забагато запитів. Спробуйте пізніше.")
+
+
+class ApiErrorResponseTests(TestCase):
+    def test_unhandled_api_exception_returns_a_sanitized_json_response(self):
+        request = APIRequestFactory().get("/api/example")
+
+        with self.assertLogs("apps.core.exceptions", level="ERROR"):
+            response = api_exception_handler(
+                RuntimeError("sensitive exception details"),
+                {"request": request},
+            )
+
+        self.assertIsNotNone(response)
+        assert response is not None
+        self.assertEqual(response.status_code, 500)
+        self.assertEqual(response.data, {"error": GENERIC_SERVER_ERROR})
+
+    def test_unknown_api_route_does_not_return_a_django_html_page(self):
+        response = APIClient().get("/api/unknown-route")
+
+        self.assertEqual(response.status_code, 404)
+        self.assertTrue(response.headers["Content-Type"].startswith("application/json"))
+        self.assertEqual(response.json(), {"error": "API-маршрут не знайдено."})

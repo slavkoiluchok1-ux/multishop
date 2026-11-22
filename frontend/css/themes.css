@@ -1,0 +1,63 @@
+/* MultiShop — теми: палітра, фон і типографіка.
+   Підключається першим рядком із base.css (не підключати окремо). */
+
+:root {
+  --ink: #101820;
+  --ink-soft: #25323a;
+  --paper: #f4f0e8;
+  --paper-bright: #fbfaf6;
+  --lime: #c8f04a;
+  --blue: #315df5;
+  --gold: #f3c95b;
+  --blood: #e3262e;
+  --muted: #667077;
+  --line: rgba(16, 24, 32, 0.16);
+  --display: "Space Grotesk", sans-serif;
+  --body: "DM Sans", sans-serif;
+
+  /* Додаткові токени MultiShop */
+  --app-bg: #050711;
+  --app-overlay: rgba(5, 7, 17, 0.35);
+  --shadow-soft: 5px 5px 0 rgba(16, 24, 32, 0.1);
+  --shadow-hard: 4px 4px 0 rgba(194, 139, 44, 0.16);
+  --radius-sm: 6px;
+  --radius: 10px;
+  --radius-lg: 14px;
+}
+
+html {
+  scroll-behavior: smooth;
+  background-color: var(--app-bg);
+  background-image:
+    linear-gradient(rgba(3, 4, 10, 0.34), rgba(3, 4, 10, 0.52)),
+    radial-gradient(circle at 12% 16%, rgba(49, 93, 245, 0.26), transparent 42%),
+    radial-gradient(circle at 88% 10%, rgba(200, 240, 74, 0.14), transparent 36%),
+    radial-gradient(circle at 76% 94%, rgba(227, 38, 46, 0.2), transparent 46%),
+    repeating-linear-gradient(135deg, #070a16 0 26px, #0a0f1f 26px 52px);
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  min-height: 100vh;
+}
+
+body {
+  background-color: transparent;
+  color: #f2f5f9;
+  min-height: 100vh;
+}
+
+/* Акцентні теми (використовуються класами на <body>) */
+.theme-lime { --accent: var(--lime); }
+.theme-blue { --accent: var(--blue); }
+.theme-gold { --accent: var(--gold); }
+.theme-blood { --accent: var(--blood); }
+
+.accent-text { color: var(--accent, var(--lime)); }
+.accent-border { border-color: var(--accent, var(--lime)) !important; }
+
+/* Фон сторінки-обгортки */
+.app-main {
+  background: var(--app-overlay);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}

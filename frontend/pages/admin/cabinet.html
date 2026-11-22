@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MultiShop — кабінет адміна</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/base.css?v=particles-v4-bloom-20261122">
+</head>
+<body>
+
+<nav class="navbar navbar-expand-xl navbar-dark mb-4">
+  <div class="container">
+    <a class="navbar-brand me-3 brand-mark" href="/">🛍️ <span>Multi<span class="brand-slash">Shop</span></span></a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false" aria-label="Меню">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="mainNavbar">
+      <ul class="navbar-nav ms-auto align-items-center">
+        <li class="nav-item"><a class="nav-link nav-pill" href="/pages/policy.html">Політика</a></li>
+        <li class="nav-item"><a class="nav-link nav-pill" href="/">Головна</a></li>
+        <li class="nav-item"><a class="nav-link nav-pill" href="/pages/catalog.html">Каталог</a></li>
+        <li class="nav-item"><a class="nav-link nav-pill" href="/pages/cart.html">Кошик<span class="nav-counter is-cart" data-cart-count hidden>0</span></a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/favorites.html">Обране<span class="nav-counter" data-counter="favorites" hidden>0</span></a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/orders.html">Замовлення<span class="nav-counter" data-counter="orders" hidden>0</span></a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/complaints.html">Скарги<span class="nav-counter" data-counter="complaints" hidden>0</span></a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/seller.html">Мої товари</a></li>
+        <li class="nav-item" data-auth="guest"><a class="nav-link nav-pill" href="/pages/support.html">Підтримка</a></li><li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/support.html">Підтримка</a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/profile.html">Профіль</a></li>
+        <li class="nav-item" data-auth="guest"><a class="nav-link nav-pill" href="/pages/login.html">Вхід</a></li>
+        <li class="nav-item" data-auth="guest"><a class="nav-link nav-pill" href="/pages/register.html">Реєстрація</a></li>
+        <li class="nav-item" data-auth="user" hidden>
+          <span class="nav-user">
+            <img class="avatar" alt="" data-user-avatar hidden>
+            <span class="nav-user-name" data-user-name></span>
+          </span>
+        </li>
+        <li class="nav-item" data-auth="user" hidden>
+          <button class="nav-link nav-pill border-0 bg-transparent" type="button" data-logout>Вийти</button>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<main class="container app-main py-3 py-md-4">
+  <div class="section-heading-panel mb-3">
+    <p class="eyebrow mb-1">Адміністрування</p>
+    <h1 class="section-title mb-2">Кабінет адміна</h1>
+    <p class="text-muted-soft mb-0">Ваші права, керування рівнями адміністраторів і журнал дій.</p>
+  </div>
+
+  <div class="alert-soft is-danger mb-3" id="cabinetError" hidden></div>
+  <div class="alert-soft is-success mb-3" id="cabinetSuccess" hidden></div>
+
+  <div class="card-soft mb-3">
+    <div class="card-body">
+      <span class="badge-soft is-lime mb-3">Ваш доступ</span>
+      <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+        <strong id="meName">…</strong>
+        <span class="badge-soft is-muted" id="meRole"></span>
+      </div>
+      <div class="d-flex flex-wrap gap-2" id="meRights"></div>
+      <div class="d-flex flex-wrap gap-2 mt-3" id="mainAdminBox" hidden>
+        <a class="btn btn-outline-primary" href="/admin/" target="_blank" rel="noopener">⚙️ Django-адмінка</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="card-soft mb-3" id="manageCard">
+    <div class="card-body">
+      <h2 class="h5 mb-3">Керування адміністраторами</h2>
+      <div class="row g-3">
+        <div class="col-md-6 position-relative">
+          <label class="form-label" for="login">Нік користувача</label>
+          <div class="input-group">
+            <input class="form-control" type="text" id="login" placeholder="нік">
+            <button class="btn btn-outline-primary" type="button" id="searchBtn" title="Знайти користувача">🔍</button>
+          </div>
+          <div class="field-hint">Нік користувача, якому видаємо рівень або права.</div>
+          <div class="card-soft" id="searchPopup" hidden
+               style="position:absolute; left:12px; right:12px; top:100%; z-index:1050; max-height:260px; overflow:auto;">
+            <div class="d-flex align-items-center justify-content-between px-3 py-2">
+              <strong class="small">Результати пошуку</strong>
+              <button class="btn-close" type="button" id="searchClose" aria-label="Закрити"></button>
+            </div>
+            <div id="searchResults"></div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="level" id="levelLabel">Рівень адміністратора</label>
+          <select class="form-select" id="level">
+            <option value="2">Адмін 2-го рівня</option>
+            <option value="1" id="level1Option" hidden>Адмін 1-го рівня (лише головний)</option>
+          </select>
+          <div class="field-hint" id="levelFixed" hidden>Рівень: Адмін 2-го рівня</div>
+        </div>
+      </div>
+      <div class="d-flex flex-wrap gap-2 mt-3">
+        <button class="btn btn-primary" type="button" id="grantBtn">Видати рівень</button>
+        <button class="btn btn-outline-primary" type="button" id="revokeBtn">Забрати права адміна</button>
+      </div>
+
+      <hr class="divider-dashed">
+      <h3 class="h6 mb-2">Права для адміна 2-го рівня <span class="text-muted-soft small" id="rightsHint" hidden>Має всі права</span></h3>
+      <div class="row g-2" id="rightsBox"></div>
+      <div class="d-flex flex-wrap gap-2 mt-3">
+        <button class="btn btn-primary" type="button" id="saveRightsBtn">Зберегти права</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card-soft mb-3">
+    <div class="card-body">
+      <h2 class="h5 mb-3">Адміністратори</h2>
+      <div class="row g-2 align-items-end mb-3">
+        <div class="col-md-4">
+          <label class="form-label" for="adminFilterName">Нік</label>
+          <input class="form-control" id="adminFilterName" placeholder="Пошук за ніком">
+        </div>
+        <div class="col-md-2">
+          <label class="form-label" for="adminFilterRole">Рівень</label>
+          <select class="form-select" id="adminFilterRole">
+            <option value="">Усі рівні</option>
+            <option value="admin_2">Адмін 2-го рівня</option>
+            <option value="admin_1">Адмін 1-го рівня</option>
+            <option value="admin_main">Головний адмін</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label" for="adminFilterFrom">Додано від</label>
+          <input class="form-control" type="date" id="adminFilterFrom">
+        </div>
+        <div class="col-md-2">
+          <label class="form-label" for="adminFilterTo">Додано до</label>
+          <input class="form-control" type="date" id="adminFilterTo">
+        </div>
+        <div class="col-md-2">
+          <button class="btn btn-outline-primary w-100" type="button" id="adminFilterBtn">Знайти</button>
+        </div>
+      </div>
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr><th>Нік</th><th>Рівень</th><th>Додано</th><th>Права</th><th>Дії</th></tr>
+          </thead>
+          <tbody id="adminsBody">
+            <tr><td colspan="5">Завантаження…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="card-soft">
+    <div class="card-body">
+      <h2 class="h5 mb-3">Журнал дій</h2>
+      <div class="row g-2 align-items-end mb-3">
+        <div class="col-md-5">
+          <label class="form-label" for="logFilterQuery">Ім'я, дія або ціль</label>
+          <input class="form-control" id="logFilterQuery" placeholder="Пошук у журналі">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label" for="logFilterFrom">Від дати</label>
+          <input class="form-control" type="date" id="logFilterFrom">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label" for="logFilterTo">До дати</label>
+          <input class="form-control" type="date" id="logFilterTo">
+        </div>
+        <div class="col-md-1">
+          <button class="btn btn-outline-primary w-100" type="button" id="logFilterBtn">⌕</button>
+        </div>
+      </div>
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr><th>Час</th><th>Хто</th><th>Дія</th><th>Кого</th></tr>
+          </thead>
+          <tbody id="logBody">
+            <tr><td colspan="4">Завантаження…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div class="app-modal" id="adminBanModal" hidden>
+  <div class="app-modal-box">
+    <button class="app-modal-close" type="button" id="adminBanClose" aria-label="Закрити">×</button>
+    <h2 class="h5 mb-2">Заблокувати адміністратора</h2>
+    <p class="text-muted-soft" id="adminBanTarget"></p>
+    <div class="alert-soft is-danger mb-2" id="adminBanError" hidden></div>
+    <label class="form-label" for="adminBanReason">Причина (побачить користувач)</label>
+    <textarea class="form-control mb-2" id="adminBanReason" rows="3" maxlength="2000" required></textarea>
+    <label class="form-label" for="adminBanDuration">Тривалість</label>
+    <select class="form-select mb-3" id="adminBanDuration">
+      <option value="1d">1 день</option><option value="3d">3 дні</option>
+      <option value="7d">7 днів</option><option value="30d">30 днів</option>
+      <option value="1m">1 місяць</option><option value="6m">6 місяців</option>
+      <option value="1y">1 рік</option><option value="forever">Назавжди</option>
+    </select>
+    <div class="d-flex justify-content-end gap-2">
+      <button class="btn btn-outline-primary" type="button" id="adminBanCancel">Скасувати</button>
+      <button class="btn btn-primary" type="button" id="adminBanSubmit">Заблокувати</button>
+    </div>
+  </div>
+</div>
+
+<footer class="footer py-4">
+  <div class="container d-flex flex-column flex-md-row justify-content-between gap-2">
+    <p class="mb-0">MultiShop — навчальний маркетплейс. Розрахунки у MultiCoins (MC).</p>
+    <a href="/pages/policy.html" class="text-decoration-none">Політика платформи →</a>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/static/js/api.js"></script>
+<script src="/static/js/price-format.js?v=price-3dp-20261114"></script>
+<script src="/static/js/auth.js?v=auth-header-tooltip-v1-20261122"></script>
+<script src="/static/js/password-change.js?v=password-change-20261114"></script>
+<script src="/static/js/notifications.js"></script>
+<script src="/static/js/policy-gate.js?v=policy-after-login-v2-20261122"></script>
+<script>
+  (function () {
+    const errorBox = document.getElementById("cabinetError");
+    const successBox = document.getElementById("cabinetSuccess");
+    const meName = document.getElementById("meName");
+    const meRole = document.getElementById("meRole");
+    const meRights = document.getElementById("meRights");
+    const rightsBox = document.getElementById("rightsBox");
+    const adminsBody = document.getElementById("adminsBody");
+    const logBody = document.getElementById("logBody");
+    const esc = window.MS.escapeHtml;
+    const loginInput = document.getElementById("login");
+    const searchPopup = document.getElementById("searchPopup");
+    const searchResults = document.getElementById("searchResults");
+    const searchBtn = document.getElementById("searchBtn");
+    const adminBanModal = document.getElementById("adminBanModal");
+    let rightsSeq = 0;
+    let canBanAdmins = false;
+    let adminBanLogin = "";
+
+    function setError(message) {
+      errorBox.textContent = message || "";
+      errorBox.hidden = !message;
+    }
+    function setSuccess(message) {
+      successBox.textContent = message || "";
+      successBox.hidden = !message;
+    }
+    function fmtDate(value) {
+      if (!value) return "—";
+      const d = new Date(value);
+      return d.toLocaleString("uk-UA");
+    }
+
+    function renderRights(user, catalog) {
+      const labels = {};
+      catalog.forEach((row) => { labels[row.key] = row.label; });
+      const names = user.rights.map((key) => labels[key] || key);
+      meRights.innerHTML = names.length
+        ? names.map((label) => '<span class="badge-soft">' + esc(label) + "</span>").join("")
+        : '<span class="text-muted-soft">Прав немає</span>';
+    }
+
+    function renderAdmins(admins, catalog, isMain, isAdmin1) {
+      const labels = {};
+      catalog.forEach((row) => { labels[row.key] = row.label; });
+      adminsBody.innerHTML = admins.map((admin) =>
+        "<tr><td>" + esc(admin.username) + "</td><td>" + esc(admin.role_display) +
+        "</td><td>" + esc(fmtDate(admin.created_at)) + "</td><td>" +
+        esc(admin.rights.map((key) => labels[key] || key).join(", ") || "—") +
+        '</td><td><div class="d-flex flex-wrap gap-1">' +
+        (admin.role !== "admin_main" && (admin.role === "admin_2" || isMain)
+          ? '<button class="btn btn-outline-primary btn-sm" type="button" data-manage-admin="' +
+            esc(admin.username) + '" data-role="' + esc(admin.role) + '">Змінити доступ</button>'
+          : "") +
+        (admin.role !== "admin_main" && (isMain || (isAdmin1 && admin.role === "admin_2"))
+          ? '<button class="btn btn-outline-danger btn-sm" type="button" data-revoke-admin="' +
+            esc(admin.username) + '">Забрати права</button>'
+          : "") +
+        (canBanAdmins && admin.role !== "admin_main"
+          ? '<button class="btn btn-outline-danger btn-sm" type="button" data-ban-admin="' +
+            esc(admin.username) + '">Бан</button>'
+          : "") +
+        "</div></td></tr>"
+      ).join("");
+      if (!admins.length) adminsBody.innerHTML = '<tr><td colspan="5">Адміністраторів не знайдено.</td></tr>';
+    }
+
+    function renderLog(rows) {
+      logBody.innerHTML = rows.length
+        ? rows.map((row) =>
+            "<tr><td>" + esc(fmtDate(row.created_at)) + "</td><td>" + esc(row.actor) +
+            "</td><td>" + esc(row.action) + "</td><td>" + esc(row.target || "—") + "</td></tr>"
+          ).join("")
+        : '<tr><td colspan="4">Записів немає.</td></tr>';
+    }
+
+    function renderCatalog(catalog) {
+      rightsBox.innerHTML = catalog.map((row) =>
+        '<div class="col-md-4"><div class="form-check">' +
+        '<input class="form-check-input" type="checkbox" id="right_' + esc(row.key) +
+        '" value="' + esc(row.key) + '">' +
+        '<label class="form-check-label" for="right_' + esc(row.key) + '">' +
+        esc(row.label) + "</label></div></div>"
+      ).join("");
+    }
+
+    // Ставить чекбокси прав за масивом ключів; all — усі відмічені й вимкнені.
+    function applyRights(rights, all) {
+      const boxes = rightsBox.querySelectorAll("input[type=checkbox]");
+      Array.prototype.forEach.call(boxes, (box) => {
+        box.checked = all || rights.indexOf(box.value) !== -1;
+        box.disabled = all;
+      });
+      document.getElementById("rightsHint").hidden = !all;
+    }
+
+    // Підтягує права обраного ніка через /admin/users/search (точний збіг).
+    async function loadRightsFor(login) {
+      const seq = ++rightsSeq;
+      const query = (login || "").trim();
+      if (query.length < 2) {
+        applyRights([], false);
+        return;
+      }
+      try {
+        const users = await window.MS.get("/admin/users/search?q=" + encodeURIComponent(query));
+        if (seq !== rightsSeq) return; // відповідь застаріла
+        const found = users.find(
+          (u) => u.username.toLowerCase() === query.toLowerCase()
+        );
+        if (!found) {
+          applyRights([], false);
+          return;
+        }
+        const all = found.role === "admin_1" || found.role === "admin_main";
+        applyRights(found.rights || [], all);
+      } catch (err) {
+        if (seq === rightsSeq) applyRights([], false);
+      }
+    }
+
+    // --- Спливаючий пошук користувача ---
+    function closeSearch() {
+      searchPopup.hidden = true;
+    }
+
+    function renderSearchResults(users) {
+      if (!users.length) {
+        searchResults.innerHTML =
+          '<div class="px-3 pb-3 text-muted-soft">Нікого не знайдено</div>';
+        return;
+      }
+      searchResults.innerHTML =
+        '<div class="list-group list-group-flush">' +
+        users.map((u) =>
+          '<button type="button" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" data-username="' +
+          esc(u.username) + '"><span>' + esc(u.username) +
+          '</span><span class="text-muted-soft small">' + esc(u.role_display) +
+          "</span></button>"
+        ).join("") + "</div>";
+    }
+
+    async function openSearch() {
+      const query = loginInput.value.trim();
+      searchPopup.hidden = false;
+      if (query.length < 2) {
+        searchResults.innerHTML =
+          '<div class="px-3 pb-3 text-muted-soft">Введіть щонайменше 2 символи.</div>';
+        return;
+      }
+      searchResults.innerHTML = '<div class="px-3 pb-3 text-muted-soft">Пошук…</div>';
+      try {
+        const users = await window.MS.get("/admin/users/search?q=" + encodeURIComponent(query));
+        renderSearchResults(users);
+      } catch (err) {
+        searchResults.innerHTML =
+          '<div class="px-3 pb-3 text-muted-soft">' + esc(err.message || "Помилка пошуку.") + "</div>";
+      }
+    }
+
+    searchBtn.addEventListener("click", openSearch);
+    document.getElementById("searchClose").addEventListener("click", closeSearch);
+    loginInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        openSearch();
+      }
+    });
+    loginInput.addEventListener("blur", () => loadRightsFor(loginInput.value));
+    searchResults.addEventListener("click", (e) => {
+      const row = e.target.closest("[data-username]");
+      if (!row) return;
+      const username = row.getAttribute("data-username");
+      loginInput.value = username;
+      closeSearch();
+      loadRightsFor(username);
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") closeSearch();
+    });
+    document.addEventListener("click", (e) => {
+      if (searchPopup.hidden) return;
+      if (searchPopup.contains(e.target) || e.target === searchBtn || e.target === loginInput) return;
+      closeSearch();
+    });
+
+    async function load() {
+      try {
+        const params = new URLSearchParams();
+        [
+          ["admin_q", "adminFilterName"],
+          ["admin_role", "adminFilterRole"],
+          ["admin_from", "adminFilterFrom"],
+          ["admin_to", "adminFilterTo"],
+          ["log_q", "logFilterQuery"],
+          ["log_from", "logFilterFrom"],
+          ["log_to", "logFilterTo"],
+        ].forEach(([key, id]) => {
+          const value = document.getElementById(id).value.trim();
+          if (value) params.set(key, value);
+        });
+        const query = params.toString();
+        const data = await window.MS.get("/admin/cabinet" + (query ? "?" + query : ""));
+        canBanAdmins = !!data.can_ban_admins;
+        window.MSAuth.setUser(Object.assign({}, window.MSAuth.state.user, {
+          is_admin_main: data.is_admin_main,
+          is_admin_1: data.is_admin_1,
+          admin_rights: data.me.rights,
+        }));
+        meName.textContent = data.me.username;
+        meRole.textContent = data.me.role_display;
+        renderCatalog(data.rights_catalog);
+        loadRightsFor(loginInput.value); // права не скидаємо після перезавантаження
+        renderRights(data.me, data.rights_catalog);
+        renderAdmins(data.admins, data.rights_catalog, !!data.is_admin_main, !!data.is_admin_1);
+        renderLog(data.log);
+        if (data.is_admin_main) {
+          document.getElementById("level1Option").hidden = false;
+          document.getElementById("mainAdminBox").hidden = false;
+        } else if (data.is_admin_1) {
+          // Адмін 1-го рівня видає лише рівень 2 — вибір не показуємо.
+          document.getElementById("levelLabel").hidden = true;
+          document.getElementById("level").hidden = true;
+          document.getElementById("levelFixed").hidden = false;
+        } else {
+          // Адмін 2-го рівня бачить лише власні права.
+          document.getElementById("manageCard").hidden = true;
+        }
+      } catch (err) {
+        setError(err.message || "Не вдалося завантажити кабінет.");
+      }
+    }
+
+    function checkedRights() {
+      return Array.prototype.map.call(
+        rightsBox.querySelectorAll("input[type=checkbox]:checked"),
+        (el) => el.value
+      );
+    }
+
+    async function submit(action, payload, successText) {
+      setError("");
+      setSuccess("");
+      const login = loginInput.value.trim();
+      if (!login) {
+        setError("Укажіть нік користувача.");
+        return;
+      }
+      try {
+        await window.MS.post("/admin/cabinet", Object.assign({ action: action, login: login }, payload));
+        setSuccess(successText);
+        window.MS.toast(successText, "success");
+        await load(); // нік і права не скидаємо — load() підтягує їх заново
+      } catch (err) {
+        setError(err.message || "Дію не виконано.");
+      }
+    }
+
+    document.getElementById("grantBtn").addEventListener("click", () => {
+      const level = document.getElementById("level").value;
+      const payload = { level: level };
+      // Для рівня 2 права надсилаємо тим самим запитом, що й зміну ролі.
+      if (level === "2") payload.rights = checkedRights();
+      submit("grant_level", payload, "Рівень видано.");
+    });
+
+    document.getElementById("saveRightsBtn").addEventListener("click", () => {
+      submit("set_rights", { rights: checkedRights() }, "Права збережено.");
+    });
+
+    document.getElementById("revokeBtn").addEventListener("click", () => {
+      submit("revoke_level", {}, "Права адміністратора знято.");
+    });
+
+    document.getElementById("adminFilterBtn").addEventListener("click", load);
+    ["adminFilterName", "logFilterQuery"].forEach((id) => {
+      document.getElementById(id).addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          load();
+        }
+      });
+    });
+    document.getElementById("logFilterBtn").addEventListener("click", load);
+    adminsBody.addEventListener("click", (event) => {
+      const manage = event.target.closest("[data-manage-admin]");
+      if (manage) {
+        const username = manage.getAttribute("data-manage-admin");
+        loginInput.value = username;
+        const targetRole = manage.getAttribute("data-role");
+        document.getElementById("level").value = targetRole === "admin_1" ? "1" : "2";
+        loadRightsFor(username);
+        document.getElementById("manageCard").scrollIntoView({ behavior: "smooth" });
+        loginInput.focus();
+        return;
+      }
+      const revoke = event.target.closest("[data-revoke-admin]");
+      if (revoke) {
+        loginInput.value = revoke.getAttribute("data-revoke-admin");
+        if (window.confirm("Забрати права адміністратора в " + loginInput.value + "?")) {
+          submit("revoke_level", {}, "Права адміністратора знято.");
+        }
+        return;
+      }
+      const ban = event.target.closest("[data-ban-admin]");
+      if (ban) {
+        adminBanLogin = ban.getAttribute("data-ban-admin");
+        document.getElementById("adminBanTarget").textContent = "Користувач: " + adminBanLogin;
+        document.getElementById("adminBanReason").value = "";
+        document.getElementById("adminBanError").hidden = true;
+        adminBanModal.hidden = false;
+      }
+    });
+    function closeAdminBan() {
+      adminBanModal.hidden = true;
+      adminBanLogin = "";
+    }
+    document.getElementById("adminBanClose").addEventListener("click", closeAdminBan);
+    document.getElementById("adminBanCancel").addEventListener("click", closeAdminBan);
+    document.getElementById("adminBanSubmit").addEventListener("click", async () => {
+      const reason = document.getElementById("adminBanReason").value.trim();
+      const error = document.getElementById("adminBanError");
+      if (reason.length < 5) {
+        error.textContent = "Причина обов'язкова (мінімум 5 символів).";
+        error.hidden = false;
+        return;
+      }
+      try {
+        await window.MS.post("/admin/bans", {
+          login: adminBanLogin,
+          reason: reason,
+          duration: document.getElementById("adminBanDuration").value,
+        });
+        closeAdminBan();
+        setSuccess("Користувача заблоковано.");
+        await load();
+      } catch (err) {
+        error.textContent = err.message || "Не вдалося заблокувати користувача.";
+        error.hidden = false;
+      }
+    });
+
+    document.addEventListener("DOMContentLoaded", () => {
+      window.MSAuth.ready().then((user) => {
+        if (!user || !user.authenticated) {
+          window.location.href = "/pages/login.html";
+          return;
+        }
+        if (!(user.is_admin_main || user.is_admin_1 || user.is_admin_2)) {
+          window.location.href = "/";
+          return;
+        }
+        load();
+      });
+    });
+  })();
+</script>
+<script src="/static/js/motion.js?v=skeleton-swr-v5-20261123"></script>
+<script src="/static/js/particles.js?v=particles-v4-bloom-20261122"></script>
+</body>
+</html>

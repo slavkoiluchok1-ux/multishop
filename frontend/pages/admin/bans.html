@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MultiShop — бани</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/base.css?v=particles-v4-bloom-20261122">
+</head>
+<body>
+
+<nav class="navbar navbar-expand-xl navbar-dark mb-4">
+  <div class="container">
+    <a class="navbar-brand me-3 brand-mark" href="/">🛍️ <span>Multi<span class="brand-slash">Shop</span></span></a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false" aria-label="Меню">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="mainNavbar">
+      <ul class="navbar-nav ms-auto align-items-center">
+        <li class="nav-item"><a class="nav-link nav-pill" href="/pages/policy.html">Політика</a></li>
+        <li class="nav-item"><a class="nav-link nav-pill" href="/">Головна</a></li>
+        <li class="nav-item"><a class="nav-link nav-pill" href="/pages/catalog.html">Каталог</a></li>
+        <li class="nav-item"><a class="nav-link nav-pill" href="/pages/cart.html">Кошик<span class="nav-counter is-cart" data-cart-count hidden>0</span></a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/favorites.html">Обране<span class="nav-counter" data-counter="favorites" hidden>0</span></a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/orders.html">Замовлення<span class="nav-counter" data-counter="orders" hidden>0</span></a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/complaints.html">Скарги<span class="nav-counter" data-counter="complaints" hidden>0</span></a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/seller.html">Мої товари</a></li>
+        <li class="nav-item" data-auth="guest"><a class="nav-link nav-pill" href="/pages/support.html">Підтримка</a></li><li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/support.html">Підтримка</a></li>
+        <li class="nav-item" data-auth="user" hidden><a class="nav-link nav-pill" href="/pages/profile.html">Профіль</a></li>
+        <li class="nav-item" data-auth="guest"><a class="nav-link nav-pill" href="/pages/login.html">Вхід</a></li>
+        <li class="nav-item" data-auth="guest"><a class="nav-link nav-pill" href="/pages/register.html">Реєстрація</a></li>
+        <li class="nav-item" data-auth="user" hidden>
+          <span class="nav-user">
+            <img class="avatar" alt="" data-user-avatar hidden>
+            <span class="nav-user-name" data-user-name></span>
+          </span>
+        </li>
+        <li class="nav-item" data-auth="user" hidden>
+          <button class="nav-link nav-pill border-0 bg-transparent" type="button" data-logout>Вийти</button>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<main class="container app-main py-3 py-md-4">
+  <div class="section-heading-panel mb-3">
+    <p class="eyebrow mb-1">Адміністрування</p>
+    <h1 class="section-title mb-2">Бани</h1>
+    <p class="text-muted-soft mb-0">Забанений користувач бачить лише Головну, Підтримку й Політику.</p>
+  </div>
+
+  <div class="alert-soft is-danger mb-3" id="banError" hidden></div>
+  <div class="alert-soft is-success mb-3" id="banSuccess" hidden></div>
+
+  <div class="card-soft mb-3">
+    <div class="card-body">
+      <h2 class="h5 mb-3">Забанити користувача</h2>
+      <div class="row g-3">
+        <div class="col-md-5">
+          <label class="form-label" for="login">Нік користувача</label>
+          <input class="form-control" type="text" id="login" placeholder="нік">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label" for="duration">Тривалість бану</label>
+          <select class="form-select" id="duration"></select>
+        </div>
+        <div class="col-md-3" id="customDateWrap" hidden>
+          <label class="form-label" for="endsAt">Дата завершення</label>
+          <input class="form-control" type="date" id="endsAt">
+        </div>
+        <div class="col-12">
+          <label class="form-label" for="reason">Причина (необов'язково)</label>
+          <input class="form-control" type="text" id="reason" placeholder="Причина бану">
+        </div>
+      </div>
+      <div class="d-flex flex-wrap gap-2 mt-3">
+        <button class="btn btn-primary" type="button" id="banBtn">Забанити</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card-soft mb-3" id="profileCard" hidden>
+    <div class="card-body">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <h2 class="h5 mb-0" id="profileTitle">Профіль користувача</h2>
+        <button class="btn btn-outline-primary btn-sm" type="button" id="profileClose">Закрити</button>
+      </div>
+      <div id="profileBody"></div>
+    </div>
+  </div>
+
+  <div class="card-soft">
+    <div class="card-body">
+      <h2 class="h5 mb-3">Список банів</h2>
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Користувач</th><th>Хто забанив</th><th>Причина</th>
+              <th>Початок</th><th>Завершення</th><th>Статус</th><th>Дії</th>
+            </tr>
+          </thead>
+          <tbody id="bansBody">
+            <tr><td colspan="7">Завантаження…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="footer py-4">
+  <div class="container d-flex flex-column flex-md-row justify-content-between gap-2">
+    <p class="mb-0">MultiShop — навчальний маркетплейс. Розрахунки у MultiCoins (MC).</p>
+    <a href="/pages/policy.html" class="text-decoration-none">Політика платформи →</a>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/static/js/api.js"></script>
+<script src="/static/js/price-format.js?v=price-3dp-20261114"></script>
+<script src="/static/js/auth.js?v=auth-header-tooltip-v1-20261122"></script>
+<script src="/static/js/password-change.js?v=password-change-20261114"></script>
+<script src="/static/js/notifications.js"></script>
+<script src="/static/js/policy-gate.js?v=policy-after-login-v2-20261122"></script>
+<script>
+  (function () {
+    const errorBox = document.getElementById("banError");
+    const successBox = document.getElementById("banSuccess");
+    const durationSelect = document.getElementById("duration");
+    const customDateWrap = document.getElementById("customDateWrap");
+    const bansBody = document.getElementById("bansBody");
+    const profileCard = document.getElementById("profileCard");
+    const profileTitle = document.getElementById("profileTitle");
+    const profileBody = document.getElementById("profileBody");
+    const esc = window.MS.escapeHtml;
+    const fmtMC = window.MSPrice.formatMCShort;
+
+    let canUnban = false;
+
+    function setError(message) {
+      errorBox.textContent = message || "";
+      errorBox.hidden = !message;
+    }
+    function setSuccess(message) {
+      successBox.textContent = message || "";
+      successBox.hidden = !message;
+    }
+    function fmtDate(value) {
+      if (!value) return "—";
+      return new Date(value).toLocaleString("uk-UA");
+    }
+
+    function fillDurations(durations) {
+      durationSelect.innerHTML = durations
+        .map((d) => '<option value="' + esc(d.code) + '">' + esc(d.label) + "</option>")
+        .join("");
+      syncCustomDate();
+    }
+
+    function syncCustomDate() {
+      customDateWrap.hidden = durationSelect.value !== "custom";
+    }
+
+    function statusLabel(ban) {
+      if (ban.is_active) return '<span class="badge-soft is-blood">Активний</span>';
+      if (ban.lifted_at) return '<span class="badge-soft is-muted">Знято</span>';
+      return '<span class="badge-soft is-muted">Завершився</span>';
+    }
+
+    function renderBans(bans) {
+      bansBody.innerHTML = bans.length
+        ? bans.map((ban) => {
+            const actions = [
+              '<button class="btn btn-outline-primary btn-sm" type="button" data-profile="' +
+                ban.user_id + '">Профіль</button>',
+            ];
+            if (canUnban && ban.is_active) {
+              actions.push('<button class="btn btn-primary btn-sm" type="button" data-lift="' +
+                ban.id + '">Розбанити</button>');
+            }
+            return "<tr><td>" + esc(ban.username) + "</td><td>" + esc(ban.issued_by) +
+              "</td><td>" + esc(ban.reason || "—") + "</td><td>" + esc(fmtDate(ban.starts_at)) +
+              "</td><td>" + (ban.forever ? "Назавжди" : esc(fmtDate(ban.ends_at))) +
+              "</td><td>" + statusLabel(ban) +
+              '</td><td><div class="d-flex flex-wrap gap-2">' + actions.join("") +
+              "</div></td></tr>";
+          }).join("")
+        : '<tr><td colspan="7">Банів немає.</td></tr>';
+    }
+
+    function contactRows(contacts) {
+      const labels = {
+        phone: "Телефон", telegram: "Telegram", instagram: "Instagram",
+        viber: "Viber", facebook: "Facebook", whatsapp: "WhatsApp",
+      };
+      const rows = Object.keys(labels)
+        .filter((key) => contacts && contacts[key])
+        .map((key) => "<div><strong>" + esc(labels[key]) + ":</strong> " + esc(contacts[key]) + "</div>");
+      return rows.length ? rows.join("") : '<span class="text-muted-soft">Контакти не вказано</span>';
+    }
+
+    function renderProfile(data) {
+      const balance = data.balance || {};
+      const products = data.products || [];
+      const bans = data.bans || [];
+      profileTitle.textContent = "Профіль: " + data.username;
+      profileBody.innerHTML =
+        '<div class="row g-3"><div class="col-md-6">' +
+        '<div><strong>Нік:</strong> ' + esc(data.username) + "</div>" +
+        '<div><strong>Email:</strong> ' + esc(data.email || "—") + "</div>" +
+        '<div><strong>Рівень:</strong> ' + esc(data.role_display) + "</div>" +
+        '<div><strong>Забанений:</strong> ' + (data.is_banned ? "так" : "ні") + "</div>" +
+        '<div><strong>Реєстрація:</strong> ' + esc(fmtDate(data.created_at)) + "</div>" +
+        "</div><div class=\"col-md-6\">" + contactRows(data.contacts) + "</div></div>" +
+        '<hr class="divider-dashed">' +
+        "<h3 class=\"h6 mb-2\">Гаманець</h3>" +
+        '<div class="d-flex flex-wrap gap-3">' +
+        "<span>Вільно: " + esc(fmtMC(balance.free_balance_mc)) + " MC</span>" +
+        "<span>Утримано: " + esc(fmtMC(balance.held_mc)) + " MC</span>" +
+        "<span>Заморожено: " + esc(fmtMC(balance.frozen_mc)) + " MC</span>" +
+        "<span>Застава: " + esc(fmtMC(balance.deposit_locked_mc)) + " MC</span>" +
+        "<span>Борг: " + esc(fmtMC(balance.debt_mc)) + " MC</span>" +
+        "</div>" +
+        '<hr class="divider-dashed">' +
+        "<h3 class=\"h6 mb-2\">Товари (" + products.length + ")</h3>" +
+        (products.length
+          ? '<div class="table-responsive"><table class="data-table"><thead><tr><th>Назва</th><th>Статус</th></tr></thead><tbody>' +
+            products.map((p) => "<tr><td>" + esc(p.name) + "</td><td>" + esc(p.status) + "</td></tr>").join("") +
+            "</tbody></table></div>"
+          : '<p class="text-muted-soft mb-0">Товарів немає.</p>') +
+        '<hr class="divider-dashed">' +
+        "<h3 class=\"h6 mb-2\">Історія банів (" + bans.length + ")</h3>" +
+        (bans.length
+          ? bans.map((ban) =>
+              "<div>" + esc(ban.reason || "без причини") + " — " +
+              (ban.forever ? "назавжди" : esc(fmtDate(ban.ends_at))) +
+              (ban.is_active ? " (активний)" : "") + "</div>").join("")
+          : '<p class="text-muted-soft mb-0">Банів немає.</p>');
+      profileCard.hidden = false;
+      profileCard.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+
+    async function load() {
+      try {
+        const data = await window.MS.get("/admin/bans");
+        canUnban = !!data.can_unban;
+        fillDurations(data.durations || []);
+        renderBans(data.bans || []);
+      } catch (err) {
+        setError(err.message || "Не вдалося завантажити бани.");
+      }
+    }
+
+    async function loadProfile(userId) {
+      try {
+        const data = await window.MS.get("/admin/users/" + userId);
+        renderProfile(data);
+      } catch (err) {
+        setError(err.message || "Не вдалося завантажити профіль.");
+      }
+    }
+
+    async function lift(banId) {
+      setError("");
+      setSuccess("");
+      try {
+        await window.MS.post("/admin/bans/" + banId + "/lift", {});
+        window.MS.toast("Бан знято.", "success");
+        await load();
+      } catch (err) {
+        setError(err.message || "Не вдалося зняти бан.");
+      }
+    }
+
+    async function submit() {
+      setError("");
+      setSuccess("");
+      const login = document.getElementById("login").value.trim();
+      if (!login) {
+        setError("Укажіть нік користувача.");
+        return;
+      }
+      const payload = {
+        login: login,
+        duration: durationSelect.value,
+        reason: document.getElementById("reason").value.trim(),
+      };
+      if (durationSelect.value === "custom") {
+        payload.ends_at = document.getElementById("endsAt").value;
+      }
+      try {
+        await window.MS.post("/admin/bans", payload);
+        setSuccess("Користувача забанено.");
+        window.MS.toast("Користувача забанено.", "success");
+        document.getElementById("login").value = "";
+        document.getElementById("reason").value = "";
+        await load();
+      } catch (err) {
+        setError(err.message || "Не вдалося забанити користувача.");
+      }
+    }
+
+    durationSelect.addEventListener("change", syncCustomDate);
+    document.getElementById("banBtn").addEventListener("click", submit);
+    document.getElementById("profileClose").addEventListener("click", () => {
+      profileCard.hidden = true;
+    });
+
+    bansBody.addEventListener("click", (event) => {
+      const profileBtn = event.target.closest("[data-profile]");
+      if (profileBtn) {
+        loadProfile(profileBtn.getAttribute("data-profile"));
+        return;
+      }
+      const liftBtn = event.target.closest("[data-lift]");
+      if (liftBtn) {
+        lift(liftBtn.getAttribute("data-lift"));
+      }
+    });
+
+    document.addEventListener("DOMContentLoaded", () => {
+      window.MSAuth.ready().then((user) => {
+        if (!user || !user.authenticated) {
+          window.location.href = "/pages/login.html";
+          return;
+        }
+        const rights = Array.isArray(user.admin_rights) ? user.admin_rights : [];
+        if (rights.indexOf("bans") === -1) {
+          window.location.href = "/";
+          return;
+        }
+        load();
+      });
+    });
+  })();
+</script>
+<script src="/static/js/motion.js?v=skeleton-swr-v5-20261123"></script>
+<script src="/static/js/particles.js?v=particles-v4-bloom-20261122"></script>
+</body>
+</html>

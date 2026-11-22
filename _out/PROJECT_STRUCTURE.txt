@@ -1,0 +1,383 @@
+# PROJECT_STRUCTURE — MultiShop
+Оновлено: 2026-11-22, відповідає поточному стану коду
+
+Цей файл описує архітектуру папок, застосунки, API-модулі й зв'язки компонентів.
+Бізнес-правила наведені у PROJECT_VISION.txt, таблиці даних — у DATA_PLAN.txt,
+а логіка скарг — у COMPLAINTS_PLAN.txt.
+
+Зміст
+  1. Принципи архітектури
+  2. Кореневе дерево
+  3. Застосунки бекенду
+  4. Ключові моделі й зв'язки
+  5. Маршрути API
+  6. Фронтенд
+  7. Docker і запуск
+  8. Тести й management-команди
+  9. Приватні й публічні файли
+  10. Терміни й скорочення
+
+1. ПРИНЦИПИ АРХІКТЕКТУРИ
+
+1.1 Загальна схема
+  Браузер завантажує власні HTML-, CSS- і JavaScript-модулі з того самого домену.
+  Фронтенд отримує JSON через Django REST Framework.
+  Django використовує сесійну автентифікацію й перевіряє CSRF для змінних запитів.
+  База даних SQLite у розробці й у DATA_DIR у production.
+
+1.2 Гейти й API
+  Модель CustomUser є AUTH_USER_MODEL.
+  PolicyGateMiddleware не пропускає API-запит залогіненого користувача без поточної редакції
+  політики; винятки перелічені в apps/policy/middleware.py.
+  Гості можуть читати публічні каталоги й сторінки і надсилати гостьову підтримку.
+  Приватні медіафайли віддаються тільки захищеними view.
+
+2. КОРЕНЕВЕ ДЕРЕВО
+
+  manage.py
+  requirements.txt
+  requirements-dev.txt
+  pyrightconfig.json
+  .env.example
+  README.md
+  db.sqlite3
+  staticfiles/
+  media/
+    public/
+    private/
+
+  config/
+    settings/base.py
+    settings/dev.py
+    settings/prod.py
+    urls.py
+    wsgi.py
+    asgi.py
+
+  apps/
+    core/
+    accounts/
+    policy/
+    wallet/
+    catalog/
+    cart/
+    favorites/
+    orders/
+    complaints/
+    support/
+    notifications/
+    telegrambot/
+
+  frontend/
+    index.html
+    pages/
+    css/
+    js/
+
+  docker/
+    Dockerfile
+    Dockerfile.dockerignore
+    docker-compose.yml
+    entrypoint.sh
+    .env.docker.example
+
+  _out/
+    PROJECT_VISION.txt
+    PROJECT_STRUCTURE.txt
+    DATA_PLAN.txt
+    COMPLAINTS_PLAN.txt
+    load static.txt
+
+  _out/load static.txt є старим довідником і не є частиною статичних ресурсів сайту.
+
+3. ЗАСТОСУНКИ БЕКЕНДУ
+
+3.1 core
+  models.py: SiteSettings і SiteBlock.
+  storage.py: приватне сховище та перевірка завантажень.
+  views.py: health і статичні сторінки.
+  api_urls.py і views.py: блоки головної і адмінські редагування.
+  management-команди: seed_demo, seed_complaint_types, create_main_admin,
+  sync_admin_flags, check_wallets.
+
+3.2 accounts
+  models.py: CustomUser, AdminRight, UserProfile, SellerVerification, Ban, AdminLog.
+  views.py/serializers.py: реєстрація, вход, дані профілю і аватара.
+  admin_api.py: кабінет адміна, видача прав, бани і журнал.
+  signals.py: створення профілю та гаманця для користувача.
+
+3.3 policy
+  models.py: PolicyVersion, PolicyAcceptance.
+  services.py: поточна редакція та перевірка прийняття.
+  middleware.py: гейт policy_required для API залогінених користувачів.
+  views.py і urls.py: перегляд і прийняття політики.
+
+3.4 wallet
+  models.py: Wallet, WalletTransaction, CoinIssue, EscrowHold, FrozenPayout, SellerDeposit.
+  services.py: комісія, застава, повернення коштів і звільнення заморожених виплат.
+  views.py/serializers.py: баланс і історія транзакцій.
+  views.py / admin_api.py: видача MC головним адміном.
+
+3.5 catalog
+  models.py: Category, Attribute, AttributeOption, Product, ProductVariant,
+  VariantAttributeValue, ProductImage, DigitalFile, Review, ReviewMedia.
+  category_data.py: канонічне дерево категорій і характеристики для сидів.
+  api_views.py: публічний каталог, товар, фільтри, відгуки і завантаження пробних файлів.
+  seller_api.py: оголошення продавця, варіанти, ціна, залишок і цифрові коди.
+  admin_api.py: модерація товарів і видалення.
+
+3.6 cart
+  models.py: Cart і CartItem.
+  views.py/urls.py: позиції кошика, гостьова сесія й злиття після входу.
+
+3.7 favorites
+  models.py: Favorite.
+  views.py/urls.py: додавання, видалення і список обраного.
+
+3.8 orders
+  models.py: Order, OrderItem, ActivationCode, OrderStatusHistory,
+  OrderCancellation, OrderComment, DownloadGrant, Refund.
+  views.py: checkout, сторінки замовлень, статуси, скасування й завантаження.
+  services.py: грошові й транзакційні переходи замовлення.
+
+3.9 complaints
+  models.py: ComplaintType, Complaint, ComplaintEvidence, ComplaintComment.
+  api_views.py: подання, список, деталі, коментарі й приватні докази.
+  admin_api.py: видимість за правами, наслідки, рішення й зняття блокування скарг.
+  services.py: false_complaints_count і тривалість блокування подачі.
+  management-команда seed_complaint_types наповнює типи скарг.
+
+3.10 support
+  models.py: SupportTicket, SupportAction, SupportMessage, AccountRecovery.
+  api_views.py: гостьові й користувацькі звернення.
+  admin_api.py: адмінське API, апеляції, відновлення акаунта й служби підтримки.
+
+3.11 notifications
+  models.py: Notification.
+  services.py: єдине створення сповіщень і адмінських дайджестів.
+  signals.py: події обраного, замовлень, гаманця, скарг і модерації.
+  views.py/urls.py: лічильники і позначення прочитаними.
+
+3.12 telegrambot
+  models.py: TelegramLink, TelegramLinkCode, TelegramRecoveryCode,
+  TelegramDelivery, TelegramBotState.
+  api.py/urls.py: підключення, статус і налаштування.
+  services.py: одноразові коди і зв'язок із акаунтом.
+  bot.py: inline-меню, команди і доставка outbox.
+  client.py: Telegram HTTP API та помилки.
+  management/commands/run_telegram_bot.py: long polling і обробка outbox.
+
+4. КЛЮЧОВІ МОДЕЛІ Й ЗВ'ЯЗКИ
+
+4.1 Користувач і права
+  CustomUser → UserProfile у one-to-one.
+  CustomUser → Wallet у one-to-one.
+  CustomUser → SellerVerification у one-to-one.
+  CustomUser → AdminRight у one-to-many для адміна 2-го рівня.
+
+4.2 Каталог і замовлення
+  Category → Category: рекурсивне one-to-many для дерева.
+  Category → Product: one-to-many.
+  Product → ProductVariant: one-to-many.
+  ProductVariant → VariantAttributeValue, DigitalFile, ActivationCode і CartItem.
+  Order → OrderItem, EscrowHold, Refund, OrderStatusHistory і DownloadGrant через позиції.
+
+4.3 Скарги й підтримка
+  ComplaintType → ComplaintType: рекурсивне one-to-many.
+  Complaint → ComplaintEvidence і ComplaintComment: one-to-many.
+  SupportTicket → SupportMessage, SupportAction і AccountRecovery: one-to-many.
+
+4.4 Сповіщення й Telegram
+  Notification → TelegramDelivery: one-to-one.
+  CustomUser → TelegramLink: one-to-one.
+  TelegramLinkCode і TelegramRecoveryCode пов'язані з користувачем окремими записами.
+
+5. МАРШРУТИ API
+
+5.1 Облікові записи і політика
+  /api/auth/csrf
+  /api/auth/register
+  /api/auth/login
+  /api/auth/logout
+  /api/auth/me
+  /api/profile
+  /api/profile/avatar
+  /api/profile/password
+  /api/profile/seller-verification
+  /api/policy
+  /api/policy/accept
+
+5.2 Адміни, гаманець і налаштування
+  /api/admin/cabinet
+  /api/admin/users/search
+  /api/admin/users/{id}
+  /api/admin/bans
+  /api/admin/bans/{id}/lift
+  /api/admin/coins/issue
+  /api/wallet
+
+5.3 Каталог і товари
+  /api/catalog/views
+  /api/catalog/categories
+  /api/catalog/categories/{id}/popup
+  /api/catalog/filters
+  /api/products
+  /api/products/{id}
+  /api/products/h/{token}
+  /api/products/mine
+  /api/products/mine/{id}/variants/{variant_id}/restock
+  /api/products/mine/{id}/variants/{variant_id}/price
+  /api/products/mine/activation-codes/check
+  /api/admin/products
+  /api/admin/products/{id}/block
+  /api/admin/products/{id}/unblock
+  /api/admin/products/{id}/delete
+
+5.4 Кошик, обране й замовлення
+  /api/cart
+  /api/cart/items
+  /api/cart/merge
+  /api/favorites
+  /api/checkout
+  /api/orders/mine
+  /api/orders/incoming
+  /api/orders/{id}
+  /api/orders/{id}/confirm-received
+  /api/orders/{id}/status
+  /api/orders/{id}/cancel
+  /api/orders/{id}/cancel-agree
+  /api/orders/{id}/comments
+  /api/downloads/{file_id}
+
+5.5 Скарги й підтримка
+  /api/complaint-types
+  /api/complaints
+  /api/complaints/{id}
+  /api/complaints/{id}/comments
+  /api/complaints/evidence/{id}
+  /api/admin/complaints
+  /api/admin/complaints/{id}/take
+  /api/admin/complaints/{id}/comments
+  /api/admin/complaints/{id}/resolve
+  /api/support/guest
+  /api/support/tickets
+  /api/support/tickets/{id}
+  /api/support/tickets/{id}/messages
+  /api/support/tickets/{id}/appeals
+  /api/admin/support
+  /api/admin/support/{id}/status
+  /api/admin/support/{id}/recover-account
+
+5.6 Telegram, лічильники і головна
+  /api/telegram/link
+  /api/telegram/status
+  /api/telegram/unlink
+  /api/telegram/prefs
+  /api/notifications/counters
+  /api/notifications/read
+  /api/admin/badges
+  /api/site/blocks
+  /api/admin/site/blocks
+  /api/admin/site/blocks/reorder
+
+6. ФРОНТЕНД
+
+6.1 Сторінки
+  index.html: Головна.
+  pages/policy.html: прийняття редакції політики.
+  pages/catalog.html: пошук, види, дерево категорій і картки.
+  pages/product.html: варіанти, характеристики, купівля й скарги.
+  pages/cart.html: кошик і оформлення.
+  pages/favorites.html: обране.
+  pages/orders.html: замовлення покупця й продавця.
+  pages/complaints.html: «Мої скарги» і «Скарги на мене».
+  pages/seller.html: оголошення, верифікація і створення товару.
+  pages/support.html: звернення і переписка.
+  pages/profile.html: профіль, гаманець і Telegram.
+  pages/login.html і pages/register.html: автентифікація.
+  pages/admin/: cabinet, bans, complaints, support, products, coins.
+
+6.2 JavaScript-модулі
+  api.js: JSON-клієнт, CSRF і формат помилок.
+  auth.js: стан користувача, навігація і гаманець у шапці.
+  auth-motion.js: анімація форм автентифікації.
+  policy-gate.js: редирект до політики й цільова сторінка після входу.
+  catalog.js, complaint-tree.js, tree-popup.js: каталог і спливаючі дерева.
+  cart.js, checkout.js: кошик і оформлення.
+  favorites.js, orders.js: обране й замовлення.
+  seller.js: ідемпотентне завантаження сторінки продавця і оновлення списку.
+  support.js: користувацькі й адмінські звернення.
+  notifications.js: лічильники й polling.
+  telegram.js, telegram-profile.js: підключення і налаштування Telegram.
+  motion.js: скелетони, реверсивні анімації і відкладені reveal.
+  particles.js: детерміновані золоті річки й bloom.
+  floating-icons.js: плаваючі іконки на Головній.
+  price-format.js: форматування MC.
+
+6.3 CSS-модулі
+  base.css: загальні компоненти й шапка.
+  components.css: картки, форми й базові елементи.
+  themes.css: кольори і тема.
+  motion.css: анімації і reveal.
+  particles.css: canvas частинок і кнопка в шапці.
+  floating-icons.css: плаваючі іконки.
+  seller.css і support-admin.css: специфічні сторінки.
+
+7. DOCKER І ЗАПУСК
+
+7.1 Dockerfile
+  Базовий образ: python:3.13-slim.
+  Застосунок працює системним користувачем app.
+  Collectstatic виконується під час побудови образу.
+  Entrypoint застосовує міграції, створює головного адміна за змінними й запускає Gunicorn.
+
+7.2 docker-compose.yml
+  web: Django/Gunicorn на порту 8000 всередині мережі.
+  redis: Redis 7 для кешу.
+  telegram_bot: той самий образ із командою run_telegram_bot і профілем bot.
+  Том appdata монтується як /data до web і telegram_bot.
+  У production БД і media зберігаються в /data.
+
+8. ТЕСТИ Й MANAGEMENT-КОМАНДИ
+
+8.1 Тести
+  apps/*/tests.py покривають моделі, API, права, грошові переходи й Telegram.
+  accounts/tests.py: ролі, бани і верифікація.
+  catalog/tests.py: категорії, товари, варіанти і файли.
+  wallet/tests.py і orders/tests.py: транзакції й замовлення.
+  complaints/tests.py і support/tests.py: розмежування прав і наслідки.
+
+8.2 Management-команди
+  seed_demo: демонстраційні категорії, товари і користувачі.
+  seed_complaint_types: типи скарг.
+  create_main_admin: створення або оновлення головного адміна.
+  sync_admin_flags: синхронізація is_staff і is_superuser із role.
+  check_wallets: перевірка й опціональне обнулення некоректних значень гаманців.
+  run_telegram_bot: запуск Telegram long polling.
+  Команди release_frozen або release_frozen_due у поточному коді немає.
+
+9. ПРИВАТНІ Й ПУБЛІЧНІ ФАЙЛИ
+
+9.1 Public
+  BASE_DIR/media/public або DATA_DIR/media/public.
+  Головне фото товару, аватар і фото відгуку.
+  Публічне медіа віддається через /media/.
+
+9.2 Private
+  BASE_DIR/media/private або DATA_DIR/media/private.
+  verification/: SellerVerification.photo.
+  digital_files/: DigitalFile.file.
+  complaint_evidence/: ComplaintEvidence.file.
+  support/: SupportMessage.attachment.
+  Приватні файли віддаються через API після перевірки ролі й об'єкта.
+
+10. ТЕРМІНИ Й СКОРОЧЕННЯ
+  MC — внутрішня одиниця балансу.
+  Ескроу — утримання коштів покупця за замовлення.
+  Утримані кошти — held_mc.
+  Заморожені кошти — frozen_mc.
+  Застава — deposit_locked_mc.
+  Борг — debt_mc.
+  Outbox — черга TelegramDelivery.
+  API — endpoint для JSON-зв'язку фронтенду і бекенду.
+
