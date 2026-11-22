@@ -6,6 +6,9 @@
 
 * { box-sizing: border-box; }
 
+.admin-action-short { display: none; }
+.admin-action-long { display: inline; }
+
 html { scroll-behavior: smooth; }
 
 body {
@@ -696,6 +699,13 @@ main.container .empty-state-panel a:not(.btn) { color: var(--blue); }
   #supportBody {
     display: block;
   }
+  .table-responsive:has(#productsBody),
+  .table-responsive:has(#issuesBody) {
+    overflow: visible;
+  }
+  .table-responsive:has(#productsBody) thead {
+    display: none;
+  }
   #issuesBody tr,
   #productsBody tr,
   #bansBody tr,
@@ -736,24 +746,40 @@ main.container .empty-state-panel a:not(.btn) { color: var(--blue); }
     font-size: 0.68rem;
     font-weight: 800;
   }
-  #productsBody td[data-label] {
+  #productsBody tr {
     display: grid;
-    grid-template-columns: 7rem minmax(0, 1fr);
-    gap: 0.45rem;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "name moderation"
+      "seller seller"
+      "actions actions";
+    gap: 0.35rem 0.5rem;
   }
-  #productsBody td[data-label]::before {
-    content: attr(data-label);
-    color: var(--muted);
-    font-size: 0.68rem;
+  #productsBody td {
+    display: none;
+  }
+  #productsBody td:nth-child(2) {
+    display: block;
+    grid-area: name;
+    font-size: 0.9rem;
     font-weight: 800;
-    letter-spacing: 0.04em;
+    overflow-wrap: anywhere;
   }
-  #productsBody td[data-label="Дії"] {
+  #productsBody td:nth-child(3) {
     display: block;
+    grid-area: seller;
+    overflow: hidden;
+    color: var(--muted);
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
-  #productsBody td[data-label="Дії"]::before {
+  #productsBody td:nth-child(5) {
     display: block;
-    margin-bottom: 0.35rem;
+    grid-area: moderation;
+  }
+  #productsBody td:nth-child(8) {
+    display: block;
+    grid-area: actions;
   }
   #productsBody .product-actions {
     width: 100%;
@@ -761,6 +787,12 @@ main.container .empty-state-panel a:not(.btn) { color: var(--blue); }
   }
   #productsBody .product-actions .btn {
     min-height: 44px;
+  }
+  .admin-action-short {
+    display: inline;
+  }
+  .admin-action-long {
+    display: none;
   }
 
   /* Компактна пагінація адмінки й каталогу. */

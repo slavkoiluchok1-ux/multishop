@@ -530,6 +530,10 @@
       "Фітнес": "🏋️", "Тренажери": "🏋️", "Гімнастика": "🤸",
       "Книги": "📚", "Канцелярія": "✏️", "Хобі": "🎨",
       "Іграшки": "🧸", "Корм": "🐾", "Косметика": "✨",
+      "Краса й здоров'я": "💄", "Макіяж": "💄", "Туш": "💄",
+      "Авто й мото": "🚗", "Автомобілі": "🚗", "Мотоцикли": "🏍️",
+      "Ігрові проєкти й ассети": "💻", "Ігри": "🎮", "Steam": "🎮",
+      "Навчання й контент": "📚", "Курси": "🎓", "Книги": "📚",
     };
     for (const [name, icon] of Object.entries(exactIcons)) {
       if (text.toLowerCase().includes(name.toLowerCase())) return icon;
@@ -784,9 +788,37 @@
       }
       els.pagination.appendChild(previous);
 
+      const jump = document.createElement("input");
+      jump.type = "number";
+      jump.className = "form-control form-control-sm catalog-page-jump";
+      jump.min = "1";
+      jump.max = String(pages);
+      jump.value = String(page);
+      jump.setAttribute("inputmode", "numeric");
+      jump.setAttribute("aria-label", "Номер сторінки");
+
+      const jumpToPage = () => {
+        let requested = Number.parseInt(jump.value, 10);
+        if (!Number.isFinite(requested) || requested < 1) requested = 1;
+        if (requested > pages) requested = pages;
+        jump.value = String(requested);
+        if (requested !== page) {
+          state.page = requested;
+          refresh();
+        }
+      };
+      jump.addEventListener("change", jumpToPage);
+      jump.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          jumpToPage();
+        }
+      });
+      els.pagination.appendChild(jump);
+
       const status = document.createElement("span");
       status.className = "catalog-page-status";
-      status.textContent = page + " / " + pages;
+      status.textContent = " / " + pages;
       els.pagination.appendChild(status);
 
       const next = document.createElement("button");

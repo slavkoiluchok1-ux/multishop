@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/css/base.css?v=admin-mobile-v4-20261122">
+  <link rel="stylesheet" href="/static/css/base.css?v=admin-mobile-v5-20261122">
 </head>
 <body>
 
@@ -103,14 +103,14 @@
         </table>
       </div>
       <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3">
-        <button class="btn btn-outline-primary btn-sm" type="button" id="prevPage">← Назад</button>
+        <button class="btn btn-outline-primary btn-sm" type="button" id="prevPage">‹</button>
         <div class="d-flex flex-wrap align-items-center justify-content-center gap-2">
           <span class="small text-muted-soft" id="pageInfo"></span>
           <label class="small text-muted-soft" for="pageJump">Сторінка</label>
           <input class="form-control form-control-sm admin-page-jump" type="number" id="pageJump" min="1" value="1">
           <button class="btn btn-outline-primary btn-sm" type="button" id="pageJumpBtn">Перейти</button>
         </div>
-        <button class="btn btn-outline-primary btn-sm" type="button" id="nextPage">Далі →</button>
+        <button class="btn btn-outline-primary btn-sm" type="button" id="nextPage">›</button>
       </div>
     </div>
   </div>
@@ -1108,11 +1108,11 @@
         if (state.page < state.pages) { state.page += 1; load(); }
       });
       function jumpToPage() {
-        const requested = Number.parseInt($("pageJump").value, 10);
-        if (!Number.isInteger(requested) || requested < 1 || requested > state.pages) {
-          $("pageJump").value = String(state.page);
-          return;
-        }
+        let requested = Number.parseInt($("pageJump").value, 10);
+        if (!Number.isInteger(requested) || requested < 1) requested = 1;
+        if (requested > state.pages) requested = state.pages;
+        $("pageJump").value = String(requested);
+        if (requested === state.page) return;
         state.page = requested;
         load();
       }
@@ -1123,6 +1123,7 @@
           jumpToPage();
         }
       });
+      $("pageJump").addEventListener("change", jumpToPage);
 
       $("ticketsBody").addEventListener("click", (event) => {
         const btn = event.target.closest("[data-open]");

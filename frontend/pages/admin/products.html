@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/css/base.css?v=admin-mobile-v4-20261122">
+  <link rel="stylesheet" href="/static/css/base.css?v=admin-mobile-v5-20261122">
   <style>
     .product-actions {
       display: grid;
@@ -115,14 +115,14 @@
         </table>
       </div>
       <div class="d-flex justify-content-between align-items-center mt-3" id="pager" hidden>
-        <button class="btn btn-outline-primary btn-sm" type="button" id="prevBtn">← Назад</button>
+        <button class="btn btn-outline-primary btn-sm" type="button" id="prevBtn">‹</button>
         <div class="d-flex flex-wrap align-items-center justify-content-center gap-2">
           <span class="text-muted-soft small" id="pageInfo"></span>
           <label class="small text-muted-soft" for="pageJump">Сторінка</label>
           <input class="form-control form-control-sm page-jump" type="number" id="pageJump" min="1" value="1">
           <button class="btn btn-outline-primary btn-sm" type="button" id="pageJumpBtn">Перейти</button>
         </div>
-        <button class="btn btn-outline-primary btn-sm" type="button" id="nextBtn">Далі →</button>
+        <button class="btn btn-outline-primary btn-sm" type="button" id="nextBtn">›</button>
       </div>
     </div>
   </div>
@@ -201,21 +201,21 @@
 
     function actionsCell(item) {
       const link = '<a class="btn btn-outline-primary btn-sm" href="/pages/product.html?id=' +
-        item.id + '">Відкрити</a>';
+        item.id + '"><span>Відкрити</span></a>';
       const deleteAll = '<button class="btn btn-outline-danger btn-sm product-action-wide" type="button" data-delete-seller="' +
         esc(item.seller_id) + '" data-seller-name="' + esc(item.seller) +
-        '">Видалити всі товари продавця</button>';
+        '"><span class="admin-action-long">Видалити всі товари продавця</span><span class="admin-action-short">Видалити всі</span></button>';
       if (item.moderation === "ok") {
         return '<div class="product-actions">' + link +
           '<button class="btn btn-outline-primary btn-sm" type="button" data-block="' + item.id +
-            '">Заблокувати</button>' +
+            '"><span class="admin-action-long">Заблокувати</span><span class="admin-action-short">Блок</span></button>' +
           '<button class="btn btn-outline-danger btn-sm product-action-wide" type="button" data-delete="' + item.id +
-            '">Видалити</button>' + deleteAll + "</div>";
+            '"><span class="admin-action-long">Видалити</span><span class="admin-action-short">Видалити</span></button>' + deleteAll + "</div>";
       }
       if (item.moderation === "blocked") {
         return '<div class="product-actions">' + link +
           '<button class="btn btn-outline-primary btn-sm" type="button" data-unblock="' + item.id +
-            '">Розблокувати</button>' +
+            '"><span class="admin-action-long">Розблокувати</span><span class="admin-action-short">Розблок.</span></button>' +
           '<button class="btn btn-outline-danger btn-sm product-action-wide" type="button" data-delete="' + item.id +
             '">Видалити</button>' + deleteAll + "</div>";
       }
@@ -369,11 +369,11 @@
       if (state.page < state.pages) { state.page += 1; load(); }
     });
     function jumpToPage() {
-      const requested = Number.parseInt(pageJump.value, 10);
-      if (!Number.isInteger(requested) || requested < 1 || requested > state.pages) {
-        pageJump.value = String(state.page);
-        return;
-      }
+      let requested = Number.parseInt(pageJump.value, 10);
+      if (!Number.isInteger(requested) || requested < 1) requested = 1;
+      if (requested > state.pages) requested = state.pages;
+      pageJump.value = String(requested);
+      if (requested === state.page) return;
       state.page = requested;
       load();
     }
@@ -384,6 +384,7 @@
         jumpToPage();
       }
     });
+    pageJump.addEventListener("change", jumpToPage);
     document.getElementById("reasonConfirm").addEventListener("click", submitReason);
     document.getElementById("reasonCancel").addEventListener("click", closeReasonModal);
     document.getElementById("reasonClose").addEventListener("click", closeReasonModal);
