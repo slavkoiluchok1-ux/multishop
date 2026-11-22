@@ -177,7 +177,7 @@ REST_FRAMEWORK = {
 SITE_DEFAULTS = {
     "commission_percent": "3",
     "mc_to_uah": "10",
-    "deposit_percent": "3",
+    "deposit_percent": "1",
     "max_upload_mb": 100,
     "max_decimals": 6,
     "payout_freeze_days": 14,

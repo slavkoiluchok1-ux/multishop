@@ -21,10 +21,16 @@ class Command(BaseCommand):
         with transaction.atomic():
             user = User.objects.select_for_update().filter(username__iexact=username).first()
             if user is not None:
+                changed_fields = []
                 if user.role != User.ROLE_ADMIN_MAIN:
                     user.role = User.ROLE_ADMIN_MAIN
-                    user.save(update_fields=["role"])
-                    self.stdout.write(self.style.SUCCESS("Користувача підвищено до головного адміна."))
+                    changed_fields.append("role")
+                if password:
+                    user.set_password(password)
+                    changed_fields.append("password")
+                if changed_fields:
+                    user.save(update_fields=changed_fields)
+                    self.stdout.write(self.style.SUCCESS("Головного адміністратора оновлено."))
                 else:
                     self.stdout.write("Головний адміністратор уже налаштований.")
                 return

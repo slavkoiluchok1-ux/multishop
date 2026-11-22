@@ -16,7 +16,7 @@ class SiteSettings(models.Model):
         "1 MC у гривнях", max_digits=10, decimal_places=2, default=Decimal("10")
     )
     deposit_percent = models.DecimalField(
-        "Застава, %", max_digits=5, decimal_places=2, default=Decimal("3")
+        "Застава, %", max_digits=5, decimal_places=2, default=Decimal("1")
     )
     max_upload_mb = models.PositiveIntegerField("Максимум завантаження, МБ", default=100)
     max_decimals = models.PositiveSmallIntegerField("Знаків після коми", default=6)

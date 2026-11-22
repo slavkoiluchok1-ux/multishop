@@ -10,6 +10,7 @@ from apps.accounts.models import CustomUser
 from apps.catalog.category_data import TREE
 from apps.catalog.models import Category, Product, ProductVariant
 from apps.core.management.commands.seed_demo import PRODUCTS
+from apps.wallet.models import Wallet
 
 
 class Command(BaseCommand):
@@ -59,6 +60,7 @@ class Command(BaseCommand):
             if not seller.has_usable_password():
                 seller.set_unusable_password()
                 seller.save(update_fields=["password"])
+            Wallet.objects.get_or_create(user=seller)
 
             created_count = 0
             for index, (name, path, kind, price, stock, brand, status) in enumerate(PRODUCTS):

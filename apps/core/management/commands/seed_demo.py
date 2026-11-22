@@ -166,7 +166,7 @@ ATTR_VALUES: dict[str, dict[str, AttributeSeedValue]] = {
 SITE_BLOCKS = [
     ("hero", "MultiShop — маркетплейс у мульти коінах", "Фізичні, цифрові товари, послуги й підписки в одному місці. Розрахунки в MC: 1 MC = 10 грн.", 1),
     ("how", "Як це працює", "Продавець виставляє товар і заставу. Покупець оплачує з гаманця. Кошти тримаються в ескроу до підтвердження.", 2),
-    ("trust", "Безпека розрахунків", "Комісія 3%, виплата продавцю заморожується на 14 днів, застава 3% від суми товарів.", 3),
+    ("trust", "Безпека розрахунків", "Комісія 3%, виплата продавцю заморожується на 14 днів, застава 1% від загальної вартості товарів продавця.", 3),
 ]
 
 
@@ -552,7 +552,7 @@ class Command(BaseCommand):
                 wallet=wallet, amount_mc=Decimal("1500"), kind="coin_issue", note="Стартові MC від головного адміна"
             )
             WalletTransaction.objects.create(
-                wallet=wallet, amount_mc=Decimal("-500"), kind="deposit_lock", note="Застава продавця 3%"
+                wallet=                wallet, amount_mc=Decimal("-500"), kind="deposit_lock", note="Застава продавця 1%"
             )
         self.stdout.write("Верифікація й застава seller1 — готово")
 
