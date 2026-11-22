@@ -152,8 +152,11 @@
     $("checkoutTitle").textContent = "Перевірка й оплата";
     $("checkoutTotal").textContent = (cart.total_full || cart.total || "0") + " MC";
     const balance = wallet.balance || {};
-    $("checkoutBalance").textContent =
-      (window.MSPrice ? window.MSPrice.formatMCShort(balance.free_balance_mc) : balance.free_balance_mc) + " MC";
+    const balanceValue = String(balance.free_balance_mc || "0");
+    const mobileBalance = window.matchMedia("(max-width: 575.98px)").matches
+      ? (balanceValue.split(".")[0].replace(/^0+(?=\d)/, "") || "0").replace(/\B(?=(\d{3})+(?!\d))/g, " ")
+      : (window.MSPrice ? window.MSPrice.formatMCShort(balance.free_balance_mc) : balanceValue);
+    $("checkoutBalance").textContent = mobileBalance + " MC";
     if (Number(balance.free_balance_mc) < Number(cart.total)) {
       showError("Недостатньо вільних MC для оплати цього кошика.");
       $("checkoutSubmit").disabled = true;

@@ -512,10 +512,15 @@ main.container .empty-state-panel a:not(.btn) { color: var(--blue); }
     flex-basis: 6.1rem;
   }
   .navbar [data-wallet-balance] {
-    width: 4.7rem;
-    min-width: 4.7rem;
-    flex-basis: 4.7rem;
-    font-size: 0.64rem;
+    width: 7rem;
+    min-width: 7rem;
+    flex-basis: 7rem;
+    padding-inline: 0.12rem;
+    overflow: visible;
+    text-overflow: clip;
+    white-space: nowrap;
+    text-align: center;
+    font-size: 0.66rem;
   }
   .navbar [data-telegram-header] {
     display: none;

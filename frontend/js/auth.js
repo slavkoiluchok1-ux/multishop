@@ -592,7 +592,7 @@
     container.insertBefore(link, wallet || container.firstChild);
   }
 
-  /* Лише рядки, без float: до 2 знаків після коми, тисячі — через пробіл. */
+  /* Баланс у шапці: цілі MC без дробової частини. */
   function formatAmount(value) {
     let raw = String(value === null || value === undefined ? "0" : value).trim();
     let sign = "";
@@ -600,10 +600,8 @@
       sign = "-";
       raw = raw.slice(1);
     }
-    const parts = raw.split(".");
-    const int = (parts[0] || "0").replace(/^0+(?=\d)/, "") || "0";
-    const frac = (parts[1] || "").slice(0, 2).replace(/0+$/, "");
-    return sign + int.replace(/\B(?=(\d{3})+(?!\d))/g, " ") + (frac ? "." + frac : "");
+    const int = (raw.split(".")[0] || "0").replace(/^0+(?=\d)/, "") || "0";
+    return sign + int.replace(/\B(?=(\d{3})+(?!\d))/g, " ");
   }
 
   function walletVisible() {
