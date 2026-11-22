@@ -62,13 +62,6 @@
   let adaptiveLevel = 1;
   let enabled = true;
 
-  function isMobileDevice() {
-    const narrow = window.matchMedia("(max-width: 1099px)").matches;
-    const coarsePointer = window.matchMedia("(pointer: coarse)").matches;
-    const noHover = window.matchMedia("(hover: none)").matches;
-    return narrow && (coarsePointer || noHover);
-  }
-
   function mulberry32(seed) {
     let state = seed >>> 0;
     return function random() {
@@ -98,10 +91,10 @@
     } catch (_error) {
       // Local storage is optional.
     }
-    return !reducedMotion.matches;
+    return false;
   }
 
-  enabled = isMobileDevice() ? false : readState();
+  enabled = readState();
 
   function persistState() {
     try {
