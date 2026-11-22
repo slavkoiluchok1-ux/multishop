@@ -292,12 +292,63 @@
     modal.hidden = true;
     modal.innerHTML =
       '<div class="app-modal-box" role="dialog" aria-modal="true" aria-label="Адмінські розділи">' +
+        '<div class="mobile-admin-drag-handle" aria-hidden="true"><span></span></div>' +
         '<button class="app-modal-close" type="button" data-admin-menu-close aria-label="Закрити">×</button>' +
         '<p class="eyebrow mb-1">Адміністрування</p>' +
         '<h2 class="h5 mb-3">Панель адміністратора</h2>' +
         '<div class="admin-menu-grid" data-admin-menu-tiles></div>' +
       "</div>";
     document.body.appendChild(modal);
+    setupAdminPanelDrag(modal);
+  }
+
+  function setupAdminPanelDrag(modal) {
+    if (!modal || modal.dataset.dragReady === "true") return;
+    modal.dataset.dragReady = "true";
+    const handle = modal.querySelector(".mobile-admin-drag-handle");
+    const box = modal.querySelector(".app-modal-box");
+    if (!handle || !box) return;
+    const positionKey = "ms_mobile_admin_panel_position";
+    let dragging = false;
+    let startX = 0;
+    let startY = 0;
+    let originLeft = 0;
+    let originTop = 0;
+
+    handle.addEventListener("pointerdown", (event) => {
+      if (!window.matchMedia("(max-width: 575.98px)").matches) return;
+      dragging = true;
+      const rect = box.getBoundingClientRect();
+      startX = event.clientX;
+      startY = event.clientY;
+      originLeft = rect.left;
+      originTop = rect.top;
+      handle.setPointerCapture(event.pointerId);
+    });
+    handle.addEventListener("pointermove", (event) => {
+      if (!dragging) return;
+      const rect = box.getBoundingClientRect();
+      const dx = event.clientX - startX;
+      const dy = event.clientY - startY;
+      const left = Math.max(8, Math.min(window.innerWidth - rect.width - 8, originLeft + dx));
+      const top = Math.max(8, Math.min(window.innerHeight - rect.height - 8, originTop + dy));
+      box.style.left = left + "px";
+      box.style.top = top + "px";
+      box.style.right = "auto";
+      box.style.bottom = "auto";
+    });
+    handle.addEventListener("pointerup", (event) => {
+      if (!dragging) return;
+      dragging = false;
+      try { handle.releasePointerCapture(event.pointerId); } catch (_error) {}
+      const rect = box.getBoundingClientRect();
+      try {
+        window.localStorage.setItem(positionKey, JSON.stringify({
+          left: Math.round(rect.left),
+          top: Math.round(rect.top),
+        }));
+      } catch (_error) {}
+    });
   }
 
   function renderAdminTiles() {
@@ -324,15 +375,58 @@
 
   function openAdminMenu() {
     const modal = document.getElementById("msAdminMenu");
-    if (!modal) return;
+    if (!modal) {
+      ensureAdminMenu();
+    }
+    const target = document.getElementById("msAdminMenu");
+    if (!target) return;
     renderAdminTiles();
-    modal.hidden = false;
+    target.hidden = false;
+    const gear = document.querySelector("[data-mobile-admin-gear]");
+    if (window.matchMedia("(max-width: 575.98px)").matches) {
+      target.classList.add("is-mobile-floating");
+      if (gear) gear.hidden = true;
+      const box = target.querySelector(".app-modal-box");
+      if (box) {
+        window.requestAnimationFrame(() => {
+          const width = box.offsetWidth || Math.min(360, window.innerWidth - 16);
+          let left = (window.innerWidth - width) / 2;
+          let top = Math.max(72, (window.innerHeight - box.offsetHeight) / 2);
+          try {
+            const saved = JSON.parse(window.localStorage.getItem("ms_mobile_admin_panel_position") || "null");
+            if (saved && Number.isFinite(saved.left) && Number.isFinite(saved.top)) {
+              left = Math.max(8, Math.min(window.innerWidth - width - 8, saved.left));
+              top = Math.max(8, Math.min(window.innerHeight - box.offsetHeight - 8, saved.top));
+            }
+          } catch (_error) {}
+          box.style.left = left + "px";
+          box.style.top = top + "px";
+          box.style.right = "auto";
+          box.style.bottom = "auto";
+        });
+      }
+    }
     if (window.MSCounters) window.MSCounters.refresh();
   }
 
   function closeAdminMenu() {
     const modal = document.getElementById("msAdminMenu");
-    if (modal) modal.hidden = true;
+    if (modal) {
+      modal.hidden = true;
+      modal.classList.remove("is-mobile-floating");
+      const box = modal.querySelector(".app-modal-box");
+      if (box) {
+        box.style.left = "";
+        box.style.top = "";
+        box.style.right = "";
+        box.style.bottom = "";
+      }
+      const gear = document.querySelector("[data-mobile-admin-gear]");
+      if (gear && window.matchMedia("(max-width: 575.98px)").matches &&
+          adminAccess(state.user)) {
+        gear.hidden = false;
+      }
+    }
   }
 
   function showBanNotice(user) {
@@ -813,9 +907,9 @@
       sheet.querySelector("[data-mobile-more-title]").textContent = "Додаткові розділи";
       const links = [
         { icon: "🏠", label: "Політика", href: "/pages/policy.html", show: () => true },
-        { icon: "♟", label: "Замовлення", href: "/pages/orders.html", show: () => !!user.authenticated },
+        { icon: "🚚", label: "Замовлення", href: "/pages/orders.html", show: () => !!user.authenticated },
         { icon: "🛍️", label: "Мої товари", href: "/pages/seller.html", show: () => !!user.authenticated },
-        { icon: "▲", label: "Скарги", href: "/pages/complaints.html", show: () => !!user.authenticated },
+        { icon: "⚠", label: "Скарги", href: "/pages/complaints.html", show: () => !!user.authenticated },
         { icon: "🆘", label: "Підтримка", href: "/pages/support.html", show: () => true },
       ].filter((tile) => tile.show(user, rights));
       grid.innerHTML = links.map((tile) =>
