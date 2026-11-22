@@ -397,11 +397,23 @@ html.motion-ready [data-reveal].product-card.is-removing {
   max-width: 90%;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  display: -webkit-box;
+  text-align: center;
+  overflow-wrap: anywhere;
   font-size: .82rem;
   font-weight: 800;
 }
-.product-placeholder-type { font-size: .72rem; font-weight: 800; letter-spacing: .04em; }
+.product-placeholder-type {
+  max-width: 90%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: .72rem;
+  font-weight: 800;
+  letter-spacing: .04em;
+}
 .product-card .product-fav { transition: transform 220ms var(--ease-spring), background 200ms ease, color 200ms ease; }
 .product-fav.is-on { animation: favorite-heart-beat 360ms var(--ease-spring) both; }
 .product-fav.is-removing { animation: favorite-heart-shrink 260ms ease both; }
