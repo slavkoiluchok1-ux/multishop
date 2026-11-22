@@ -35,7 +35,7 @@ if render_hostname:
     if render_origin not in CSRF_TRUSTED_ORIGINS:
         CSRF_TRUSTED_ORIGINS.append(render_origin)
 
-DATA_DIR = Path(os.environ.get("DATA_DIR", "/data")).expanduser()
+DATA_DIR = Path(os.environ.get("DATA_DIR", str(BASE_DIR))).expanduser()
 database_url = os.environ.get("DATABASE_URL", "").strip()
 if database_url:
     DATABASES = {
