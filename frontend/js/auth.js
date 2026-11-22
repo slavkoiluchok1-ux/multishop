@@ -389,6 +389,14 @@
       if (gear) gear.hidden = true;
       const box = target.querySelector(".app-modal-box");
       if (box) {
+        const closeButton = box.querySelector("[data-admin-menu-close]");
+        if (closeButton) {
+          closeButton.style.position = "absolute";
+          closeButton.style.top = "0.35rem";
+          closeButton.style.right = "0.45rem";
+          closeButton.style.left = "auto";
+          closeButton.style.bottom = "auto";
+        }
         window.requestAnimationFrame(() => {
           const width = box.offsetWidth || Math.min(360, window.innerWidth - 16);
           let left = (window.innerWidth - width) / 2;
@@ -427,6 +435,14 @@
             box.style.top = "";
             box.style.right = "";
             box.style.bottom = "";
+            const closeButton = box.querySelector("[data-admin-menu-close]");
+            if (closeButton) {
+              closeButton.style.position = "";
+              closeButton.style.top = "";
+              closeButton.style.right = "";
+              closeButton.style.left = "";
+              closeButton.style.bottom = "";
+            }
           }
           const gear = document.querySelector("[data-mobile-admin-gear]");
           if (gear && adminAccess(state.user)) gear.hidden = false;
