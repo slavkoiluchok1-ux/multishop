@@ -115,6 +115,13 @@ body > .footer {
   }
 }
 
+@media (max-width: 1099px) and (hover: none), (max-width: 1099px) and (pointer: coarse) {
+  .particles-background-canvas,
+  .navbar-particles-toggle {
+    display: none !important;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .particles-background-canvas { transition-duration: 120ms; }
   .navbar-particles-toggle { transition-duration: 120ms; }

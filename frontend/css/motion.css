@@ -594,6 +594,16 @@ html.motion-ready [data-reveal].cart-row.is-removing {
   .hero-mc-coin { display: none !important; }
 }
 
+@media (max-width: 1099px) and (hover: none), (max-width: 1099px) and (pointer: coarse) {
+  .hero-panel::before,
+  .hero-ambient::before,
+  .hero-ambient span,
+  .hero-ambient .hero-mc-coin,
+  .floating-icons {
+    animation: none !important;
+  }
+}
+
 @media (hover: none), (pointer: coarse) {
   .motion-tilt,
   .motion-tilt:hover { transform: none !important; }
