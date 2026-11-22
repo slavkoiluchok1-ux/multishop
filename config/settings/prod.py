@@ -2,6 +2,7 @@
 import os
 from pathlib import Path
 
+import dj_database_url
 from django.core.exceptions import ImproperlyConfigured
 
 from .base import *  # noqa: F401,F403
@@ -13,7 +14,7 @@ def env_list(name: str) -> list[str]:
     return [value.strip() for value in os.environ.get(name, "").split(",") if value.strip()]
 
 
-DEBUG = False
+DEBUG = os.environ.get("DEBUG", "false").strip().lower() in {"1", "true", "yes"}
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "")
 if not SECRET_KEY:
     raise ImproperlyConfigured("Задайте DJANGO_SECRET_KEY у змінних середовища.")
@@ -21,19 +22,36 @@ if not SECRET_KEY:
 SESSION_COOKIE_NAME = os.environ.get("SESSION_COOKIE_NAME", "multishop_docker_sessionid")
 
 ALLOWED_HOSTS = env_list("DJANGO_ALLOWED_HOSTS")
+render_hostname = os.environ.get("RENDER_EXTERNAL_HOSTNAME", "").strip()
+if render_hostname:
+    ALLOWED_HOSTS.append(render_hostname)
+for local_host in ("localhost", "127.0.0.1"):
+    if local_host not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append(local_host)
+
 CSRF_TRUSTED_ORIGINS = env_list("CSRF_TRUSTED_ORIGINS")
+if render_hostname:
+    render_origin = "https://" + render_hostname
+    if render_origin not in CSRF_TRUSTED_ORIGINS:
+        CSRF_TRUSTED_ORIGINS.append(render_origin)
 
 DATA_DIR = Path(os.environ.get("DATA_DIR", "/data")).expanduser()
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": DATA_DIR / "db.sqlite3",
-        "OPTIONS": {
-            "init_command": "PRAGMA journal_mode=WAL;",
-            "transaction_mode": "IMMEDIATE",
-        },
+database_url = os.environ.get("DATABASE_URL", "").strip()
+if database_url:
+    DATABASES = {
+        "default": dj_database_url.parse(database_url, conn_max_age=600, ssl_require=True)
     }
-}
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": DATA_DIR / "db.sqlite3",
+            "OPTIONS": {
+                "init_command": "PRAGMA journal_mode=WAL;",
+                "transaction_mode": "IMMEDIATE",
+            },
+        }
+    }
 
 PUBLIC_MEDIA_ROOT = DATA_DIR / "media" / "public"
 PRIVATE_MEDIA_ROOT = DATA_DIR / "media" / "private"
