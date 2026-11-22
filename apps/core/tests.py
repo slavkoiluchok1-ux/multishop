@@ -7,6 +7,8 @@ from unittest.mock import patch
 from django.core.cache import cache
 from django.core.management import call_command
 from django.core.management.base import CommandError
+from django.core.exceptions import ValidationError
+from django.contrib.auth import password_validation
 from django.test import RequestFactory, TestCase, override_settings
 from rest_framework.test import APIClient, APIRequestFactory
 
@@ -308,6 +310,70 @@ class RateLimitTests(TestCase):
 
         self.assertEqual(limited.status_code, 429)
         self.assertEqual(limited.json()["error"], "Забагато запитів. Спробуйте пізніше.")
+
+
+class BootstrapAdminTests(TestCase):
+    def test_bootstrap_admin_is_created_without_resetting_an_existing_password(self):
+        env = {
+            "BOOTSTRAP_ADMIN_USERNAME": "boss",
+            "BOOTSTRAP_ADMIN_PASSWORD": "20261122",
+            "BOOTSTRAP_ADMIN_EMAIL": "boss@example.com",
+        }
+        with patch.dict(os.environ, env, clear=False):
+            call_command("bootstrap_admin")
+
+        boss = CustomUser.objects.get(username="boss")
+        self.assertEqual(boss.role, CustomUser.ROLE_ADMIN_MAIN)
+        self.assertTrue(boss.check_password("20261122"))
+
+        boss.set_password("changed-password-123")
+        boss.save(update_fields=["password"])
+
+        with patch.dict(os.environ, env, clear=False):
+            call_command("bootstrap_admin")
+
+        boss.refresh_from_db()
+        self.assertTrue(boss.check_password("changed-password-123"))
+        self.assertFalse(boss.check_password("20261122"))
+
+    def test_login_accepts_bootstrap_nickname_and_email(self):
+        boss = CustomUser.objects.create_user(
+            username="boss",
+            email="boss@example.com",
+            password="20261122",
+            role=CustomUser.ROLE_ADMIN_MAIN,
+        )
+
+        for login_value in ("boss", "boss@example.com"):
+            with self.subTest(login=login_value):
+                client = APIClient()
+                response = client.post(
+                    "/api/auth/login",
+                    {"login": login_value, "password": "20261122"},
+                    format="json",
+                )
+                self.assertEqual(response.status_code, 200)
+                self.assertTrue(boss.is_admin_main)
+
+    @override_settings(
+        AUTH_PASSWORD_VALIDATORS=[
+            {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
+        ]
+    )
+    def test_registration_rejects_a_numeric_password_but_bootstrap_bypasses_validation(self):
+        with self.assertRaises(ValidationError):
+            password_validation.validate_password("20261122")
+
+        env = {
+            "BOOTSTRAP_ADMIN_USERNAME": "boss",
+            "BOOTSTRAP_ADMIN_PASSWORD": "20261122",
+            "BOOTSTRAP_ADMIN_EMAIL": "boss@example.com",
+        }
+        with patch.dict(os.environ, env, clear=False):
+            call_command("bootstrap_admin")
+
+        boss = CustomUser.objects.get(username="boss")
+        self.assertTrue(boss.check_password("20261122"))
 
 
 class ApiErrorResponseTests(TestCase):
