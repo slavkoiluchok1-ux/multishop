@@ -932,6 +932,7 @@
   max-width: 100%;
   overflow-wrap: anywhere;
   white-space: normal;
+  word-spacing: 0.12em;
 }
 .product-card .product-foot {
   min-width: 0;

@@ -621,7 +621,6 @@
       : '<span class="product-placeholder-icon" aria-hidden="true">' + placeholderIcon + "</span>";
     const placeholder = '<div class="product-thumb product-placeholder" style="--placeholder-hue:' +
       hue + 'deg">' + logoMarkup +
-      '<span class="product-placeholder-name">' + window.MS.escapeHtml(product.name) + "</span>" +
       '<span class="product-placeholder-type">' +
       window.MS.escapeHtml(product.product_type_display) + "</span></div>";
     card.innerHTML =
@@ -658,7 +657,6 @@
           fallback.style.setProperty("--placeholder-hue", hue + "deg");
           fallback.innerHTML =
             logoMarkup +
-            '<span class="product-placeholder-name">' + window.MS.escapeHtml(product.name) + "</span>" +
             '<span class="product-placeholder-type">' +
             window.MS.escapeHtml(product.product_type_display) + "</span>";
           image.replaceWith(fallback);
@@ -691,6 +689,8 @@
       window.MS.toast("Увійдіть, щоб додати товар в обране.", "danger");
       return;
     }
+    if (btn.disabled) return;
+    btn.disabled = true;
     const wasFavorite = product.is_favorite;
     product.is_favorite = !wasFavorite;
     btn.classList.toggle("is-on", product.is_favorite);
@@ -698,7 +698,6 @@
     btn.setAttribute("aria-pressed", String(product.is_favorite));
     btn.setAttribute("aria-label", product.is_favorite ? "Прибрати з обраного" : "Додати в обране");
     btn.textContent = product.is_favorite ? "♥" : "♡";
-    if (product.is_favorite) makeHeartParticles(btn);
     try {
       const res = await window.MS.post("/favorites", { product_id: product.id });
       const on = !!res.is_favorite;
@@ -718,6 +717,8 @@
       btn.setAttribute("aria-label", wasFavorite ? "Прибрати з обраного" : "Додати в обране");
       btn.textContent = wasFavorite ? "♥" : "♡";
       window.MS.toast(err.message || "Не вдалося оновити обране.", "danger");
+    } finally {
+      btn.disabled = false;
     }
   }
 
