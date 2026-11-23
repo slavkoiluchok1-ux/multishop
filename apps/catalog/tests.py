@@ -2,8 +2,8 @@ import json
 from decimal import Decimal
 from typing import Any, cast
 
-from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.cache import cache
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.utils import timezone
 from rest_framework.response import Response as APIResponse
@@ -12,10 +12,11 @@ from rest_framework.test import APIClient
 from apps.accounts.models import AdminLog, AdminRight, CustomUser, SellerVerification
 from apps.cart.models import Cart, CartItem
 from apps.notifications.models import Notification
-from apps.orders.models import Order, OrderItem
+from apps.orders.models import ActivationCode, Order, OrderItem, activation_code_key
 from apps.wallet.models import FrozenPayout, Wallet, WalletTransaction
 from apps.wallet.services import recalculate_seller_deposit, seller_deposit_required
 
+from .category_data import ATTRIBUTES as CATEGORY_ATTRIBUTE_DEFINITIONS
 from .models import (
     Attribute,
     AttributeOption,
@@ -27,7 +28,6 @@ from .models import (
     ReviewMedia,
     VariantAttributeValue,
 )
-from apps.orders.models import ActivationCode, activation_code_key
 
 
 def api_post(client: APIClient, *args: Any, **kwargs: Any) -> APIResponse:
@@ -219,6 +219,102 @@ class CatalogPopupTests(TestCase):
         self.assertNotIn(
             "Посилання-активація",
             [option["value"] for option in fields["Видача"]["options"]],
+        )
+
+    def test_popup_merges_case_variants_and_keeps_empty_categories(self):
+        electronics = Category.objects.create(name="Електроніка")
+        audio = Category.objects.create(name="Аудіо", parent=electronics)
+        headphones = Category.objects.create(name="Навушники", parent=audio)
+        alias_headphones = Category.objects.create(name="навушники", parent=audio)
+        Category.objects.create(name="Бездротові TWS", parent=headphones)
+        alias_leaf = Category.objects.create(
+            name="бездротові TWS", parent=alias_headphones
+        )
+
+        audio_data = self.popup(audio)
+        self.assertEqual(
+            [(child["id"], child["name"]) for child in audio_data["children"]],
+            [(headphones.id, "Навушники")],
+        )
+        self.assertEqual(audio_data["children"][0]["product_count"], 0)
+        self.assertTrue(audio_data["children"][0]["has_children"])
+
+        from .api_views import _category_map, _subtree_ids
+
+        subtree_ids = _subtree_ids(_category_map(), headphones.id)
+        self.assertIn(alias_headphones.id, subtree_ids)
+        self.assertIn(alias_leaf.id, subtree_ids)
+
+        seller = CustomUser.objects.create_user(
+            username="category-alias-seller",
+            email="category-alias@example.com",
+            password="test-password",
+        )
+        product = Product.objects.create(
+            seller=seller,
+            category=alias_leaf,
+            name="Alias category product",
+            product_type="physical",
+            status="active",
+            moderation="ok",
+        )
+        ProductVariant.objects.create(
+            product=product,
+            price_mc=Decimal("10"),
+            stock=1,
+        )
+        self.assertEqual(self.popup(audio)["children"][0]["product_count"], 1)
+        response = api_get(
+            cast(APIClient, self.client),
+            f"/api/products?category={headphones.id}",
+        )
+        self.assertEqual(api_response_data(response)["count"], 1)
+
+    def test_root_categories_api_includes_empty_categories(self):
+        response = api_get(cast(APIClient, self.client), "/api/catalog/categories?view=all")
+        categories = api_response_data(response)["categories"]
+        electronics = next(
+            category for category in categories
+            if category["name"] == "Електроніка"
+        )
+
+        self.assertEqual(electronics["product_count"], 0)
+
+    def test_graphics_card_attributes_are_inherited_by_nvidia_leaf(self):
+        path = (
+            "Електроніка",
+            "Комп'ютери й ноутбуки",
+            "Комплектуючі",
+            "Відеокарти",
+        )
+        parent = None
+        for name in (*path, "NVIDIA"):
+            parent = Category.objects.create(name=name, parent=parent)
+        graphics_cards = Category.objects.get(
+            path=" › ".join(path)
+        )
+
+        for order, definition in enumerate(CATEGORY_ATTRIBUTE_DEFINITIONS):
+            if path not in definition["targets"]:
+                continue
+            attribute = Attribute.objects.create(
+                category=graphics_cards,
+                name=definition["name"],
+                kind=definition["kind"],
+                unit=definition["unit"],
+                required=definition["required"],
+                order=order,
+            )
+            for value in definition["options"]:
+                AttributeOption.objects.create(attribute=attribute, value=value)
+
+        data = self.popup(parent)
+        fields = {attribute["name"]: attribute for attribute in data["attributes"]}
+        self.assertIn("Обсяг відеопам'яті", fields)
+        self.assertIn("Трасування променів", fields)
+        self.assertIn(
+            "GDDR7",
+            [option["value"] for option in fields["Тип відеопам'яті"]["options"]],
         )
 
 

@@ -918,6 +918,7 @@
 .filter-name { font-weight: 700; color: var(--ink); font-size: 0.85rem; }
 .filter-chips { display: flex; flex-wrap: wrap; gap: 0.35rem; align-items: center; }
 .filter-chip {
+  max-width: 100%;
   border: 1.5px solid rgba(16, 24, 32, 0.22);
   background: #fff;
   color: var(--ink);
@@ -925,6 +926,9 @@
   padding: 0.28rem 0.7rem;
   font-size: 0.8rem;
   font-weight: 600;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-align: left;
   cursor: pointer;
   transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
@@ -937,6 +941,7 @@
 /* ---------- Плитки розділів ---------- */
 .tile-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 0.7rem; }
 .tile {
+  min-width: 0;
   background: #fff;
   border: 1.5px solid rgba(194, 139, 44, 0.42);
   border-radius: 10px;
@@ -961,7 +966,13 @@
   font-size: 1.15rem;
   line-height: 1;
 }
-.tile .tile-name { display: block; font-weight: 700; }
+.tile .tile-name {
+  display: block;
+  min-width: 0;
+  flex: 1 1 auto;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
 .tile .tile-count { display: block; font-size: 0.78rem; color: var(--muted); margin-top: 0.2rem; }
 
 /* ---------- Сітка карток товарів ---------- */

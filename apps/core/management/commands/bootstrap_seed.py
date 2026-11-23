@@ -7,8 +7,25 @@ from django.db import transaction
 from django.utils.text import slugify
 
 from apps.accounts.models import CustomUser
-from apps.catalog.category_data import TREE, uses_digital_delivery, walk
-from apps.catalog.models import Category, Product, ProductVariant
+from apps.catalog.category_data import (
+    ATTRIBUTES,
+    TREE,
+    uses_digital_delivery,
+    walk,
+)
+from apps.catalog.category_data import (
+    children as category_children,
+)
+from apps.catalog.category_data import (
+    norm as normalize_category_name,
+)
+from apps.catalog.models import (
+    Attribute,
+    AttributeOption,
+    Category,
+    Product,
+    ProductVariant,
+)
 from apps.core.management.commands.seed_demo import PRODUCTS
 from apps.wallet.models import Wallet
 
@@ -17,35 +34,95 @@ class Command(BaseCommand):
     help = "Ідемпотентно створює початкове дерево категорій і демонстраційні товари."
 
     def create_categories(self, data, parent=None):
-        if isinstance(data, dict):
-            entries = ((name, subtree, order) for order, (name, subtree) in enumerate(data.items()))
-        elif isinstance(data, list):
-            entries = ((name, None, order) for order, name in enumerate(data))
-        else:
-            entries = ()
-        for name, subtree, order in entries:
-            category, _ = Category.objects.get_or_create(
-                parent=parent,
-                name=name,
-                defaults={"order": order, "is_active": True},
-            )
-            if not category.is_active:
-                category.is_active = True
-                category.save(update_fields=["is_active"])
+        siblings = list(Category.objects.filter(parent=parent))
+        for order, (name, subtree) in enumerate(category_children(data).items()):
+            category = next((item for item in siblings if item.name == name), None)
+            if category is None:
+                category = next(
+                    (
+                        item for item in siblings
+                        if normalize_category_name(item.name) == name
+                    ),
+                    None,
+                )
+            if category is None:
+                category = Category.objects.create(
+                    parent=parent,
+                    name=name,
+                    order=order,
+                    is_active=True,
+                )
+                siblings.append(category)
+            else:
+                changed = []
+                if category.name != name:
+                    category.name = name
+                    changed.append("name")
+                if category.order != order:
+                    category.order = order
+                    changed.append("order")
+                if not category.is_active:
+                    category.is_active = True
+                    changed.append("is_active")
+                if changed:
+                    category.save(update_fields=[*changed, "path"])
+                    if "name" in changed:
+                        self.refresh_category_paths(category)
             self.create_categories(subtree, parent=category)
+
+    def refresh_category_paths(self, parent):
+        for category in Category.objects.filter(parent=parent):
+            expected_path = f"{parent.path} › {category.name}"
+            if category.path != expected_path:
+                category.save(update_fields=["path"])
+            self.refresh_category_paths(category)
 
     def get_category(self, path):
         parent = None
         for name in path:
-            category = Category.objects.filter(parent=parent, name=name).first()
+            normalized = normalize_category_name(name)
+            siblings = list(Category.objects.filter(parent=parent))
+            category = next((item for item in siblings if item.name == normalized), None)
             if category is None:
-                category = Category.objects.create(parent=parent, name=name)
+                category = next(
+                    (
+                        item for item in siblings
+                        if normalize_category_name(item.name) == normalized
+                    ),
+                    None,
+                )
+            if category is None:
+                category = Category.objects.create(parent=parent, name=normalized)
             parent = category
         return parent
+
+    def create_attributes(self):
+        for order, definition in enumerate(ATTRIBUTES):
+            for path in definition["targets"]:
+                category = self.get_category(path)
+                attribute, _ = Attribute.objects.update_or_create(
+                    category=category,
+                    name=definition["name"],
+                    defaults={
+                        "kind": definition["kind"],
+                        "unit": definition["unit"],
+                        "required": definition["required"],
+                        "order": order,
+                    },
+                )
+                options = definition["options"]
+                existing_options = AttributeOption.objects.filter(attribute=attribute)
+                if options:
+                    existing_options.exclude(value__in=options).delete()
+                else:
+                    existing_options.delete()
+                for value in options:
+                    AttributeOption.objects.get_or_create(attribute=attribute, value=value)
 
     def handle(self, *args, **options):
         with transaction.atomic():
             self.create_categories(TREE)
+            self.create_attributes()
 
             seller, _ = CustomUser.objects.get_or_create(
                 username="bootstrap_seller",

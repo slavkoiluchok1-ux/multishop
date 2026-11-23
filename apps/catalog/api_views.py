@@ -2,8 +2,8 @@
 from collections import defaultdict
 from typing import cast
 
-from django.core.paginator import Paginator
 from django.core.cache import cache
+from django.core.paginator import Paginator
 from django.db.models import Count, Exists, FloatField, Min, OuterRef, Q
 from django.db.models.functions import Cast
 from django.http import Http404
@@ -16,9 +16,17 @@ from apps.favorites.models import Favorite
 
 from .category_data import (
     ATTRIBUTES as CATEGORY_ATTRIBUTE_DEFINITIONS,
+)
+from .category_data import (
     ROOT_PRODUCT_TYPES,
+)
+from .category_data import (
     TREE as CATEGORY_TREE,
+)
+from .category_data import (
     VIEWS as CATEGORY_VIEWS,
+)
+from .category_data import (
     walk as walk_category_tree,
 )
 from .models import (
@@ -31,10 +39,11 @@ from .models import (
 )
 from .pricing import dec, format_card, format_full
 
-_CANONICAL_CATEGORY_PATHS = {
-    tuple(part.casefold() for part in path)
+_CANONICAL_CATEGORY_PATH_LABELS = {
+    tuple(part.casefold() for part in path): path
     for path, _ in walk_category_tree(CATEGORY_TREE)
 }
+_CANONICAL_CATEGORY_PATHS = set(_CANONICAL_CATEGORY_PATH_LABELS)
 _CONFIGURED_CATEGORY_ATTRIBUTES = {
     (
         tuple(part.casefold() for part in path),
@@ -116,6 +125,38 @@ def _category_map() -> dict[int, Category]:
     )
 
 
+def _category_path_key(category):
+    return tuple(
+        part.strip().casefold()
+        for part in category.path.split(" › ")
+        if part.strip()
+    )
+
+
+def _category_path_groups(cats):
+    groups = defaultdict(list)
+    for category in cats.values():
+        key = _category_path_key(category)
+        if key:
+            groups[key].append(category)
+    return groups
+
+
+def _category_preference(category):
+    key = _category_path_key(category)
+    canonical_path = _CANONICAL_CATEGORY_PATH_LABELS.get(key)
+    expected_path = " › ".join(canonical_path) if canonical_path else None
+    return (
+        not category.is_active,
+        category.path != expected_path if expected_path else False,
+        category.id,
+    )
+
+
+def _preferred_category(categories):
+    return min(categories, key=_category_preference)
+
+
 def _nonempty(cats, products):
     """Непорожні вузли й кількість товарів у піддереві кожного вузла."""
     parent_of = {
@@ -142,13 +183,18 @@ def _parents_with_children(cats, nonempty):
 
 
 def _subtree_ids(cats, root_id):
-    """id вузла й усіх його нащадків (без додаткових запитів до БД)."""
+    """id вузла, його регістрових дублікатів і всіх їхніх нащадків."""
+    root = cats.get(root_id)
+    if root is None:
+        return set()
+    groups = _category_path_groups(cats)
+    roots = groups.get(_category_path_key(root), [root])
     children = defaultdict(list)
     for cat in cats.values():
         if cat.parent_id:
             children[cat.parent_id].append(cat.id)
-    ids = {root_id}
-    frontier = [root_id]
+    ids = {cat.id for cat in roots}
+    frontier = list(ids)
     while frontier:
         nxt = []
         for cid in frontier:
@@ -267,6 +313,7 @@ def _sort_phone_attributes(attributes):
 
 def _effective_attributes(cats, category_ids):
     """Повертає успадковані характеристики, де найближча категорія має пріоритет."""
+    path_groups = _category_path_groups(cats)
     by_category = defaultdict(list)
     for attribute in (
         Attribute.objects.filter(category_id__in=_category_ancestor_ids(cats, category_ids))
@@ -284,10 +331,12 @@ def _effective_attributes(cats, category_ids):
         category = cats.get(category_id)
         seen_names = set()
         while category is not None:
-            for attribute in by_category.get(category.id, []):
-                if attribute.name not in seen_names:
-                    effective[attribute.id] = attribute
-                    seen_names.add(attribute.name)
+            aliases = path_groups.get(_category_path_key(category), [category])
+            for alias in sorted(aliases, key=_category_preference):
+                for attribute in by_category.get(alias.id, []):
+                    if attribute.name not in seen_names:
+                        effective[attribute.id] = attribute
+                        seen_names.add(attribute.name)
             category = (
                 cats.get(category.parent_id)
                 if category.parent_id
@@ -297,11 +346,13 @@ def _effective_attributes(cats, category_ids):
 
 
 def _category_ancestor_ids(cats, category_ids):
+    path_groups = _category_path_groups(cats)
     ancestors = set()
     for category_id in category_ids:
         category = cats.get(category_id)
         while category is not None:
-            ancestors.add(category.id)
+            aliases = path_groups.get(_category_path_key(category), [category])
+            ancestors.update(alias.id for alias in aliases)
             category = (
                 cats.get(category.parent_id)
                 if category.parent_id
@@ -335,16 +386,21 @@ def _brand_payload(products):
     }
 
 
-def _category_item(cat, total, has_kids):
+def _category_item(cat, total, has_kids, aliases=None):
+    key = _category_path_key(cat)
+    canonical_path = _CANONICAL_CATEGORY_PATH_LABELS.get(key)
+    path = " › ".join(canonical_path) if canonical_path else cat.path
+    name = canonical_path[-1] if canonical_path else cat.name
+    aliases = aliases or [cat]
     return {
         "id": cat.id,
-        "name": cat.name,
-        "path": cat.path,
-        "product_types": list(ROOT_PRODUCT_TYPES.get(cat.name, ()))
+        "name": name,
+        "path": path,
+        "product_types": list(ROOT_PRODUCT_TYPES.get(name, ()))
         if cat.parent_id is None
         else [],
-        "product_count": total.get(cat.id, 0),
-        "has_children": cat.id in has_kids,
+        "product_count": sum(total.get(alias.id, 0) for alias in aliases),
+        "has_children": any(alias.id in has_kids for alias in aliases),
     }
 
 
@@ -514,7 +570,7 @@ class CatalogViewsView(APIView):
 
 
 class CatalogCategoriesView(APIView):
-    """GET /api/catalog/categories?view=&parent= — вузли дерева без порожніх."""
+    """GET /api/catalog/categories?view=&parent= — вузли дерева, включно з порожніми."""
 
     permission_classes = [AllowAny]
 
@@ -525,27 +581,42 @@ class CatalogCategoriesView(APIView):
         cats = _category_map()
         nonempty, total = _nonempty(cats, visible_products(types, availability))
         has_kids = _parents_with_children(cats, nonempty)
+        path_groups = _category_path_groups(cats)
 
         parent_raw = request.query_params.get("parent")
         parent_id = int(parent_raw) if parent_raw and parent_raw.isdigit() else None
+        if parent_id is None:
+            parent_ids = {None}
+        else:
+            parent = cats.get(parent_id)
+            parent_aliases = (
+                path_groups.get(_category_path_key(parent), [parent])
+                if parent is not None
+                else []
+            )
+            parent = _preferred_category(parent_aliases) if parent_aliases else None
+            parent_id = parent.id if parent is not None else parent_id
+            parent_ids = {alias.id for alias in parent_aliases}
 
-        nodes = sorted(
-            (
-                c for c in cats.values()
-                if c.is_active
-                and c.parent_id == parent_id
-                and (
-                    parent_id is not None
-                    or c.name in _allowed_root_names(types)
-                )
-            ),
-            key=lambda c: (c.order, c.name),
-        )
+        allowed_roots = {name.casefold() for name in _allowed_root_names(types)}
+        grouped_nodes = defaultdict(list)
+        for category in cats.values():
+            if not category.is_active or category.parent_id not in parent_ids:
+                continue
+            if parent_id is None and category.name.casefold() not in allowed_roots:
+                continue
+            grouped_nodes[_category_path_key(category)].append(category)
+        nodes = []
+        for key, candidates in grouped_nodes.items():
+            category = _preferred_category(candidates)
+            aliases = path_groups.get(key, candidates)
+            nodes.append((category, _category_item(category, total, has_kids, aliases)))
+        nodes.sort(key=lambda item: (item[0].order, item[1]["name"].casefold()))
         return Response(
             {
                 "view": view_key,
                 "parent": parent_id,
-                "categories": [_category_item(c, total, has_kids) for c in nodes],
+                "categories": [item for _, item in nodes],
             }
         )
 
@@ -562,27 +633,37 @@ class CatalogCategoryPopupView(APIView):
         category = get_object_or_404(Category, pk=pk)
 
         cats = _category_map()
-        if _root_category(cats, category).name not in _allowed_root_names(types):
+        path_groups = _category_path_groups(cats)
+        category_aliases = path_groups.get(_category_path_key(category), [category])
+        category_aliases = [item for item in category_aliases if item.is_active] or category_aliases
+        category = _preferred_category(category_aliases)
+        allowed_roots = {name.casefold() for name in _allowed_root_names(types)}
+        if _root_category(cats, category).name.casefold() not in allowed_roots:
             raise Http404("Розділ недоступний для цього виду товарів")
         nonempty, total = _nonempty(cats, visible_products(types, availability))
         has_kids = _parents_with_children(cats, nonempty)
         chain = _breadcrumbs(category)
 
-        children = sorted(
-            (
-                c for c in cats.values()
-                if c.parent_id == category.id and c.is_active
-            ),
-            key=lambda c: (c.order, c.name),
-        )
+        parent_ids = {item.id for item in category_aliases}
+        grouped_children = defaultdict(list)
+        for child in cats.values():
+            if child.is_active and child.parent_id in parent_ids:
+                grouped_children[_category_path_key(child)].append(child)
+        children = []
+        for key, candidates in grouped_children.items():
+            child = _preferred_category(candidates)
+            aliases = path_groups.get(key, candidates)
+            children.append((child, _category_item(child, total, has_kids, aliases)))
+        children.sort(key=lambda item: (item[0].order, item[1]["name"].casefold()))
         attributes = (
-            _effective_attributes(cats, [category.id])
+            _effective_attributes(cats, [item.id for item in category_aliases])
             if not children
             else []
         )
         is_phone_leaf = (
             not children
-            and category.path.startswith("Електроніка › Смартфони й зв'язок › Смартфони")
+            and _category_path_key(category)[:3]
+            == ("електроніка", "смартфони й зв'язок", "смартфони")
         )
         if is_phone_leaf:
             attributes = _sort_phone_attributes(attributes)
@@ -593,12 +674,27 @@ class CatalogCategoryPopupView(APIView):
         else:
             attributes_payload = []
         attributes_payload.extend(_attr_payload(attribute) for attribute in attributes)
+        category_payload = _category_item(category, total, has_kids, category_aliases)
+        breadcrumbs = []
+        for crumb in chain:
+            aliases = path_groups.get(_category_path_key(crumb), [crumb])
+            active_aliases = [item for item in aliases if item.is_active] or aliases
+            canonical_crumb = _preferred_category(active_aliases)
+            canonical_path = _CANONICAL_CATEGORY_PATH_LABELS.get(_category_path_key(crumb))
+            breadcrumbs.append({
+                "id": canonical_crumb.id,
+                "name": canonical_path[-1] if canonical_path else canonical_crumb.name,
+            })
         return Response(
             {
-                "category": {"id": category.id, "name": category.name, "path": category.path},
-                "breadcrumbs": [{"id": c.id, "name": c.name} for c in chain],
+                "category": {
+                    "id": category_payload["id"],
+                    "name": category_payload["name"],
+                    "path": category_payload["path"],
+                },
+                "breadcrumbs": breadcrumbs,
                 "attributes": attributes_payload,
-                "children": [_category_item(c, total, has_kids) for c in children],
+                "children": [item for _, item in children],
             }
         )
 
@@ -615,14 +711,17 @@ class CatalogFiltersView(APIView):
             return Response({"attributes": []})
 
         cats = _category_map()
+        path_groups = _category_path_groups(cats)
         leaf_ids = []
         for cid in category_ids:
             category = cats.get(cid)
             if category is None:
                 continue
+            aliases = path_groups.get(_category_path_key(category), [category])
+            alias_ids = {alias.id for alias in aliases}
             has_active_children = any(
                 child.is_active
-                and child.parent_id == category.id
+                and child.parent_id in alias_ids
                 for child in cats.values()
             )
             if not has_active_children:
@@ -636,7 +735,11 @@ class CatalogFiltersView(APIView):
         attributes = []
         for leaf_id in leaf_ids:
             leaf = cats[leaf_id]
-            if leaf.path.startswith("Електроніка › Смартфони й зв'язок › Смартфони"):
+            if _category_path_key(leaf)[:3] == (
+                "електроніка",
+                "смартфони й зв'язок",
+                "смартфони",
+            ):
                 attributes.append(
                     _brand_payload(
                         visible_products(types, availability).filter(

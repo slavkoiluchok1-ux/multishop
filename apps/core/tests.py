@@ -5,17 +5,17 @@ import secrets
 from typing import Iterable, cast
 from unittest.mock import patch
 
+from django.contrib.auth import password_validation
 from django.core.cache import cache
+from django.core.exceptions import ValidationError
 from django.core.management import call_command
 from django.core.management.base import CommandError
-from django.core.exceptions import ValidationError
-from django.contrib.auth import password_validation
 from django.http import StreamingHttpResponse
 from django.test import RequestFactory, TestCase, override_settings
 from rest_framework.test import APIClient, APIRequestFactory
 
 from apps.accounts.models import AdminLog, AdminRight, Ban, CustomUser
-from apps.catalog.models import Product
+from apps.catalog.models import Attribute, Category, Product
 
 from .exceptions import GENERIC_SERVER_ERROR, api_exception_handler
 from .models import SiteBlock
@@ -55,6 +55,36 @@ def make_user(username: str, role: str | None = None) -> CustomUser:
 
 
 class BootstrapSeedCommandTests(TestCase):
+    def test_seed_normalizes_names_and_syncs_category_attributes(self):
+        from apps.core.management.commands.bootstrap_seed import Command
+
+        root = Category.objects.create(name="Каталог")
+        child = Category.objects.create(name="підтип", parent=root)
+        attribute_definition = {
+            "name": "Напруга",
+            "kind": "number",
+            "unit": "В",
+            "required": True,
+            "options": [],
+            "targets": [("Каталог", "Підтип")],
+        }
+
+        command = Command()
+        with patch(
+            "apps.core.management.commands.bootstrap_seed.ATTRIBUTES",
+            [attribute_definition],
+        ):
+            command.create_categories({"Каталог": ["підтип"]})
+            command.create_attributes()
+
+        child.refresh_from_db()
+        self.assertEqual(child.name, "Підтип")
+        self.assertEqual(child.path, "Каталог › Підтип")
+        self.assertEqual(Category.objects.filter(parent=root).count(), 1)
+        attribute = Attribute.objects.get(category=child, name="Напруга")
+        self.assertEqual(attribute.unit, "В")
+        self.assertTrue(attribute.required)
+
     def test_seed_rerun_preserves_products_and_unfulfillable_downloads_are_inactive(self):
         tree = {
             "Подарункові картки й поповнення": {"Steam": []},
@@ -82,6 +112,7 @@ class BootstrapSeedCommandTests(TestCase):
         ]
         with (
             patch("apps.core.management.commands.bootstrap_seed.TREE", tree),
+            patch("apps.core.management.commands.bootstrap_seed.ATTRIBUTES", []),
             patch("apps.core.management.commands.bootstrap_seed.PRODUCTS", products),
         ):
             call_command("bootstrap_seed", stdout=io.StringIO())
