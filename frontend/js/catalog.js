@@ -311,7 +311,7 @@
         tile.type = "button";
         tile.className = "tile" + (state.categories.indexOf(String(cat.id)) !== -1 ? " is-selected" : "");
         tile.innerHTML =
-          '<span class="tile-icon" aria-hidden="true">' + categoryIcon(cat.name) + "</span>" +
+          '<span class="tile-icon" aria-hidden="true">' + categoryIcon(cat) + "</span>" +
           '<span class="tile-name">' + window.MS.escapeHtml(cat.name) + "</span>";
         tile.addEventListener("click", () => window.MSTree.openCategory(cat.id, state.view, state.availability));
         els.tileGrid.appendChild(tile);
@@ -479,12 +479,55 @@
     ["Гра", "🎮"], ["Steam", "🎮"], ["EA", "🎮"], ["Xbox", "🎮"],
     ["Netflix", "▶️"], ["Game Pass", "🎮"], ["Windows", "🪟"], ["Курс", "🎓"],
     ["Шаблон", "🎨"], ["Дизайн", "🎨"], ["Програмув", "💻"], ["Послуг", "🛠️"],
-    ["Підписк", "♻️"], ["Подарун", "🎁"], ["Ліценз", "🔑"], ["Музик", "🎵"],
+    ["Підписк", "🎫"], ["Подарун", "🎁"], ["Ліценз", "🔑"], ["Музик", "🎵"],
+    ["Самокат", "🛴"], ["Очі", "👁️"], ["Худі", "🧥"], ["Браслет", "📿"],
+    ["Антивірус", "🛡️"], ["Подарункові набори", "🎟️"], ["Подарункові картки", "🎟️"],
+    ["Ubisoft+", "🎫"], ["Ubisoft", "🎮"], ["Батаре", "🔋"], ["Акумулятор", "🔋"],
+    ["Битви королів", "🏆"],
   ];
 
-  function categoryIcon(name) {
-    const text = String(name || "");
-    const exactIcons = {
+  const CATEGORY_ICON_RULES = CATEGORY_ICONS.slice().sort(
+    (left, right) => right[0].length - left[0].length
+  );
+  const CATEGORY_ICON_OVERRIDES = {
+    "Електроніка": "🔌",
+    "Одяг, взуття, аксесуари": "👕",
+    "Дім і меблі": "🛋️",
+    "Сад, ремонт, інструменти": "🛠️",
+    "Краса й здоров'я": "🩺",
+    "Книги, канцелярія, хобі": "📚",
+    "Спорт і туризм": "🏕️",
+    "Авто й мото": "🚗",
+    "Зоотовари": "🐾",
+    "Дитячі товари": "🧸",
+    "Їжа й напої": "🥗",
+    "Подарунки й набори": "🎁",
+    "Ігри": "🎮",
+    "Ігрові проєкти й ассети": "🧩",
+    "Софт і ліцензії": "🛡️",
+    "Навчання й контент": "🎓",
+    "Цифрові дизайн-ресурси": "🎨",
+    "Подарункові картки й поповнення": "🎟️",
+    "Послуги": "🧰",
+    "Підписки": "🎫",
+    "Самокати": "🛴",
+    "Очі": "👁️",
+    "Худі": "🧥",
+    "Браслети": "📿",
+    "Антивіруси": "🛡️",
+    "Подарункові набори": "🎟️",
+    "Ubisoft+": "🎫",
+    "Ubisoft": "🎮",
+    "Apple": "🍎",
+  };
+  let exactCategoryIcons;
+
+  function categoryIcon(category) {
+    const raw = category && typeof category === "object"
+      ? category.path || category.category_path || category.name
+      : category;
+    const segments = String(raw || "").split("›").map((part) => part.trim()).filter(Boolean);
+    const exactIcons = exactCategoryIcons || (exactCategoryIcons = {
       "Смартфони": "📱", "Планшети": "🔲", "Електронні книги": "📘",
       "Ноутбуки": "💻", "Настільні ПК": "🖥️", "Процесори": "⚙️",
       "Відеокарти": "🎮", "Монітори": "🖥️", "Клавіатури": "⌨️",
@@ -583,36 +626,49 @@
       "Догляд за шкірою": "🧴", "Макіяж": "💄", "Волосся": "💇",
       "Парфумерія": "🧴", "Гігієна": "🪥", "Гантелі": "🏋️",
       "Автокрісла": "🚗", "Корм для собак": "🐕", "Корм для котів": "🐈",
-    };
-    for (const [name, icon] of Object.entries(exactIcons)) {
-      if (text.toLowerCase().includes(name.toLowerCase())) return icon;
+    });
+
+    for (let index = segments.length - 1; index >= 0; index -= 1) {
+      const segment = segments[index].toLowerCase();
+      const overrideEntry = Object.entries(CATEGORY_ICON_OVERRIDES).find(
+        ([label]) => label.toLowerCase() === segment
+      );
+      if (overrideEntry) return overrideEntry[1];
+      const exactEntry = Object.entries(exactCategoryIcons).find(
+        ([label]) => label.toLowerCase() === segment
+      );
+      if (exactEntry) return exactEntry[1];
+      for (const [needle, icon] of CATEGORY_ICON_RULES) {
+        if (segment.includes(needle.toLowerCase())) return icon;
+      }
     }
-    for (const [needle, icon] of CATEGORY_ICONS) {
-      if (text.toLowerCase().includes(needle.toLowerCase())) return icon;
-    }
-    if (/Електрон/.test(text)) return "📱";
-    if (/одяг|взут/.test(text)) return "👟";
-    if (/меб|дім/.test(text)) return "🏠";
-    return "▣";
+    return "🛍️";
   }
+
+  window.MSCategoryIcons = Object.freeze({ iconFor: categoryIcon });
 
   function brandLogoUrl(brand) {
     const key = String(brand || "").toLowerCase();
     const brands = {
       "ea sports fc": "easports",
       "ea games": "easports",
+      "ea app": "ea",
       "ea": "ea",
       "netflix": "netflix",
       "coursera": "coursera",
       "microsoft": "microsoft",
+      "microsoft store": "microsoft",
       "xbox game pass": "xbox",
+      "pc game pass": "xbox",
       "game pass": "xbox",
       "steam": "steam",
       "valve": "steam",
       "sony": "sony",
       "playstation": "playstation",
+      "playstation store": "playstation",
       "nintendo": "nintendo",
       "google": "google",
+      "google play": "google",
       "apple": "apple",
       "samsung": "samsung",
       "nike": "nike",
@@ -628,7 +684,7 @@
       "roblox": "roblox",
     };
     for (const [name, slug] of Object.entries(brands)) {
-      if (key.includes(name)) {
+      if (key === name) {
         return "https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/" + slug + ".svg";
       }
     }
@@ -636,41 +692,11 @@
   }
 
   function categoryLogoUrl(product) {
-    const text = (product.category_leaf + " " + product.name + " " + (product.brand || "")).toLowerCase();
-    const logos = [
-      ["ea sports", "ea.com"],
-      ["ea games", "ea.com"],
-      ["netflix", "netflix.com"],
-      ["game pass", "xbox.com"],
-      ["xbox", "xbox.com"],
-      ["playstation", "playstation.com"],
-      ["steam", "store.steampowered.com"],
-      ["windows", "microsoft.com"],
-      ["microsoft", "microsoft.com"],
-      ["coursera", "coursera.org"],
-      ["unity", "unity.com"],
-      ["figma", "figma.com"],
-      ["google", "google.com"],
-      ["apple", "apple.com"],
-      ["samsung", "samsung.com"],
-      ["sony", "sony.com"],
-      ["nvidia", "nvidia.com"],
-      ["amd", "amd.com"],
-      ["intel", "intel.com"],
-      ["nike", "nike.com"],
-      ["lego", "lego.com"],
-    ];
-    for (const [name, domain] of logos) {
-      if (text.includes(name)) {
-        return "https://www.google.com/s2/favicons?domain=" + encodeURIComponent(domain) + "&sz=128";
-      }
-    }
-    return brandLogoUrl(product.brand || product.name);
+    return brandLogoUrl(product.category_leaf);
   }
 
   function placeholderIconForProduct(product) {
-    const text = product.category_path + " " + product.name + " " + (product.brand || "");
-    return categoryIcon(text);
+    return categoryIcon(product.category_path || product.category_leaf);
   }
 
   function logCatalogDebugStats() {
