@@ -308,6 +308,7 @@ class CatalogPopupTests(TestCase):
             for value in definition["options"]:
                 AttributeOption.objects.create(attribute=attribute, value=value)
 
+        assert parent is not None
         data = self.popup(parent)
         fields = {attribute["name"]: attribute for attribute in data["attributes"]}
         self.assertIn("Обсяг відеопам'яті", fields)
