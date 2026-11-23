@@ -7,7 +7,7 @@ from django.db import transaction
 from django.db.models import F
 from django.utils import timezone
 
-from apps.catalog.models import ProductVariant
+from apps.catalog.models import Product, ProductVariant
 from apps.core.models import SiteSettings
 from apps.orders.models import Order
 from apps.complaints.models import Complaint
@@ -28,6 +28,34 @@ def money(value: Decimal) -> Decimal:
 def balance_over_limit(value: Decimal) -> bool:
     """True, якщо сума виходить за межі Decimal(15,6)."""
     return money(value) > MAX_BALANCE_MC
+
+
+@transaction.atomic
+def charge_hidden_listing_fee(product: Product) -> bool:
+    """Списує 1 MC за приховування товару не більше одного разу."""
+    locked_product = Product.objects.select_for_update().get(pk=product.pk)
+    if locked_product.hidden_fee_paid:
+        return False
+
+    wallet, _ = Wallet.objects.select_for_update().get_or_create(
+        user_id=locked_product.seller_id
+    )
+    fee = Decimal("1.000000")
+    if wallet.free_balance_mc < fee:
+        raise ValidationError("Створення прихованого товару коштує 1 MC.")
+
+    wallet.free_balance_mc = money(wallet.free_balance_mc - fee)
+    wallet.save(update_fields=["free_balance_mc", "updated_at"])
+    WalletTransaction.objects.create(
+        wallet=wallet,
+        amount_mc=-fee,
+        kind="hidden_listing_fee",
+        note=f"Плата за прихований товар #{locked_product.pk}",
+    )
+    locked_product.hidden_fee_paid = True
+    locked_product.save(update_fields=["hidden_fee_paid", "updated_at"])
+    product.hidden_fee_paid = True
+    return True
 
 
 def commission_for(amount: Decimal) -> Decimal:

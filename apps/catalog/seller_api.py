@@ -50,7 +50,7 @@ from apps.orders.models import (
     activation_code_key,
 )
 from apps.wallet.models import SellerDeposit, Wallet
-from apps.wallet.services import recalculate_seller_deposit
+from apps.wallet.services import charge_hidden_listing_fee, recalculate_seller_deposit
 
 
 class VariantInputSerializer(serializers.Serializer):
@@ -458,6 +458,7 @@ def _activation_codes_cover_variants(product: Product) -> bool:
 
 
 def _persist_product(product: Product, data: dict[str, Any]) -> Product:
+    was_hidden = product.pk is not None and product.status == "hidden"
     category_id = data.pop("category_id")
     variants = data.pop("variants")
     product.category_id = category_id
@@ -496,6 +497,8 @@ def _persist_product(product: Product, data: dict[str, Any]) -> Product:
     # Нуль залишку — автоматично «Закінчився»; поповнення повертає «У продажу»
     sync_stock_status(product)
     try:
+        if product.status == "hidden" and not was_hidden:
+            charge_hidden_listing_fee(product)
         recalculate_seller_deposit(product.seller, order=None)
     except DjangoValidationError as exc:
         message = exc.messages[0] if getattr(exc, "messages", None) else str(exc)
@@ -616,20 +619,26 @@ class SellerProductDetailView(APIView):
     def patch(self, request, pk):
         seller = cast(CustomUser, request.user)
         _require_verified_seller(seller)
-        product = _owned_product(seller, pk)
-        _require_editable(product)
-        serializer = ProductInputSerializer(
-            data=request.data,
-            partial=True,
-            context={"product": product},
-        )
-        serializer.is_valid(raise_exception=True)
-        data = cast(dict[str, Any], serializer.validated_data)
-        if "category_id" not in data:
-            data["category_id"] = product.category_id
-        if "variants" not in data:
-            data["variants"] = []
         with transaction.atomic():
+            product = (
+                Product.objects.select_for_update()
+                .filter(pk=pk, seller=seller)
+                .first()
+            )
+            if product is None:
+                raise NotFound("Товар не знайдено.")
+            _require_editable(product)
+            serializer = ProductInputSerializer(
+                data=request.data,
+                partial=True,
+                context={"product": product},
+            )
+            serializer.is_valid(raise_exception=True)
+            data = cast(dict[str, Any], serializer.validated_data)
+            if "category_id" not in data:
+                data["category_id"] = product.category_id
+            if "variants" not in data:
+                data["variants"] = []
             product = _persist_product(product, data)
         product = _seller_product_queryset().get(pk=product.pk)
         return Response(_seller_product_payload(product))

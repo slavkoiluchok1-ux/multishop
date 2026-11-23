@@ -747,6 +747,8 @@ class ProductHiddenView(APIView):
             ),
             hidden_token=token,
         )
+        if product.status != "hidden":
+            raise Http404("Товар недоступний")
         # Заблокований чи видалений товар не відкривається навіть за посиланням
         if product.is_moderated and not _is_staff_admin(request.user):
             raise Http404("Товар недоступний")

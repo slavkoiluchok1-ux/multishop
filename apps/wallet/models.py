@@ -56,6 +56,7 @@ class WalletTransaction(models.Model):
         ("escrow_to_frozen", "З утриманих у заморожені продавцю"),
         ("frozen_release", "Звільнення заморожених у доступні"),
         ("fee", "Комісія сайту"),
+        ("hidden_listing_fee", "Плата за прихований товар"),
         ("refund", "Повернення коштів покупцю"),
         ("deposit_lock", "Блокування застави"),
         ("deposit_return", "Повернення застави"),

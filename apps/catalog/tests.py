@@ -13,7 +13,7 @@ from apps.accounts.models import AdminLog, AdminRight, CustomUser, SellerVerific
 from apps.cart.models import Cart, CartItem
 from apps.notifications.models import Notification
 from apps.orders.models import Order, OrderItem
-from apps.wallet.models import FrozenPayout, Wallet
+from apps.wallet.models import FrozenPayout, Wallet, WalletTransaction
 from apps.wallet.services import recalculate_seller_deposit, seller_deposit_required
 
 from .models import (
@@ -455,6 +455,99 @@ class SellerProductApiTests(TestCase):
         self.assertEqual(response.status_code, 201, response.data)
         wallet.refresh_from_db()
         self.assertEqual(wallet.deposit_locked_mc, Decimal("1"))
+        self.assertEqual(wallet.free_balance_mc, Decimal("18"))
+        self.assertTrue(
+            WalletTransaction.objects.filter(
+                wallet=wallet,
+                kind="hidden_listing_fee",
+                amount_mc=Decimal("-1"),
+            ).exists()
+        )
+
+    def test_hidden_listing_fee_is_charged_once_when_status_changes(self):
+        wallet = self.verify_seller()
+        response = api_post(
+            self.api_client,
+            "/api/products/mine",
+            self.payload,
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 201, response.data)
+        product_id = response.data["id"]
+        response = api_patch(
+            self.api_client,
+            f"/api/products/mine/{product_id}",
+            {"status": "hidden"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.data)
+        wallet.refresh_from_db()
+        self.assertEqual(wallet.free_balance_mc, Decimal("14"))
+        self.assertEqual(
+            WalletTransaction.objects.filter(
+                wallet=wallet, kind="hidden_listing_fee"
+            ).count(),
+            1,
+        )
+
+        response = api_patch(
+            self.api_client,
+            f"/api/products/mine/{product_id}",
+            {"status": "active"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.data)
+        response = api_patch(
+            self.api_client,
+            f"/api/products/mine/{product_id}",
+            {"status": "hidden"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.data)
+        wallet.refresh_from_db()
+        self.assertEqual(wallet.free_balance_mc, Decimal("14"))
+        self.assertEqual(
+            WalletTransaction.objects.filter(
+                wallet=wallet, kind="hidden_listing_fee"
+            ).count(),
+            1,
+        )
+
+    def test_hidden_listing_requires_one_free_mc(self):
+        wallet = self.verify_seller(balance="0.5")
+        payload = dict(self.payload)
+        payload["status"] = "hidden"
+        payload["variants"] = [
+            {"sku": "HIDDEN-1", "price_mc": "0.000001", "stock": 1, "attributes": []}
+        ]
+
+        response = api_post(self.api_client, "/api/products/mine", payload, format="json")
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("коштує 1 MC", str(response.data))
+        self.assertFalse(Product.objects.filter(seller=self.seller).exists())
+        wallet.refresh_from_db()
+        self.assertEqual(wallet.free_balance_mc, Decimal("0.5"))
+        self.assertFalse(
+            WalletTransaction.objects.filter(wallet=wallet, kind="hidden_listing_fee").exists()
+        )
+
+    def test_hidden_listing_fee_rolls_back_if_deposit_cannot_be_locked(self):
+        wallet = self.verify_seller(balance="1")
+        payload = dict(self.payload)
+        payload["status"] = "hidden"
+
+        response = api_post(self.api_client, "/api/products/mine", payload, format="json")
+
+        self.assertEqual(response.status_code, 400)
+        self.assertFalse(Product.objects.filter(seller=self.seller).exists())
+        wallet.refresh_from_db()
+        self.assertEqual(wallet.free_balance_mc, Decimal("1"))
+        self.assertEqual(wallet.deposit_locked_mc, Decimal("0"))
+        self.assertFalse(
+            WalletTransaction.objects.filter(wallet=wallet, kind="hidden_listing_fee").exists()
+        )
 
     def test_inactive_product_requires_no_deposit(self):
         wallet = self.verify_seller()
@@ -758,6 +851,20 @@ class ProductDetailAttributeTests(TestCase):
             api_response_data(response)["seller"]["avatar"],
             self.seller.avatar.url,
         )
+
+    def test_hidden_product_link_stops_working_when_product_is_inactive(self):
+        self.product.status = "hidden"
+        self.product.save()
+        token = self.product.hidden_token
+        client = cast(APIClient, self.client)
+
+        visible_response = api_get(client, f"/api/products/h/{token}")
+        self.assertEqual(visible_response.status_code, 200)
+
+        self.product.status = "inactive"
+        self.product.save(update_fields=["status"])
+        inactive_response = api_get(client, f"/api/products/h/{token}")
+        self.assertEqual(inactive_response.status_code, 404)
 
 
 class SellerProductSearchTests(TestCase):

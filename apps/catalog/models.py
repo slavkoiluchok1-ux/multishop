@@ -173,6 +173,7 @@ class Product(models.Model):
     product_type = models.CharField("Вид товару", max_length=16, choices=PRODUCT_TYPES)
     status = models.CharField("Статус", max_length=16, choices=PRODUCT_STATUSES, default="active")
     hidden_token = models.CharField("Токен прихованого товару", max_length=64, blank=True)
+    hidden_fee_paid = models.BooleanField("Плату за приховування сплачено", default=False)
     main_image = models.ImageField(
         "Головне фото", upload_to="products/", blank=True, null=True, validators=[validate_image]
     )
