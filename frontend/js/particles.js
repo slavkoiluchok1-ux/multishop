@@ -22,6 +22,7 @@
   const SIZE_RANGE = [1, 2, 3, 6];
   const SPRITE_SIZE = 64;
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+  const coarsePointer = window.matchMedia("(pointer: coarse)");
 
   const canvas = document.createElement("canvas");
   canvas.className = "particles-background-canvas";
@@ -51,6 +52,7 @@
   let narrowGlowEnabled = true;
   let wideGlowEnabled = true;
   let weakGlow = false;
+  let effectInitialized = false;
   const pointScratch = new Float32Array(2);
   const riverHalfWidths = new Float32Array(RIVER_COUNT);
   let frame = 0;
@@ -105,7 +107,10 @@
   }
 
   function desiredCount() {
-    const base = width < 1100 ? 1450 : (width >= 1920 ? 3700 : 3450);
+    const base = width < 600 ? 560
+      : (coarsePointer.matches || width < 900) ? 900
+        : width < 1100 ? 1450
+          : width >= 1920 ? 3700 : 3450;
     return Math.max(Math.round(base * 0.5), Math.round(base * adaptiveLevel));
   }
 
@@ -276,6 +281,13 @@
     narrowGlowEnabled = true;
     buildGlowSprites();
     buildParticles();
+  }
+
+  function initializeEffect() {
+    if (effectInitialized) return;
+    buildSprites();
+    resizeCanvas();
+    effectInitialized = true;
   }
 
   function riverWave(angle, river, elapsed) {
@@ -487,7 +499,28 @@
 
   function startLoop() {
     if (!loopAllowed || document.hidden || frame) return;
+    initializeEffect();
+    if (reducedMotion.matches) {
+      drawFrame(0);
+      return;
+    }
     frame = window.requestAnimationFrame(tick);
+  }
+
+  function motionPreferenceChanged() {
+    if (!effectInitialized || !loopAllowed || !enabled) return;
+    if (reducedMotion.matches) {
+      pauseLoop();
+      if (!document.hidden) drawFrame(0);
+    } else {
+      startLoop();
+    }
+  }
+
+  function resizeEffect() {
+    if (!effectInitialized) return;
+    resizeCanvas();
+    if (enabled && reducedMotion.matches && !document.hidden) drawFrame(0);
   }
 
   function setEnabled(next, persist) {
@@ -545,16 +578,19 @@
   }
 
   function initialize() {
-    buildSprites();
-    resizeCanvas();
     initToggle();
-    window.addEventListener("resize", resizeCanvas, { passive: true });
+    window.addEventListener("resize", resizeEffect, { passive: true });
     document.addEventListener("visibilitychange", () => {
       if (document.hidden) pauseLoop();
       else startLoop();
     });
     window.addEventListener("pagehide", pauseLoop);
     window.addEventListener("pageshow", startLoop);
+    if (typeof reducedMotion.addEventListener === "function") {
+      reducedMotion.addEventListener("change", motionPreferenceChanged);
+    } else if (typeof reducedMotion.addListener === "function") {
+      reducedMotion.addListener(motionPreferenceChanged);
+    }
     loopAllowed = enabled;
     if (enabled) {
       canvas.classList.add("is-visible");

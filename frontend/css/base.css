@@ -2,7 +2,7 @@
 @import url("themes.css");
 @import url("components.css?v=auth-check-v1-20261123");
 @import url("motion.css?v=motion-orders-support-v1-20261122");
-@import url("particles.css?v=particles-default-off-v6-20261122");
+@import url("particles.css?v=particles-default-off-v7-20261123");
 
 * { box-sizing: border-box; }
 

@@ -115,6 +115,16 @@ body > .footer {
   }
 }
 
+@media (max-width: 575.98px), (pointer: coarse) {
+  .navbar-particles-toggle {
+    width: 2.75rem;
+    height: 2.75rem;
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+    flex-basis: 2.75rem;
+  }
+}
+
 
 @media (prefers-reduced-motion: reduce) {
   .particles-background-canvas { transition-duration: 120ms; }
