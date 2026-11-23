@@ -1065,21 +1065,28 @@ main.container .empty-state-panel a:not(.btn) { color: var(--blue); }
   #logFilterBtn {
     width: 100%;
   }
-  #searchPopup {
-    position: fixed !important;
-    left: 0.65rem !important;
-    right: 0.65rem !important;
-    top: auto !important;
-    bottom: calc(4.25rem + env(safe-area-inset-bottom, 0px)) !important;
-    max-height: 52dvh !important;
+  #manageCard .admin-user-search #searchBtn {
+    width: 3.25rem;
+    min-width: 3.25rem;
+    flex: 0 0 3.25rem;
+    border-radius: 0 12px 12px 0;
+  }
+  #manageCard .admin-user-search .form-control {
+    border-radius: 12px 0 0 12px;
+  }
+  #manageCard #searchPopup {
+    position: static !important;
+    width: 100%;
+    margin-top: 0.35rem;
+    max-height: min(52dvh, 360px) !important;
     border-radius: 16px;
   }
-  #searchPopup .btn-close {
+  #manageCard #searchPopup .btn-close {
     width: 44px;
     height: 44px;
     flex: 0 0 44px;
   }
-  #searchPopup #searchResults > * {
+  #manageCard #searchPopup #searchResults > * {
     min-height: 48px;
     padding: 0.55rem 0.75rem;
     border-top: 1px solid rgba(194, 139, 44, 0.18);
@@ -1433,6 +1440,49 @@ main.container .empty-state-panel a:not(.btn) { color: var(--blue); }
     background: rgba(255, 255, 255, 0.96);
     backdrop-filter: blur(10px);
   }
+}
+
+.admin-user-search {
+  position: relative;
+}
+.admin-target-summary {
+  min-width: 0;
+  padding: 0.8rem 0.95rem;
+  border: 1px solid rgba(194, 139, 44, 0.26);
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(241, 248, 224, 0.92));
+  box-shadow: 0 8px 22px rgba(32, 48, 34, 0.07);
+}
+.admin-target-summary-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.45rem;
+  margin-bottom: 0.4rem;
+}
+.admin-target-summary-name {
+  display: block;
+  overflow-wrap: anywhere;
+}
+.admin-user-search-popup {
+  position: absolute;
+  z-index: 1050;
+  top: calc(100% + 0.35rem);
+  right: 0.75rem;
+  left: 0.75rem;
+  max-height: min(52vh, 360px);
+  overflow: auto;
+  border-radius: 14px;
+  box-shadow: 0 16px 40px rgba(18, 30, 24, 0.2);
+}
+#searchResults [data-username] {
+  gap: 0.75rem;
+}
+#searchResults [data-username] > span:first-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  text-align: left;
 }
 
 .checkout-dialog {

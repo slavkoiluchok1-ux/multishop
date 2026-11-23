@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/css/base.css?v=category-tiles-v18-20261124">
+  <link rel="stylesheet" href="/static/css/base.css?v=category-tiles-v19-20261123">
 </head>
 <body>
 
@@ -76,19 +76,22 @@
       <div class="row g-3">
         <div class="col-md-6 position-relative">
           <label class="form-label" for="login">Нік користувача</label>
-          <div class="input-group">
-            <input class="form-control" type="text" id="login" placeholder="нік">
-            <button class="btn btn-outline-primary" type="button" id="searchBtn" title="Знайти користувача">🔍</button>
+          <div class="admin-user-search">
+            <div class="input-group">
+              <input class="form-control" type="text" id="login" placeholder="нік">
+              <button class="btn btn-outline-primary" type="button" id="searchBtn" title="Знайти користувача"
+                aria-controls="searchPopup" aria-expanded="false" aria-label="Знайти користувача">🔍</button>
+            </div>
+            <div class="card-soft admin-user-search-popup" id="searchPopup" hidden
+                 role="dialog" aria-label="Результати пошуку користувачів">
+              <div class="d-flex align-items-center justify-content-between px-3 py-2">
+                <strong class="small">Результати пошуку</strong>
+                <button class="btn-close" type="button" id="searchClose" aria-label="Закрити"></button>
+              </div>
+              <div id="searchResults"></div>
+            </div>
           </div>
           <div class="field-hint">Нік користувача, якому видаємо рівень або права.</div>
-          <div class="card-soft" id="searchPopup" hidden
-               style="position:absolute; left:12px; right:12px; top:100%; z-index:1050; max-height:260px; overflow:auto;">
-            <div class="d-flex align-items-center justify-content-between px-3 py-2">
-              <strong class="small">Результати пошуку</strong>
-              <button class="btn-close" type="button" id="searchClose" aria-label="Закрити"></button>
-            </div>
-            <div id="searchResults"></div>
-          </div>
         </div>
         <div class="col-md-6">
           <label class="form-label" for="level" id="levelLabel">Рівень адміністратора</label>
@@ -97,6 +100,14 @@
             <option value="1" id="level1Option" hidden>Адмін 1-го рівня (лише головний)</option>
           </select>
           <div class="field-hint" id="levelFixed" hidden>Рівень: Адмін 2-го рівня</div>
+          <div class="admin-target-summary mt-3" id="targetSummary" hidden aria-live="polite">
+            <div class="admin-target-summary-heading">
+              <span class="small text-muted-soft">Поточний доступ</span>
+              <span class="badge-soft is-muted" id="targetRole"></span>
+            </div>
+            <strong class="admin-target-summary-name" id="targetName"></strong>
+            <p class="small mb-0 mt-1 text-muted-soft" id="targetRights"></p>
+          </div>
         </div>
       </div>
       <div class="d-flex flex-wrap gap-2 mt-3">
@@ -240,8 +251,13 @@
     const searchPopup = document.getElementById("searchPopup");
     const searchResults = document.getElementById("searchResults");
     const searchBtn = document.getElementById("searchBtn");
+    const targetSummary = document.getElementById("targetSummary");
+    const targetName = document.getElementById("targetName");
+    const targetRole = document.getElementById("targetRole");
+    const targetRights = document.getElementById("targetRights");
     const adminBanModal = document.getElementById("adminBanModal");
     let rightsSeq = 0;
+    let rightsLabels = {};
     let canBanAdmins = false;
     let adminBanLogin = "";
 
@@ -303,6 +319,8 @@
     }
 
     function renderCatalog(catalog) {
+      rightsLabels = {};
+      catalog.forEach((row) => { rightsLabels[row.key] = row.label; });
       rightsBox.innerHTML = catalog.map((row) =>
         '<div class="col-md-4"><div class="form-check">' +
         '<input class="form-check-input" type="checkbox" id="right_' + esc(row.key) +
@@ -310,6 +328,21 @@
         '<label class="form-check-label" for="right_' + esc(row.key) + '">' +
         esc(row.label) + "</label></div></div>"
       ).join("");
+    }
+
+    function renderTargetSummary(user) {
+      targetName.textContent = user.username;
+      targetRole.textContent = user.role_display || "Користувач";
+      const rights = Array.isArray(user.rights) ? user.rights : [];
+      if (user.role === "admin_1" || user.role === "admin_main") {
+        targetRights.textContent = "Має всі адміністративні права.";
+      } else if (rights.length) {
+        targetRights.textContent = "Поточні права: " +
+          rights.map((key) => rightsLabels[key] || key).join(", ");
+      } else {
+        targetRights.textContent = "Адміністративних прав немає.";
+      }
+      targetSummary.hidden = false;
     }
 
     // Ставить чекбокси прав за масивом ключів; all — усі відмічені й вимкнені.
@@ -328,6 +361,7 @@
       const query = (login || "").trim();
       if (query.length < 2) {
         applyRights([], false);
+        targetSummary.hidden = true;
         return;
       }
       try {
@@ -338,18 +372,26 @@
         );
         if (!found) {
           applyRights([], false);
+          targetSummary.hidden = true;
           return;
         }
+        renderTargetSummary(found);
         const all = found.role === "admin_1" || found.role === "admin_main";
         applyRights(found.rights || [], all);
       } catch (err) {
-        if (seq === rightsSeq) applyRights([], false);
+        if (seq !== rightsSeq) return;
+        applyRights([], false);
+        targetName.textContent = query;
+        targetRole.textContent = "Не вдалося завантажити";
+        targetRights.textContent = err.message || "Поточний доступ недоступний.";
+        targetSummary.hidden = false;
       }
     }
 
     // --- Спливаючий пошук користувача ---
     function closeSearch() {
       searchPopup.hidden = true;
+      searchBtn.setAttribute("aria-expanded", "false");
     }
 
     function renderSearchResults(users) {
@@ -371,6 +413,7 @@
     async function openSearch() {
       const query = loginInput.value.trim();
       searchPopup.hidden = false;
+      searchBtn.setAttribute("aria-expanded", "true");
       if (query.length < 2) {
         searchResults.innerHTML =
           '<div class="px-3 pb-3 text-muted-soft">Введіть щонайменше 2 символи.</div>';
