@@ -29,6 +29,7 @@ class Order(models.Model):
     buyer_id: int
     seller_id: int
     items: "RelatedManager[OrderItem]"
+    comments: "RelatedManager[OrderComment]"
     status_history: "RelatedManager[OrderStatusHistory]"
     cancellation: "OrderCancellation"
     refunds: "RelatedManager[Refund]"
@@ -90,6 +91,7 @@ class OrderItem(models.Model):
     order_id: int
     variant_id: int
     downloads: "RelatedManager[DownloadGrant]"
+    activation_codes: "RelatedManager[ActivationCode]"
 
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="items")
     variant = models.ForeignKey(
@@ -109,6 +111,8 @@ class OrderItem(models.Model):
 
 class ActivationCode(models.Model):
     """Один приватний код на одиницю товару; код не можна використати повторно."""
+
+    variant_id: int
 
     variant = models.ForeignKey(
         "catalog.ProductVariant",

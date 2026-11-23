@@ -215,7 +215,7 @@
     el("twTitle").textContent = data.category.name;
     renderBreadcrumbs(data.breadcrumbs || []);
     renderAttributes(state.attributes);
-    renderChildren(data.children || []);
+    renderChildren((data.children || []).filter((child) => Number(child.product_count) > 0));
     el("treeWindow").hidden = false;
   }
 

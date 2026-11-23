@@ -2,6 +2,7 @@
 import io
 import os
 import secrets
+from typing import Iterable, cast
 from unittest.mock import patch
 
 from django.core.cache import cache
@@ -9,10 +10,12 @@ from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.core.exceptions import ValidationError
 from django.contrib.auth import password_validation
+from django.http import StreamingHttpResponse
 from django.test import RequestFactory, TestCase, override_settings
 from rest_framework.test import APIClient, APIRequestFactory
 
 from apps.accounts.models import AdminLog, AdminRight, Ban, CustomUser
+from apps.catalog.models import Product
 
 from .exceptions import GENERIC_SERVER_ERROR, api_exception_handler
 from .models import SiteBlock
@@ -32,7 +35,8 @@ class FrontendDebugFlagTests(TestCase):
         request = RequestFactory().get("/pages/catalog.html")
         response = page(request, "catalog.html")
         try:
-            content = b"".join(response.streaming_content)
+            assert isinstance(response, StreamingHttpResponse)
+            content = b"".join(cast(Iterable[bytes], response.streaming_content))
         finally:
             response.close()
 
@@ -48,6 +52,61 @@ def make_user(username: str, role: str | None = None) -> CustomUser:
         user.role = role
         user.save(update_fields=["role"])
     return user
+
+
+class BootstrapSeedCommandTests(TestCase):
+    def test_seed_rerun_preserves_products_and_unfulfillable_downloads_are_inactive(self):
+        tree = {
+            "Подарункові картки й поповнення": {"Steam": []},
+            "Ігрові проєкти й ассети": {"2D-ресурси": ["Іконки"]},
+        }
+        products = [
+            (
+                "Download sample",
+                ["Ігрові проєкти й ассети", "2D-ресурси", "Іконки"],
+                "digital_file",
+                "100",
+                1,
+                "Demo",
+                "active",
+            ),
+            (
+                "Hidden download",
+                ["Ігрові проєкти й ассети", "2D-ресурси", "Іконки"],
+                "digital_file",
+                "200",
+                1,
+                "Demo",
+                "hidden",
+            ),
+        ]
+        with (
+            patch("apps.core.management.commands.bootstrap_seed.TREE", tree),
+            patch("apps.core.management.commands.bootstrap_seed.PRODUCTS", products),
+        ):
+            call_command("bootstrap_seed", stdout=io.StringIO())
+            seller = CustomUser.objects.get(username="bootstrap_seller")
+            first_ids = dict(
+                Product.objects.filter(seller=seller).values_list("name", "id")
+            )
+
+            gift_card = Product.objects.get(name="Steam Classic #1")
+            self.assertEqual(gift_card.product_type, "digital_key")
+            self.assertEqual(gift_card.brand, "Steam")
+            self.assertEqual(
+                Product.objects.get(name="Download sample").status, "inactive"
+            )
+            hidden = Product.objects.get(name="Hidden download")
+            self.assertEqual(hidden.status, "inactive")
+            self.assertEqual(hidden.hidden_token, "")
+
+            call_command("bootstrap_seed", stdout=io.StringIO())
+            second_ids = dict(
+                Product.objects.filter(seller=seller).values_list("name", "id")
+            )
+
+        self.assertEqual(first_ids, second_ids)
+        self.assertEqual(len(second_ids), 6)
 
 
 class SiteBlocksAdminApiTests(TestCase):

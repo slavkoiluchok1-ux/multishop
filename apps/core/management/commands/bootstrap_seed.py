@@ -7,7 +7,7 @@ from django.db import transaction
 from django.utils.text import slugify
 
 from apps.accounts.models import CustomUser
-from apps.catalog.category_data import TREE, walk
+from apps.catalog.category_data import TREE, uses_digital_delivery, walk
 from apps.catalog.models import Category, Product, ProductVariant
 from apps.core.management.commands.seed_demo import PRODUCTS
 from apps.wallet.models import Wallet
@@ -196,9 +196,6 @@ class Command(BaseCommand):
                         "active",
                     ))
 
-            original_names = {name for name, *_ in seed_products}
-            Product.objects.filter(seller=seller).exclude(name__in=original_names).delete()
-
             leaf_paths = [path for path, is_leaf in walk(TREE) if is_leaf]
             leaves_by_root = {}
             for path in leaf_paths:
@@ -225,6 +222,9 @@ class Command(BaseCommand):
                 if root == "Підписки":
                     kind = "subscription"
                     brand = "Learning+" if "Навчання" in path else "MediaPass"
+                elif root == "Подарункові картки й поповнення":
+                    kind = "digital_key"
+                    brand = path[-1]
                 elif root in ("Ігри", "Софт і ліцензії"):
                     kind = "digital_key"
                     brand = "Steam" if root == "Ігри" else "Microsoft"
@@ -244,6 +244,9 @@ class Command(BaseCommand):
                     price = str(700 + (leaf_index * 2 + variant_index) * 43)
                     stock = 999 if kind in ("digital_key", "digital_file", "subscription") else 20
                     seed_products.append((unique_name, list(path), kind, price, stock, brand, "active"))
+
+            original_names = {name for name, *_ in seed_products}
+            Product.objects.filter(seller=seller).exclude(name__in=original_names).delete()
 
             created_count = 0
             for index, (name, path, kind, price, stock, brand, status) in enumerate(seed_products):
@@ -277,6 +280,20 @@ class Command(BaseCommand):
                         "stock": stock,
                     },
                 )
+                if (
+                    product.status in ("active", "hidden")
+                    and uses_digital_delivery(product.product_type, category.path)
+                ):
+                    paid_variant_ids = set(
+                        product.digital_files.filter(is_trial=False).values_list(
+                            "variant_id", flat=True
+                        )
+                    )
+                    variant_ids = set(product.variants.values_list("id", flat=True))
+                    if None not in paid_variant_ids and not variant_ids.issubset(paid_variant_ids):
+                        product.status = "inactive"
+                        product.hidden_token = ""
+                        product.save(update_fields=["status", "hidden_token"])
 
         self.stdout.write(
             self.style.SUCCESS(f"Початкові товари готові: створено {created_count}.")

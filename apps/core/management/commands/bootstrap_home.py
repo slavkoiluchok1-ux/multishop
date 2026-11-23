@@ -109,4 +109,23 @@ class Command(BaseCommand):
                     defaults=defaults,
                 )
 
+            legacy_trust = SiteBlock.objects.filter(key="trust").first()
+            if legacy_trust is not None:
+                legacy_trust.text = (
+                    "Комісія 1%, виплата продавцю заморожується на 14 днів, "
+                    "застава 1% від загальної вартості товарів продавця."
+                )
+                legacy_trust.save(update_fields=["text"])
+
+            coins_block = SiteBlock.objects.filter(key="coins_and_commission").first()
+            if coins_block is not None:
+                coins_block.text = (
+                    "MC — внутрішня умовна валюта навчального проєкту: 1 MC дорівнює 10 грн "
+                    "лише у демонстраційних розрахунках. Комісія платформи становить 1%, "
+                    "а застава продавця — 1%."
+                )
+                coins_block.save(update_fields=["text"])
+
+            SiteBlock.objects.filter(key="ке").delete()
+
         self.stdout.write(self.style.SUCCESS("Початкові блоки головної оновлено без дублікатів."))

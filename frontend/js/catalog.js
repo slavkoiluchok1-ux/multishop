@@ -300,7 +300,7 @@
     const cacheKey = window.MSSkeletons.cacheKey(requestUrl);
     const cached = window.MSSkeletons.getCachedData(cacheKey);
     const renderTiles = (data) => {
-      const cats = data.categories || [];
+      const cats = (data.categories || []).filter((category) => Number(category.product_count) > 0);
       els.tileGrid.replaceChildren();
       if (!cats.length) {
         els.tileGrid.innerHTML = '<p class="text-muted-soft small mb-0">Немає розділів для цього виду товарів.</p>';

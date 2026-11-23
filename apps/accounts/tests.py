@@ -5,6 +5,7 @@ import tempfile
 from typing import Any, Protocol, cast
 
 from django.contrib import admin as django_admin
+from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import connection
 from django.test import RequestFactory, TestCase, override_settings
@@ -41,6 +42,7 @@ class AuthenticationSessionTests(TestCase):
     def test_login_by_nickname_or_email_sets_a_working_session_and_logout_clears_it(self):
         for login_value in ("session-user", "SESSION-USER@EXAMPLE.COM"):
             with self.subTest(login=login_value):
+                cache.clear()
                 client = APIClient(enforce_csrf_checks=True)
                 client.get("/api/auth/csrf")
                 csrf_token = client.cookies["csrftoken"].value
@@ -69,6 +71,33 @@ class AuthenticationSessionTests(TestCase):
 
                 self.assertEqual(logout.status_code, 200, logout.data)
                 self.assertFalse(client.get("/api/auth/me").json()["authenticated"])
+
+    def test_registration_creates_an_authenticated_session_with_csrf(self):
+        client = APIClient(enforce_csrf_checks=True)
+        client.get("/api/auth/csrf")
+        csrf_token = client.cookies["csrftoken"].value
+
+        response = client.post(
+            "/api/auth/register",
+            {
+                "username": "new-session-user",
+                "email": "new-session-user@example.com",
+                "password": "N3wAccountPassword!",
+                "password2": "N3wAccountPassword!",
+            },
+            format="json",
+            HTTP_X_CSRFTOKEN=csrf_token,
+        )
+
+        self.assertEqual(response.status_code, 201, response.data)
+        self.assertIn("sessionid", response.cookies)
+        self.assertTrue(client.get("/api/auth/me").json()["authenticated"])
+        self.assertTrue(
+            CustomUser.objects.filter(
+                username="new-session-user",
+                email="new-session-user@example.com",
+            ).exists()
+        )
 
 
 class ProfileUpdateApiTests(TestCase):

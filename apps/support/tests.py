@@ -11,6 +11,8 @@ from django.core.cache import cache
 from django.db import connection
 from django.core import mail
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.contrib.sessions.backends.db import SessionStore
+from django.contrib.sessions.models import Session
 from django.http import HttpResponseBase
 from django.test import TestCase
 from django.test.utils import override_settings
@@ -471,6 +473,14 @@ class SupportAdminTests(SupportAPITestCase):
     def test_recover_account_generates_temp_password(self):
         self.ticket.request_type = "account"
         self.ticket.save(update_fields=["request_type"])
+        user_session = SessionStore()
+        user_session["_auth_user_id"] = str(self.user.pk)
+        user_session.create()
+        corrupt_session = Session.objects.create(
+            session_key="corrupted-session",
+            session_data="invalid-session-data",
+            expire_date=user_session.get_expiry_date(),
+        )
         self.api_client.force_authenticate(user=self.admin)
         response = self.api_client.post(
             f"/api/admin/support/{self.ticket.id}/recover-account",
@@ -484,6 +494,8 @@ class SupportAdminTests(SupportAPITestCase):
         self.assertTrue(self.user.must_change_password)
         self.assertTrue(self.user.check_password(data["temp_password"]))
         self.assertTrue(AccountRecovery.objects.filter(ticket=self.ticket, target_user=self.user).exists())
+        self.assertFalse(Session.objects.filter(session_key=user_session.session_key).exists())
+        self.assertTrue(Session.objects.filter(pk=corrupt_session.pk).exists())
 
     def test_recover_account_cannot_target_another_user(self):
         self.ticket.request_type = "account"

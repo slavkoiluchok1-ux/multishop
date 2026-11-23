@@ -1,0 +1,143 @@
+# Звіт аудиту MultiShop
+
+Дата початку: 2026-11-22
+
+## Передумови та резервна копія
+
+- До змін створено копію проєкту: `C:\Users\Laptop\Desktop\Нова папка\multishop-backup-20261122`.
+- Перевірено наявність у копії `db.sqlite3` та каталогу `apps`.
+- Не копіювалися відтворювані `.venv`, `staticfiles`, `.ruff_cache`, `__pycache__` та `*.pyc`.
+- Початкові робочі зміни в коді включені в копію.
+
+## Етапи
+
+| Етап | Стан |
+| --- | --- |
+| 1. Карта проєкту | Виконано |
+| 2. Базова перевірка й міграції | Виконано |
+| 3. Цілісність даних | Виконано; аномалії перевіряються на етапах 8 і 10 |
+| 4. Перевірка маршрутів і сторінок | Виконано; GET-перевірки без 5xx |
+| 5. Шаблони | Виконано; відсутніх змінних не виявлено |
+| 6. Статика й медіа | Виконано; локальні ресурси та роздача перевірені |
+| 7. Каталог і продуктивність | Виконано; N+1 не виявлено |
+| 8. Seed-команда | Виконано; виявлено повторне видалення 214 товарів |
+| 9. Повний набір тестів | Виконано: 265 тестів пройшли |
+| 10. Виправлення підтверджених проблем | Виконано |
+| 11. Фінальна перевірка | Виконано |
+| 12. Додатковий аудит після повторного звернення | Виконано |
+| 13. Оновлення Render cache-buster | Виконано локально; live-деплой недоступний |
+
+## Висновки
+
+### Етап 1 — карта проєкту
+
+- Django apps: `core`, `accounts`, `telegrambot`, `policy`, `wallet`, `catalog`, `cart`, `favorites`, `orders`, `complaints`, `support`, `notifications` (12 локальних apps).
+- `INSTALLED_APPS`: Django admin/auth/contenttypes/sessions/messages/staticfiles, DRF і ці 12 локальних apps. Dev додає `debug_toolbar`.
+- Головний `config/urls.py`: `/health/`, `/admin/`, усі API includes під `/api/`, frontend include на корені, публічне `/media/<path>`; debug toolbar тільки при `DEBUG=True`.
+- App URL-модулі: `accounts/urls.py`, `telegrambot/urls.py`, `policy/urls.py`, `wallet/urls.py`, `core/api_urls.py`, `catalog/api_urls.py`, `cart/urls.py`, `favorites/urls.py`, `notifications/urls.py`, `complaints/urls.py`, `orders/urls.py`, `support/urls.py`; `core/urls.py` також має `/`, `/catalog/h/<token>` і `/pages/<path:name>`.
+- `manage.py` за замовчуванням вибирає `config.settings.dev`; Render/build запускає `config.settings.prod`.
+- Базові налаштування: `DEBUG=False`, `ALLOWED_HOSTS=["*"]`, SQLite у `BASE_DIR/db.sqlite3`, `STATIC_URL=/static/`, `STATICFILES_DIRS=[BASE_DIR/frontend]`, `STATIC_ROOT=BASE_DIR/staticfiles`, WhiteNoise + `CompressedManifestStaticFilesStorage`; публічне й приватне media розділені.
+- Templates: `DIRS=[BASE_DIR/templates]`, `APP_DIRS=True`, context processors `request`, `auth`, `messages`; каталог `templates/` існує.
+- Middleware: Security, WhiteNoise, Session, Common, CSRF, Authentication, Messages, Clickjacking, потім policy/ban/password-change gates та JSON API exception middleware.
+- Prod: `DEBUG` за env (default false), обов'язковий `DJANGO_SECRET_KEY`, `ALLOWED_HOSTS` з env/Render hostname, secure cookies/HTTPS, БД з `DATABASE_URL` або SQLite у `DATA_DIR`; кеш Redis за `REDIS_URL`, інакше локальний in-memory cache. У dev окремого `CACHES` немає (Django default).
+- Вже підтверджена перед аудитом браузерна помилка: дубльований `const gear` у `frontend/js/auth.js` спричиняв SyntaxError до експорту `MSAuth`; це ламало мобільну навігацію, запуск каталогу і форми. Дубль прибраний, cache-buster оновлений; перевірено в браузері, що JS запускається й каталог відображає товари.
+- На цьому етапі нових змін конфігурації не внесено.
+
+### Етап 2 — Django checks і міграції
+
+- `manage.py check`: успішно, 0 зауважень.
+- `manage.py makemigrations --check --dry-run`: `No changes detected`.
+- До та після `manage.py migrate --noinput`: всі міграції позначені застосованими; `No migrations to apply`.
+- `showmigrations` завершився з кодом 0 до і після `migrate`.
+- Схему БД змінювати не довелося.
+
+### Етап 3 — дані та зв'язки
+
+- Базовий знімок SQLite до виправлень етапу 10: 274 товари; 263 `active`, 4 `sold_out`, 4 `inactive`, 3 `hidden`; усі 274 мають `moderation="ok"`. Усі 263 активні товари мали варіанти із залишком і потрапляли у звичайну вибірку каталогу.
+- У базовому знімку було 1 609 категорій, з них 1 572 активні та 37 неактивні. 1 367 активних вузлів не мали товарів у піддереві за звичайним фільтром «у наявності»; тоді всі 20 кореневих плиток мали товари. Фінальний стан після виправлення даних описано в етапі 11.
+- Немає товарів без варіантів, порожніх обов'язкових назви/slug/типу/статусу/модерації, дублів slug товарів чи категорій, дублів `Category.path`, циклів або застарілих шляхів категорій. `PRAGMA foreign_key_check` повернув 0 порушень.
+- **Підтверджена аномалія даних для перевірки seed-коду:** 10 активних товарів у категорії подарункових карток мають `product_type="physical"`, хоча тип кореневої категорії — `digital_key` (ID: 945–946, 985–986, 1025–1026, 1065–1066, 1105–1106). Це може прибирати їх із цифрового фільтра.
+- **Підтверджена аномалія даних для перевірки seed-коду:** 46 активних товарів, для яких `uses_digital_delivery()` вимагає платний файл, не мають жодного платного `DigitalFile` (34 `digital_file` та 12 розробницьких послуг). Перевірити джерело й безпечне виправлення на етапах 8 і 10; до цього продаж цих записів не вважається коректно налаштованим.
+- Сповіщення: 77 записів, з них 61 непрочитане. Окремої моделі «значка» немає: лічильники навігації та адмінські badges формуються динамічно через API.
+- На цьому етапі БД не змінювалася.
+
+### Етап 4 — маршрути, сторінки та дані каталогу
+
+- Django resolver знайшов і перевірив GET-запитом усі 110 маршрутів застосунку (включно з динамічними шаблонами маршрутів). `5xx` і traceback немає. `403` — захищений endpoint без авторизованої сесії; `405` — endpoint не підтримує GET; `404` — навмисно відсутній об'єкт/файл або перевірка неіснуючої сторінки.
+- Статуси GET для кожного маршруту (динамічні параметри замінені тестовими значеннями):
+  - **200 (19):** `/health/`, `/api/auth/csrf`, `/api/auth/me`, `/api/auth/username-check`, `/api/policy`, `/api/site/blocks`, `/api/catalog/views`, `/api/catalog/categories`, `/api/catalog/categories/1/popup`, `/api/catalog/filters`, `/api/products`, `/api/products/1/reviews`, `/api/products/1`, `/api/cart`, `/api/favorites`, `/api/notifications/counters`, `/api/complaint-types`, `/`, `/catalog/h/sample-token`.
+  - **403 (81):** `/api/auth/logout`, `/api/profile`, `/api/profile/avatar`, `/api/profile/password`, `/api/profile/seller-verification`, `/api/admin/cabinet`, `/api/admin/users/search`, `/api/admin/users/1`, `/api/admin/bans`, `/api/admin/bans/1/lift`, `/api/admin/coins/issue`, `/api/telegram/link`, `/api/telegram/status`, `/api/telegram/unlink`, `/api/telegram/prefs`, `/api/policy/accept`, `/api/wallet`, `/api/admin/site/blocks`, `/api/admin/site/blocks/reorder`, `/api/admin/site/blocks/1`, `/api/products/mine`, `/api/products/mine/activation-codes/check`, `/api/products/mine/1`, `/api/products/mine/1/digital-files`, `/api/products/mine/1/variants/1/restock`, `/api/products/mine/1/variants/1/price`, `/api/admin/products`, `/api/admin/products/sellers/1/delete-all`, `/api/admin/products/1/block`, `/api/admin/products/1/unblock`, `/api/admin/products/1/delete`, `/api/admin/badges`, `/api/notifications/read`, `/api/complaints`, `/api/complaints/evidence/1`, `/api/complaints/1`, `/api/complaints/1/comments`, `/api/admin/complaints`, `/api/admin/complaints/1`, `/api/admin/complaints/1/take`, `/api/admin/complaints/1/comments`, `/api/admin/complaints/1/resolve`, `/api/admin/users/1/lift-complaint-block`, `/api/admin/verifications/1`, `/api/admin/verifications/1/photo`, `/api/checkout`, `/api/orders/mine`, `/api/orders/incoming`, `/api/orders/1`, `/api/orders/1/confirm-received`, `/api/orders/1/status`, `/api/orders/1/cancel`, `/api/orders/1/cancel-agree`, `/api/orders/1/comments`, `/api/downloads/1`, `/api/support/tickets`, `/api/support/tickets/1`, `/api/support/tickets/1/messages`, `/api/support/tickets/1/appeals`, `/api/support/attachments/1`, `/api/admin/support`, `/api/admin/support/1`, `/api/admin/support/1/status`, `/api/admin/support/1/recover-account`, `/api/admin/support/1/category`, `/api/admin/support/1/bug/status`, `/api/admin/support/1/idea/status`, `/api/admin/support/1/internal-note`, `/api/admin/support/1/template-reply`, `/api/admin/support/1/ban/lift`, `/api/admin/support/1/ban/reduce`, `/api/admin/support/1/ban/reject`, `/api/admin/support/1/wallet`, `/api/admin/support/1/wallet/issue`, `/api/admin/support/1/wallet/refund-held`, `/api/admin/support/1/order`, `/api/admin/support/1/order/pay-seller`, `/api/admin/support/1/order/refund-buyer`, `/api/admin/support/1/product`, `/api/admin/support/1/product/deactivate`, `/api/admin/support/1/product/restore`.
+  - **404 (3):** `/api/products/h/sample-token`, `/api/products/1/trial-files/1`, `/pages/missing-file` (недійсні тестові ідентифікатори).
+  - **405 (7):** `/api/auth/register`, `/api/auth/login`, `/api/telegram/recovery/request`, `/api/telegram/recovery/verify`, `/api/cart/items`, `/api/cart/merge`, `/api/support/guest` (ці операції не приймають GET).
+- Головна та всі 18 HTML-сторінок у `frontend/pages/` повернули 200, зокрема catalog, product, cart, login/register, profile, orders, seller/support та admin pages.
+- До виправлення даних етапу 10 каталог мав 267 видимих товарів: сторінки `page=1..10` повертали по 24 записи, а всі їхні деталі — 200. Після виправлення остаточні лічильники й сторінки наведено в етапі 11. Popup-запити 1 609 категорій повертали 200. За `view=all/physical/digital/services` кореневий список повернув 20/12/6/2 категорії відповідно.
+- У цій стадії мережеві помилки сторінок не відтворились; запити виконані через Django test Client.
+
+### Етап 5 — Django-шаблони
+
+- Django-шаблонів у `apps/*/templates/` немає. Є email-шаблони `templates/emails/order_created.html` і `.txt`, які використовуються при оформленні замовлення.
+- Обидва email-шаблони реально відрендерено з тимчасовим `TEMPLATES[...]["OPTIONS"]["string_if_invalid"]="__INVALID_%s__"` і контекстом замовлення; маркер відсутніх змінних не з'явився, винятків рендерингу немає.
+- `{% load %}`, `{% extends %}`, `{% include %}` та `{% url %}` у HTML-шаблоні не використовуються, тому помилкових завантажень тегів/маршрутів або зламаного наслідування немає. HTML `frontend/` віддається як готовий файл, не через Django template engine.
+
+### Етап 6 — статика й медіа
+
+- `collectstatic --noinput`: успішно; 61 файл скопійовано, 178 не змінено, 644 пройшли post-process. `staticfiles/` ігнорується Git.
+- У frontend є 22 JS, 8 CSS і 2 SVG; усі 26 унікальних HTML-посилань на `/static/` та всі 8 локальних CSS import/URL ведуть до файлів, що існують.
+- 52 головні зображення товарів і всі 6 приватних цифрових файлів існують на диску; відсутніх файлів у БД-посиланнях не знайдено. Публічний media root і приватний media root існують.
+- Реальний `runserver` у DEBUG віддав 200 для головної, каталогу, усіх 32 JS/CSS/SVG файлів і 55 файлів у public media: 89 запитів, 0 помилок. Пряма спроба доступу до приватного файлу через публічний `/media/` повернула 404, як і має бути.
+
+### Етап 7 — каталог і продуктивність
+
+- `ProductListView` застосовує фільтри до QuerySet, `select_related("category", "seller")`, `prefetch_related("variants")`, рахує мінімальну ціну в SQL і формує картки з уже завантажених варіантів. Спискова вибірка не виконує запитів на кожен товар.
+- До виправлення даних етапу 10 сторінки 1–12 мали 200, відповідно 24 товари на сторінках 1–11 та 3 на сторінці 12; 3 SQL-запити на кожну сторінку, включно з 1 та 10. Теплий час сторінок 1–11 переважно 15–19 мс; перший холодний запит ~169 мс.
+- Ізольований тестовий SQLite DB з 1 000 синтетичними товарами та варіантами: сторінки 1/20/42 повернули 200 і 24/24/16 записів; у всіх випадках 3 SQL-запити, теплий час ~21–22 мс. Тимчасова БД після заміру видалена; робоча БД не змінювалася.
+- Пошук, сортування за ціною, фільтр типу та категорії повернули 200; query count стабільний (3, для першого холодного запиту з кешем дерева категорій — 4). N+1 або повільного запиту на перевірених обсягах не виявлено.
+
+### Етап 8 — bootstrap_seed
+
+- На ізольованій тестовій БД чистий `bootstrap_seed` створює 1 164 категорії, 240 товарів і 240 варіантів. Другий запуск залишив ті самі кількості, але звіт команди знову показав `створено 214`; перевірка пояснює це неідемпотентною поведінкою з втратою PK: `original_names` формується до додавання 214 згенерованих товарів, а cleanup видаляє їх перед кожним повторним створенням. Це може ламати замовлення та інші посилання на варіанти.
+- У scratch-тесті cleanup видалив сторонній запис лише під зарезервованим `bootstrap_seller`; товар іншого продавця залишився. У робочій БД зараз 240 товарів `bootstrap_seller`, їхні назви повністю збігаються з поточним seed-набором (0 відсутніх/зайвих). Кількість старих категорій не очищається: 500 шляхів не входять до поточного `TREE`, але 12 із цих категорій мають прямі товари (11 видимих), тому автоматичне видалення небезпечне і не робилося.
+- У генераторі типу товару не врахований корінь `Подарункові картки й поповнення`: 10 активних seed-товарів створюються як `physical`, хоча цей root дозволяє `digital_key`.
+- Seed не створює `DigitalFile`, але створює активні/приховані записи для цифрової доставки. На `bootstrap_seller` знайдено 44 такі записи без платного файлу (32 активні `digital_file`, 1 прихований `digital_file`, 11 активних послуг розробки). Це порушує ту саму вимогу, яку застосовує seller API перед публікацією.
+- Scratch test DB і тимчасові медіа були очищені. Робочі товари/категорії seed-командою не запускалися й не змінювалися.
+
+### Етап 9 — базовий повний набір тестів
+
+- До виправлень: `.\.venv\Scripts\python.exe manage.py test` завершився успішно: 265 тестів за 264.457 с, `System check identified no issues`. Очікувані логи `Forbidden`/`Bad Request` і тестові помилки доставки Telegram не спричинили падіння.
+
+### Етап 10 — виправлення підтверджених проблем
+
+- `frontend/js/auth.js`: повторне оголошення `const gear` в одному блоці спричиняло `SyntaxError` до експорту `MSAuth`, через що скрипт зупиняв мобільну навігацію та сценарії авторизації. Дублікат усунуто; сторінки використовують cache-buster `auth-v15-20261122`.
+- `apps/core/management/commands/bootstrap_seed.py:248-249`: набір імен seed-товарів тепер формується після додавання згенерованих записів; повторний запуск більше не видаляє й не створює заново 214 товарів, отже зберігає їхні ID та зв’язки. Корінь подарункових карток отримує тип `digital_key` і бренд підкатегорії; активні/приховані цифрові товари без платних файлів переводяться в `inactive`, а прихований токен очищається.
+- `apps/core/tests.py:57`: додано регресійний тест на стабільність ID при повторному seed, тип/бренд подарункової картки та деактивацію неповної цифрової доставки.
+- У локальній БД 10 seed-товарів подарункових карток виправлено з `physical` на `digital_key`; 48 записів із неповною цифровою доставкою (46 активних, 2 прихованих) переведено в `inactive`. Записи не видалялися; пов’язаних замовлень не було, кошик і обране збережено.
+- `frontend/js/catalog.js:303` та `frontend/js/tree-popup.js:218`: покупецький каталог приховує порожні розділи й підтипи. API категорій і `frontend/js/seller.js` не змінювалися: перевірка `/api/catalog/categories` повернула всі 20 коренів, зокрема 4 порожні, потрібні для вибору продавцем.
+- Для змінених каталогових скриптів оновлено cache-busters до `category-icons-v3-20261122` і `leaf-icons-v17-20261122`; `collectstatic --noinput` після змін завершився успішно. Розгортання на Render не виконувалося.
+- Стан після виправлення даних: 274 товари загалом, 217 `active` з `moderation='ok'`, 1 609 категорій. Окремий клієнтський API-прогін повернув 200 для всіх сторінок каталогу 1–10: по 24 товари на сторінках 1–9 та 1 товар на сторінці 10.
+
+### Етап 11 — фінальна перевірка
+
+- Після всіх змін `manage.py check` завершився успішно без зауважень, `makemigrations --check --dry-run` повідомив `No changes detected`; повний `manage.py test` завершився з `OK`: 266 тестів за 299.503 с. Очікувані в тестах відповіді `Forbidden`/`Bad Request` і симульовані помилки Telegram не спричинили падіння.
+- Перевірено реальну взаємодію каталогу в браузері: пагінацією пройдено сторінки 1–10; сторінки 1–9 відобразили по 24 картки, сторінка 10 — 1 картку з зображенням товару. Картки мають фото або іконки/emoji fallback. Сторінка 10 відкривається як остання сторінка `10 з 10` без помилки.
+- Окремо через Django test Client повторно перевірено всі 18 HTML-сторінок (усі 200), 221 деталь товару зі статусом `active`/`sold_out` і `moderation='ok'` (усі 200), а також popup усіх 1 609 категорій (усі 200; traceback і неочікуваних статусів немає). Сторінки входу й реєстрації повернули 200; у браузері форму не надсилали й акаунт у робочій БД не створювали.
+- На фінальній БД: 274 товари — 217 `active`, 4 `sold_out`, 52 `inactive`, 1 `hidden`; усі 217 активних мають `moderation='ok'`. У каталозі видно 16 кореневих категорій із товарами; API продавця зберігає всі 20 коренів, включно з 4 порожніми. У popup «Ігри» показаний лише підтип PC, інші порожні підтипи приховані.
+- Після виправлень `collectstatic --noinput` успішний (3 файли скопійовано, 236 без змін, 602 post-processed); актуальні `/static/js/auth.js`, `catalog.js` і `tree-popup.js` та сторінки login/register фактично повернули 200 з cache-buster URL.
+- Незавершених проблем відображення/маршрутизації не виявлено. 12 категорій поза актуальною канонічною таксономією, що мають прямі товари, збережено, не видаляючи потенційно потрібні зв’язки. Cache-busters оновлено локально; деплой і live-перевірку Render не виконували.
+
+### Етап 12 — додатковий аудит після повторного звернення
+
+- До нової правки створено актуальну резервну копію `C:\Users\Laptop\Desktop\Нова папка\multishop-backup-20261122-followup` з БД, кодом і звітом; `.venv`, `staticfiles` та кеш виключені.
+- Повторно відкрито в браузері головну та всі 18 сторінок `frontend/pages/`: усі 19 відповідей — 200, жодної невиловленої JS-помилки виконання. Захищені сторінки для анонімного відвідувача закономірно показали екран входу; форми не надсилалися.
+- У наявних account-тестах перевірявся вхід, але не POST-реєстрація. Додано тест `apps/accounts/tests.py:75`, який через тимчасову тестову БД перевіряє CSRF-захищений `POST /api/auth/register`, статус 201 та автологін. Він пройшов окремо; акаунт у робочій БД не створювався.
+- `check --deploy` з локальними параметрами `.env` показував попередження, бо Docker-приклад навмисно вказує `SECURE_SSL_REDIRECT=false`, незахищені cookie та `SECURE_HSTS_SECONDS=0` для локального HTTP. Це не production-default: із захищеними значеннями `check --deploy` пройшов без зауважень. Локальний `/data` не змонтований у Windows, тому production-check тут запускався з локальною writable `DATA_DIR`; у Render/Docker її задає середовище.
+- Повний Ruff scan знайшов 580 існуючих lint-зауважень, переважно RUF012/FURB157/I001; formatter повідомив про 145 неформатованих файлів. Масовий стильовий переформат не робився; для невикористаних імен/невизначених символів окремий скан не виявив F821/F822/F823.
+- У `apps/support/admin_api.py` функція відкликання сесій без потреби ловила `Exception` і мовчки продовжувала, що могло приховати помилки читання БД. Django decoder сам повертає порожні дані для пошкодженої сесії; зайвий catch прибрано. `apps/support/tests.py` розширено перевіркою: recovery видаляє валідну сесію користувача й не зупиняється на пошкодженій.
+- Цільовий набір `SupportAdminTests`: 19 тестів пройшли. Після змін повний `manage.py test` завершився успішно: 266 тестів за 272.443 с; додатковий тест реєстрації також пройшов окремо. Системна перевірка під час тестів — без зауважень.
+- Остаточна вибіркова Ruff-перевірка `BLE001,S112,F841` для трьох змінених Python-файлів чиста. `pip check` не знайшов проблем залежностей. Pyright завершився з 0 помилок, але проєктна конфігурація має `typeCheckingMode="off"` і вимикає основні діагностики, тож це не повний строгий тип-чек.
+- Інших відтворюваних runtime-помилок у цьому проході не знайдено. 580 загальних Ruff-попереджень і 145 файлів, які formatter хоче переформатувати, лишено без масових змін: це переважно стиль/класові конфігураційні колекції, а не підтверджені функціональні дефекти.
+
+### Етап 13 — оновлення Render cache-buster
+
+- Після зауваження оновлено дату cache-buster `20261122` → `20261123` для `base.css`, його `components.css` import, `auth.js`, `catalog.js` і `tree-popup.js` у всіх відповідних HTML-сторінках.
+- Повторний `collectstatic --noinput` успішний: 20 файлів скопійовано, 219 без змін, 620 post-processed. Старих цільових cache-buster рядків у `frontend/` не залишилося; 19 HTML-маршрутів і 5 оновлених статичних URL повернули 200 через Django test Client.
+- Актуальна резервна копія до цієї зміни: `C:\Users\Laptop\Desktop\Нова папка\multishop-backup-20261123-render-version`. Це оновлює URL-версії в коді для наступної публікації; live Render не розгортався, бо середовище не має Render CLI, Git CLI чи конфігурації конкретного Render-сервісу.

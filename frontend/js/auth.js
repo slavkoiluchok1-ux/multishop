@@ -456,7 +456,6 @@
         modal.hidden = true;
         modal.classList.remove("is-mobile-floating");
       }
-      const gear = document.querySelector("[data-mobile-admin-gear]");
       if (gear && !(window.matchMedia("(max-width: 575.98px)").matches &&
           modal.classList.contains("is-mobile-closing"))) {
         gear.hidden = false;

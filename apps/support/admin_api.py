@@ -66,10 +66,7 @@ def _delete_user_sessions(user_id: int) -> None:
     """
     now = timezone.now()
     for session in Session.objects.filter(expire_date__gte=now):
-        try:
-            data = session.get_decoded()
-        except Exception:
-            continue
+        data = session.get_decoded()
         if str(data.get("_auth_user_id")) == str(user_id):
             session.delete()
 
