@@ -540,7 +540,17 @@ class AdminComplaintsView(APIView):
             groups = {
                 key: group
                 for key, group in groups.items()
-                if lowered in group["title"].lower() or lowered in group["subtitle"].lower()
+                if lowered in " ".join(
+                    (
+                        group["title"],
+                        group["subtitle"],
+                        *(
+                            value
+                            for complaint in group["complaints"]
+                            for value in (complaint["type_path"], complaint["preview"])
+                        ),
+                    )
+                ).lower()
             }
 
         items = sorted(

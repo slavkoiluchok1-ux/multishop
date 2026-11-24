@@ -945,20 +945,26 @@
       sheet.querySelector("[data-mobile-more-title]").textContent = "Додаткові розділи";
       const links = [
         { icon: "🏠", label: "Політика", href: "/pages/policy.html", show: () => true },
-        { icon: "🚚", label: "Замовлення", href: "/pages/orders.html", show: () => !!user.authenticated },
+        { icon: "🚚", label: "Замовлення", href: "/pages/orders.html", counter: "orders", show: () => !!user.authenticated },
         { icon: "🛍️", label: "Мої товари", href: "/pages/seller.html", show: () => !!user.authenticated },
-        { icon: "⚠", label: "Скарги", href: "/pages/complaints.html", show: () => !!user.authenticated },
-        { icon: "🆘", label: "Підтримка", href: "/pages/support.html", show: () => true },
+        { icon: "⚠", label: "Скарги", href: "/pages/complaints.html", counter: "complaints", show: () => !!user.authenticated },
+        { icon: "🆘", label: "Підтримка", href: "/pages/support.html", counter: "support", show: () => true },
       ].filter((tile) => tile.show(user, rights));
       grid.innerHTML = links.map((tile) =>
         '<a class="mobile-more-link" href="' + esc(tile.href) + '">' +
           '<span class="mobile-more-icon" aria-hidden="true">' + esc(tile.icon) + '</span>' +
-          '<span>' + esc(tile.label) + '</span></a>'
+          '<span>' + esc(tile.label) + '</span>' +
+          (tile.counter
+            ? '<span class="nav-counter mobile-more-counter" data-counter="' +
+              esc(tile.counter) + '" hidden>0</span>'
+            : "") +
+          '</a>'
       ).join("");
       sheet.hidden = false;
       sheet.classList.remove("is-closing");
       backdrop.hidden = false;
       nav.querySelector("[data-mobile-more]").classList.add("is-open");
+      if (window.MSCounters) window.MSCounters.refresh();
     });
     sheet.querySelector("[data-mobile-more-close]").addEventListener("click", closeMore);
     backdrop.addEventListener("click", closeMore);
@@ -970,6 +976,12 @@
       gear.setAttribute("data-mobile-admin-gear", "");
       gear.setAttribute("aria-label", "Відкрити адмінпанель");
       gear.textContent = "⚙";
+      const badge = document.createElement("span");
+      badge.className = "nav-counter is-admin-badge";
+      badge.setAttribute("data-admin-total", "");
+      badge.setAttribute("aria-label", "Нових: 0");
+      badge.hidden = true;
+      gear.appendChild(badge);
       gear.hidden = true;
       document.body.appendChild(gear);
 

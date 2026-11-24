@@ -99,6 +99,27 @@ class AuthenticationSessionTests(TestCase):
             ).exists()
         )
 
+    def test_registration_preserves_generated_password_characters(self):
+        password = " 4K!qP9#tR2$vL8w "
+        response = APIClient().post(
+            "/api/auth/register",
+            {
+                "username": "google-pass-user",
+                "email": "generated-password@example.com",
+                "password": password,
+                "password2": password,
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 201, response.data)
+        login = APIClient().post(
+            "/api/auth/login",
+            {"login": "google-pass-user", "password": password},
+            format="json",
+        )
+        self.assertEqual(login.status_code, 200, login.data)
+
 
 class ProfileUpdateApiTests(TestCase):
     def setUp(self):

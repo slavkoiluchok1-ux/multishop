@@ -20,8 +20,8 @@ class RegisterSerializer(serializers.Serializer):
 
     username = serializers.CharField(max_length=20)
     email = serializers.EmailField()
-    password = serializers.CharField(write_only=True)
-    password2 = serializers.CharField(write_only=True)
+    password = serializers.CharField(write_only=True, trim_whitespace=False)
+    password2 = serializers.CharField(write_only=True, trim_whitespace=False)
 
     def validate_username(self, value):
         if CustomUser.objects.filter(username__iexact=value).exists():

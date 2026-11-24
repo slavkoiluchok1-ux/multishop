@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/css/base.css?v=category-tiles-v19-20261123">
+  <link rel="stylesheet" href="/static/css/base.css?v=category-tiles-v20-20261124">
   <style>.admin-page-jump { width: 5.25rem; }</style>
 </head>
 <body>
@@ -63,10 +63,10 @@
         <div class="col-md-3">
           <label class="form-label" for="viewFilter">Фільтр</label>
           <select class="form-select" id="viewFilter">
+            <option value="all" selected>Усе</option>
             <option value="products">Товари</option>
             <option value="sellers">Продавці</option>
             <option value="orders">Замовлення</option>
-            <option value="all">Усе</option>
           </select>
         </div>
         <div class="col-md-3">
@@ -82,7 +82,7 @@
         </div>
         <div class="col-md-4">
           <label class="form-label" for="searchInput">Пошук</label>
-          <input class="form-control" type="text" id="searchInput" placeholder="Назва товару, нік або номер замовлення">
+          <input class="form-control" type="text" id="searchInput" placeholder="Тип або опис скарги, товар, нік чи замовлення">
         </div>
         <div class="col-md-2">
           <button class="btn btn-primary w-100" type="button" id="applyBtn">Застосувати</button>
@@ -95,7 +95,7 @@
     <div class="card-body">
       <h2 class="h5 mb-3">Цілі зі скаргами</h2>
       <div class="table-responsive">
-        <table class="data-table">
+        <table class="data-table admin-complaints-table">
           <thead>
             <tr><th>Ціль</th><th>Кому належить</th><th>Скарг</th><th>Відкритих</th><th>Дії</th></tr>
           </thead>
@@ -160,7 +160,7 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="/static/js/api.js"></script>
 <script src="/static/js/price-format.js?v=price-3dp-20261114"></script>
-<script src="/static/js/auth.js?v=auth-v15-20261123"></script>
+<script src="/static/js/auth.js?v=auth-v16-20261124"></script>
 <script src="/static/js/password-change.js?v=password-change-20261114"></script>
 <script src="/static/js/notifications.js"></script>
 <script src="/static/js/policy-gate.js?v=policy-after-login-v2-20261122"></script>
@@ -199,7 +199,7 @@
       rejected: "is-muted",
     };
 
-    const state = { view: "products", status: "all", q: "", page: 1, pages: 1, rights: [] };
+    const state = { view: "all", status: "all", q: "", page: 1, pages: 1, rights: [] };
     state.q = new URLSearchParams(location.search).get("q") || "";
     $("searchInput").value = state.q;
     let groups = [];

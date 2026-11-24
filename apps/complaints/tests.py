@@ -571,6 +571,24 @@ class AdminComplaintTests(TestCase):
             {order_title, "Test product", "seller", "admin_1"},
         )
 
+    def test_admin_complaints_default_view_includes_all_and_searches_type(self):
+        client = self.client_for(self.admin_main)
+        response = api_get(client, "/api/admin/complaints")
+
+        self.assertEqual(response.status_code, 200, api_data(response))
+        data = api_data(response)
+        self.assertEqual(data["view"], "all")
+        self.assertIn(f"Замовлення №{self.order.id}", {
+            group["title"] for group in data["results"]
+        })
+
+        search = api_get(client, "/api/admin/complaints?q=Фізичні замовлення")
+        self.assertEqual(search.status_code, 200, api_data(search))
+        self.assertEqual(
+            {group["title"] for group in api_data(search)["results"]},
+            {f"Замовлення №{self.order.id}"},
+        )
+
     def test_admin_cannot_open_complaint_outside_his_rights(self):
         response = api_get(
             self.client_for(self.admin_p),
