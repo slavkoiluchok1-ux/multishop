@@ -173,7 +173,7 @@
     if (
       event.target &&
       event.target.closest &&
-      event.target.closest("[data-admin-open]") &&
+      event.target.closest("[data-admin-open], [data-mobile-admin-gear]") &&
       lastAdminBadgeCounts
     ) {
       window.setTimeout(() => paintAdminBadges(lastAdminBadgeCounts), 0);
