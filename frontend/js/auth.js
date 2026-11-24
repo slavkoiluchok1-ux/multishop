@@ -990,8 +990,8 @@
         const saved = JSON.parse(window.localStorage.getItem(gearPositionKey) || "null");
         if (saved && Number.isFinite(saved.left) && Number.isFinite(saved.top)) {
           const size = gear.offsetWidth || 52;
-          const left = Math.max(8, Math.min(window.innerWidth - size - 8, saved.left));
-          const top = Math.max(8, Math.min(window.innerHeight - size - 90, saved.top));
+          const left = Math.max(8, Math.min(window.innerWidth - size - 18, saved.left));
+          const top = Math.max(18, Math.min(window.innerHeight - size - 90, saved.top));
           gear.style.left = left + "px";
           gear.style.top = top + "px";
           gear.style.right = "auto";
@@ -1029,8 +1029,8 @@
         const dy = event.clientY - startY;
         if (Math.abs(dx) + Math.abs(dy) > 5) gear.dataset.dragMoved = "true";
         const size = gear.getBoundingClientRect();
-        const left = Math.max(8, Math.min(window.innerWidth - size.width - 8, originLeft + dx));
-        const top = Math.max(8, Math.min(window.innerHeight - size.height - 90, originTop + dy));
+        const left = Math.max(8, Math.min(window.innerWidth - size.width - 18, originLeft + dx));
+        const top = Math.max(18, Math.min(window.innerHeight - size.height - 90, originTop + dy));
         gear.style.left = left + "px";
         gear.style.top = top + "px";
         gear.style.right = "auto";

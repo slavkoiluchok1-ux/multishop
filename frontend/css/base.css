@@ -1297,7 +1297,7 @@ main.container .empty-state-panel a:not(.btn) { color: var(--blue); }
   .mobile-admin-gear {
     position: fixed;
     z-index: 1085;
-    right: 0.75rem;
+    right: 1.125rem;
     bottom: calc(6.25rem + env(safe-area-inset-bottom, 0px));
     width: 52px;
     height: 52px;
@@ -1312,11 +1312,13 @@ main.container .empty-state-panel a:not(.btn) { color: var(--blue); }
     line-height: 1;
     touch-action: none;
     -webkit-tap-highlight-color: transparent;
+    overflow: visible;
   }
   .mobile-admin-gear .nav-counter {
-    top: -0.3rem;
-    right: -0.3rem;
-    z-index: 1;
+    top: 0;
+    right: 0;
+    z-index: 2;
+    transform: translate(50%, -50%);
   }
   .mobile-admin-gear[hidden] {
     display: none !important;
