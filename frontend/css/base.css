@@ -1,7 +1,7 @@
 /* MultiShop — базові стилі (стиль із портфоліо) */
 @import url("themes.css");
 @import url("components.css?v=category-tiles-v3-20261124");
-@import url("motion.css?v=motion-orders-support-v1-20261122");
+@import url("motion.css?v=motion-ripple-host-v1-20261124");
 @import url("particles.css?v=particles-default-off-v7-20261123");
 
 * { box-sizing: border-box; }

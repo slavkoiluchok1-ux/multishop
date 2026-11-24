@@ -72,7 +72,8 @@ html.motion-ready [data-reveal].motion-tilt.is-revealed:hover {
   transform: perspective(900px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg)) translateY(-4px);
 }
 
-.motion-ripple-host { position: relative; overflow: hidden; }
+.motion-ripple-host { overflow: hidden; }
+.motion-ripple-host--positioned { position: relative; }
 .motion-ripple {
   position: absolute;
   width: 1rem;

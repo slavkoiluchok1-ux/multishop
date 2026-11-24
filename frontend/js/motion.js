@@ -532,6 +532,9 @@
       ripple.className = "motion-ripple";
       ripple.style.left = (event.clientX - bounds.left) + "px";
       ripple.style.top = (event.clientY - bounds.top) + "px";
+      if (window.getComputedStyle(button).position === "static") {
+        button.classList.add("motion-ripple-host--positioned");
+      }
       button.classList.add("motion-ripple-host");
       button.appendChild(ripple);
       ripple.addEventListener("animationend", () => ripple.remove(), { once: true });
