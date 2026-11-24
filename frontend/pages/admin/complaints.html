@@ -9,7 +9,44 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/css/base.css?v=mobile-gear-clearance-v22-20261124">
-  <style>.admin-page-jump { width: 5.25rem; }</style>
+  <style>
+    .admin-page-jump { width: 5.25rem; }
+    .admin-complaints-table .complaint-order-target { display: grid; gap: .45rem; min-width: 0; }
+    .complaint-order-heading { display: flex; flex-wrap: wrap; align-items: center; gap: .45rem; }
+    .complaint-order-kind {
+      color: var(--muted);
+      font-size: .7rem;
+      font-weight: 800;
+      letter-spacing: .045em;
+      text-transform: uppercase;
+    }
+    .complaint-order-number {
+      display: inline-flex;
+      align-items: center;
+      padding: .2rem .55rem;
+      border: 1px solid rgba(194, 139, 44, .32);
+      border-radius: 999px;
+      background: rgba(194, 139, 44, .1);
+      color: var(--ink);
+      font-size: .9rem;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+    .complaint-order-meta { display: flex; flex-wrap: wrap; gap: .35rem; }
+    .complaint-order-meta span {
+      padding: .18rem .45rem;
+      border: 1px solid rgba(31, 45, 56, .1);
+      border-radius: 999px;
+      background: rgba(31, 45, 56, .04);
+      color: var(--muted);
+      font-size: .72rem;
+      line-height: 1.4;
+    }
+    .complaint-order-parties { display: grid; gap: .3rem; }
+    .complaint-order-party { display: flex; flex-wrap: wrap; align-items: baseline; gap: .25rem .4rem; }
+    .complaint-order-party-label { color: var(--muted); font-size: .72rem; font-weight: 700; }
+    .complaint-order-party-name { overflow-wrap: anywhere; }
+  </style>
 </head>
 <body>
 
@@ -229,6 +266,33 @@
 
     /* ---------- Список цілей ---------- */
 
+    function targetHtml(row) {
+      if (row.kind !== "order") return "<strong>" + esc(row.title) + "</strong>";
+      const details = row.order_details || {};
+      const meta = [];
+      if (details.status) meta.push("<span>" + esc(details.status) + "</span>");
+      if (details.total_mc != null) {
+        meta.push("<span>Сума: " + esc(fmtMC(details.total_mc)) + " MC</span>");
+      }
+      if (details.created_at) meta.push("<span>Створено: " + esc(fmtDate(details.created_at)) + "</span>");
+      return '<div class="complaint-order-target">' +
+        '<div class="complaint-order-heading"><span class="complaint-order-kind">Замовлення</span>' +
+        '<strong class="complaint-order-number">№ ' + esc(row.target_id) + "</strong></div>" +
+        (meta.length ? '<div class="complaint-order-meta">' + meta.join("") + "</div>" : "") +
+        "</div>";
+    }
+
+    function ownerHtml(row) {
+      const details = row.order_details;
+      if (row.kind !== "order" || !details) return esc(row.subtitle || "—");
+      return '<div class="complaint-order-parties">' +
+        '<div class="complaint-order-party"><span class="complaint-order-party-label">Покупець</span>' +
+        '<strong class="complaint-order-party-name">' + esc(details.buyer || "—") + "</strong></div>" +
+        '<div class="complaint-order-party"><span class="complaint-order-party-label">Продавець</span>' +
+        '<strong class="complaint-order-party-name">' + esc(details.seller || "—") + "</strong></div>" +
+        "</div>";
+    }
+
     function renderGroups(rows) {
       const visible = rows.filter((row) => !row.is_banned);
       groups = visible;
@@ -238,8 +302,8 @@
               ? '<button class="btn btn-outline-primary btn-sm" type="button" data-profile="' +
                 row.user_id + '">Профіль</button>'
               : '<span class="small text-muted-soft">—</span>';
-            return "<tr><td><strong>" + esc(row.title) + "</strong></td><td>" +
-              esc(row.subtitle || "—") + "</td><td>" + esc(row.count) + "</td><td>" +
+            return "<tr><td>" + targetHtml(row) + "</td><td>" +
+              ownerHtml(row) + "</td><td>" + esc(row.count) + "</td><td>" +
               esc(row.open) + '</td><td><div class="d-flex flex-wrap gap-2">' +
               '<button class="btn btn-primary btn-sm" type="button" data-group="' + index +
               '">Скарги (' + esc(row.count) + ")</button>" + profile + "</div></td></tr>";

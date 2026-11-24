@@ -444,9 +444,16 @@ def _target_of(complaint: Complaint):
             ("order", order.id),
             "order",
             order.id,
-            f"Замовлення №{order.id}",
-            f"{order.buyer.username} → {order.seller.username}",
+            f"Замовлення № {order.id}",
+            f"Покупець: {order.buyer.username} · Продавець: {order.seller.username}",
             None,
+            {
+                "buyer": order.buyer.username,
+                "seller": order.seller.username,
+                "status": order.get_status_display(),
+                "total_mc": str(order.total_mc),
+                "created_at": order.created_at,
+            },
         )
     if complaint.target_kind == "product" and complaint.product is not None:
         product = complaint.product
@@ -457,6 +464,7 @@ def _target_of(complaint: Complaint):
             product.name,
             product.seller.username,
             product.seller_id,
+            None,
         )
     if complaint.target_user is not None:
         user = complaint.target_user
@@ -467,6 +475,7 @@ def _target_of(complaint: Complaint):
             user.username,
             user.get_role_display(),  # pyright: ignore[reportAttributeAccessIssue]
             user.id,
+            None,
         )
     return (
         (complaint.target_kind, complaint.id),
@@ -474,6 +483,7 @@ def _target_of(complaint: Complaint):
         complaint.id,
         complaint.get_target_kind_display(),  # pyright: ignore[reportAttributeAccessIssue]
         "",
+        None,
         None,
     )
 
@@ -515,7 +525,7 @@ class AdminComplaintsView(APIView):
 
         groups: dict[tuple, dict[str, Any]] = {}
         for complaint in queryset.order_by("-created_at"):
-            key, kind, target_id, title, subtitle, user_id = _target_of(complaint)
+            key, kind, target_id, title, subtitle, user_id, order_details = _target_of(complaint)
             group = groups.get(key)
             if group is None:
                 group = {
@@ -523,6 +533,7 @@ class AdminComplaintsView(APIView):
                     "target_id": target_id,
                     "title": title,
                     "subtitle": subtitle,
+                    "order_details": order_details,
                     "user_id": user_id,
                     "count": 0,
                     "open": 0,
@@ -537,10 +548,10 @@ class AdminComplaintsView(APIView):
 
         if query:
             lowered = query.lower()
-            groups = {
-                key: group
-                for key, group in groups.items()
-                if lowered in " ".join(
+            normalized_query = lowered.replace("№ ", "№")
+            filtered_groups: dict[tuple, dict[str, Any]] = {}
+            for key, group in groups.items():
+                searchable = " ".join(
                     (
                         group["title"],
                         group["subtitle"],
@@ -551,7 +562,9 @@ class AdminComplaintsView(APIView):
                         ),
                     )
                 ).lower()
-            }
+                if normalized_query in searchable.replace("№ ", "№"):
+                    filtered_groups[key] = group
+            groups = filtered_groups
 
         items = sorted(
             groups.values(),

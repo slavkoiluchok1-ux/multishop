@@ -591,7 +591,7 @@ class AdminComplaintTests(TestCase):
     # --- Видимість за правами й handler_rights ---
 
     def test_visibility_respects_handler_rights(self):
-        order_title = f"Замовлення №{self.order.id}"
+        order_title = f"Замовлення № {self.order.id}"
 
         self.assertEqual(self.group_titles(self.admin_p), {"Test product"})
         self.assertEqual(self.group_titles(self.admin_b), {"seller"})
@@ -615,15 +615,41 @@ class AdminComplaintTests(TestCase):
         self.assertEqual(response.status_code, 200, api_data(response))
         data = api_data(response)
         self.assertEqual(data["view"], "all")
-        self.assertIn(f"Замовлення №{self.order.id}", {
+        order_title = f"Замовлення № {self.order.id}"
+        self.assertIn(order_title, {
             group["title"] for group in data["results"]
         })
+        order_group = next(group for group in data["results"] if group["title"] == order_title)
+        self.assertEqual(
+            order_group["subtitle"],
+            f"Покупець: {self.buyer.username} · Продавець: {self.seller.username}",
+        )
+        self.assertEqual(
+            order_group["order_details"],
+            {
+                "buyer": self.buyer.username,
+                "seller": self.seller.username,
+                "status": self.order.get_status_display(),
+                "total_mc": str(self.order.total_mc.quantize(Decimal("0.000001"))),
+                "created_at": self.order.created_at,
+            },
+        )
 
         search = api_get(client, "/api/admin/complaints?q=Фізичні замовлення")
         self.assertEqual(search.status_code, 200, api_data(search))
         self.assertEqual(
             {group["title"] for group in api_data(search)["results"]},
-            {f"Замовлення №{self.order.id}"},
+            {order_title},
+        )
+        search_without_number_spacing = api_get(
+            client,
+            "/api/admin/complaints",
+            {"q": f"Замовлення №{self.order.id}"},
+        )
+        self.assertEqual(search_without_number_spacing.status_code, 200)
+        self.assertEqual(
+            {group["title"] for group in api_data(search_without_number_spacing)["results"]},
+            {order_title},
         )
 
     def test_admin_cannot_open_complaint_outside_his_rights(self):
