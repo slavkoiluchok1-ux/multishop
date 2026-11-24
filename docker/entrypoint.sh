@@ -4,6 +4,7 @@ set -eu
 mkdir -p "${DATA_DIR:-/data}/media/public" "${DATA_DIR:-/data}/media/private"
 
 python manage.py migrate --noinput
+python manage.py seed_complaint_types
 
 if [ -n "${MAIN_ADMIN_NICK:-}${MAIN_ADMIN_EMAIL:-}${MAIN_ADMIN_PASSWORD:-}" ]; then
     python manage.py create_main_admin

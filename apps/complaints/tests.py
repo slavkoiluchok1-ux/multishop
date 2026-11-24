@@ -53,13 +53,51 @@ class ComplaintTypeSeedTests(TestCase):
         count = ComplaintType.objects.count()
         call_command("seed_complaint_types")
 
-        self.assertEqual(count, 148)
+        self.assertEqual(count, 150)
         self.assertEqual(ComplaintType.objects.count(), count)
         admin_type = ComplaintType.objects.get(
             view="users_content",
             path="Адміністратори › Зловживання доступом до фото верифікації",
         )
         self.assertEqual(admin_type.handler_rights, ["admin_1", "admin_main"])
+
+    @override_settings(DEBUG=False)
+    def test_seed_populates_types_with_production_settings(self):
+        call_command("seed_complaint_types")
+
+        for view in ("orders", "products", "users_content"):
+            with self.subTest(view=view):
+                self.assertTrue(
+                    ComplaintType.objects.filter(
+                        view=view, parent__isnull=True, is_active=True
+                    ).exists()
+                )
+
+    def test_seed_migrates_placeholder_complaints_to_other_type(self):
+        author = CustomUser.objects.create_user(
+            username="placeholder-author",
+            email="placeholder-author@example.com",
+            password="test-password",
+        )
+        placeholder = ComplaintType.objects.create(
+            view="orders", name="Скоро виправлю"
+        )
+        complaint = Complaint.objects.create(
+            author=author,
+            complaint_type=placeholder,
+            target_kind="order",
+            text="Збережений текст старої скарги",
+        )
+
+        call_command("seed_complaint_types")
+
+        placeholder.refresh_from_db()
+        complaint.refresh_from_db()
+        self.assertFalse(placeholder.is_active)
+        self.assertEqual(
+            complaint.complaint_type.path, "Інше › Не знайшов потрібний тип"
+        )
+        self.assertEqual(complaint.text, "Збережений текст старої скарги")
 
     def test_order_complaint_api_returns_only_leaf_types(self):
         call_command("seed_complaint_types")
@@ -81,8 +119,7 @@ class ComplaintTypeSeedTests(TestCase):
         self.assertEqual(row["required_fields"], expected.required_fields)
 
 
-# seed_complaint_types працює лише при DEBUG=True, але тоді вмикається
-# debug_toolbar, який ламає тестовий клієнт — тому прибираємо його middleware.
+# DEBUG=True автоматично вмикає debug_toolbar, який заважає тестовому клієнту.
 MIDDLEWARE_WITHOUT_TOOLBAR = [
     name for name in settings.MIDDLEWARE if "debug_toolbar" not in name
 ]

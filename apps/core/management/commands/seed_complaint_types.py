@@ -1,9 +1,8 @@
 """Ідемпотентно наповнює типи скарг зі специфікації COMPLAINTS_PLAN."""
-from django.conf import settings
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import BaseCommand
 from django.db import transaction
 
-from apps.complaints.models import ComplaintType
+from apps.complaints.models import Complaint, ComplaintType
 
 
 TREE = {
@@ -95,6 +94,7 @@ TREE = {
                 "Помилкове списання коштів",
             ],
         },
+        "Інше": ["Не знайшов потрібний тип"],
     },
     "products": {
         "Заборонений товар": [
@@ -226,12 +226,25 @@ class Command(BaseCommand):
         if options["dry_run"]:
             self.stdout.write(f"Буде створено або оновлено вузлів: {count}")
             return
-        if not settings.DEBUG:
-            raise CommandError("Наповнення дерева скарг дозволене лише при DEBUG=True.")
 
         with transaction.atomic():
             for view, branch in TREE.items():
                 self._save_level(view, branch)
+            fallback = ComplaintType.objects.get(
+                view="orders", path="Інше › Не знайшов потрібний тип"
+            )
+            placeholders = ComplaintType.objects.filter(
+                view="orders",
+                parent__isnull=True,
+                name="Скоро виправлю",
+                is_active=True,
+            )
+            for placeholder in placeholders:
+                Complaint.objects.filter(complaint_type=placeholder).update(
+                    complaint_type=fallback
+                )
+                placeholder.is_active = False
+                placeholder.save(update_fields=["is_active"])
         self.stdout.write(self.style.SUCCESS(f"Типів скарг синхронізовано: {count}"))
 
     @classmethod
