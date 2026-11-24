@@ -2,6 +2,7 @@
 import io
 import os
 import secrets
+import tempfile
 from typing import Iterable, cast
 from unittest.mock import patch
 
@@ -55,6 +56,48 @@ def make_user(username: str, role: str | None = None) -> CustomUser:
 
 
 class BootstrapSeedCommandTests(TestCase):
+    def test_seed_restores_missing_product_image(self):
+        tree = {
+            "Електроніка": {
+                "Комп'ютери й ноутбуки": {
+                    "Комплектуючі": {"Відеокарти": ["NVIDIA"]},
+                },
+            },
+        }
+        products = [
+            (
+                "Відеокарта NVIDIA RTX 5080",
+                [
+                    "Електроніка",
+                    "Комп'ютери й ноутбуки",
+                    "Комплектуючі",
+                    "Відеокарти",
+                    "NVIDIA",
+                ],
+                "physical",
+                "74000",
+                3,
+                "NVIDIA",
+                "active",
+            ),
+        ]
+
+        with tempfile.TemporaryDirectory() as media_root:
+            with (
+                override_settings(MEDIA_ROOT=media_root, PUBLIC_MEDIA_ROOT=media_root),
+                patch("apps.core.management.commands.bootstrap_seed.TREE", tree),
+                patch("apps.core.management.commands.bootstrap_seed.ATTRIBUTES", []),
+                patch("apps.core.management.commands.bootstrap_seed.PRODUCTS", products),
+            ):
+                call_command("bootstrap_seed", stdout=io.StringIO())
+                product = Product.objects.get(name="Відеокарта NVIDIA RTX 5080")
+                product.main_image.storage.delete(product.main_image.name)
+
+                call_command("bootstrap_seed", stdout=io.StringIO())
+
+                product.refresh_from_db()
+                self.assertTrue(product.main_image.storage.exists(product.main_image.name))
+
     def test_seed_normalizes_names_and_syncs_category_attributes(self):
         from apps.core.management.commands.bootstrap_seed import Command
 

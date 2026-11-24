@@ -342,7 +342,10 @@ class Command(BaseCommand):
                 if created:
                     created_count += 1
 
-                if not product.main_image:
+                if (
+                    not product.main_image
+                    or not product.main_image.storage.exists(product.main_image.name)
+                ):
                     photo_name = slugify(name, allow_unicode=True) + ".png"
                     photo_path = Path(__file__).resolve().parents[4] / "seed" / "products" / photo_name
                     if photo_path.is_file():

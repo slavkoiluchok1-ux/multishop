@@ -1298,7 +1298,7 @@ main.container .empty-state-panel a:not(.btn) { color: var(--blue); }
     position: fixed;
     z-index: 1085;
     right: 0.75rem;
-    bottom: calc(5.05rem + env(safe-area-inset-bottom, 0px));
+    bottom: calc(6.25rem + env(safe-area-inset-bottom, 0px));
     width: 52px;
     height: 52px;
     display: grid;
